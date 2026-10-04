@@ -12,3 +12,130 @@ FAQ --> Frequently Asked Questions
   -- 工作够用
 
 
+Answer 
+1.git是什么?
+-->
+一个分布式版本控制系统
+用来记录文件修改历史、保存每一次改动快照，方便回退、多人协作的工具
+分布式: 多个独立节点一起干活, 没有唯一总管; 一个节点坏了, 整体还能继续跑
+
+2.为什么要git? 
+-->
+记录更改信息
+保存快照, 随时回退
+分支功能, 并行开发 
+方便远程备份 + 多人协作
+
+3.git的实现原理
+--> 
+分三个区域:
+工作区 + 暂存区 + 仓库区[本地 / 远程] 
+git add -> 暂存
+git commit -m 'meta'
+本地仓库与远程仓库要对其分支实现对齐
+--> 进而实现基本的拉取推送
+
+4.git的本质
+--> 
+git本质是一个内容寻址的键值数据库 
+
+5.git的使用
+--> 
+-- 安装 
+https://git-scm.com/book/zh
+
+-- 配置
+git config --global --list 
+git config --global user.name "user_name"
+git config --global user.email "user_email"
+
+-- 基本命令
+git init 
+git clone [-b <branch>] <url> 
+git remote -v 
+git remote add <origin> <url>
+git remote rm <origin>
+git pull <origin> <branch>
+git checkout [-b] <branch>
+git status 
+git branch -d <branch>
+git add <file> 
+git commit -m 'message'
+git push [-u] <origin> <branch>
+Tip: <origin> == <alias> 
+
+-- 工作够用 
+-->
+基本命令补充
+git merge <branch>
+git pull <origin> <branch> --allow-unrelated-histories 
+
+git commit -m '规范说明'
+-->
+feat: 新功能
+fix: 缺陷修复
+refactor: 代码重构
+docs: 文档更新
+test: 测试相关
+
+.gitignore 文件 
+项目中允许git推送文件配置
+! 强制推送符
+
+.gitkeep 文件
+推送空文件夹占位 
+
+.gitattributes 文件
+git属性配置
+
+.editorconfig 开源编辑器规范配置文件
+
+冲突问题 
+合并两个分支可能发生冲突 --> 两个分支对同一个最近钩子进行同一个数据行更改
+发生冲突会有警告 
+git status 查看哪些文件冲突 
+
+对应文件冲突代码块如下:
+<<<<<<< HEAD 
+当前分支冲突代码 
+=======
+另一分支冲突代码 
+>>>>>>> origin/master
+
+手动选择决定保留一个冲突代码, 另外一个删除 
+重新提交 git add -> git commit -> git push  
+产出合并提交历史记录M 
+
+解决意外子git问题
+git rm --cached <sub_folder> 
+再重新添加推送
+
+回退上一次 git add / git commit 
+git reset HEAD~1  
+
+git代理
+git config --global http.proxy 127.0.0.1:代理端口 
+git config --global https.proxy 127.0.0.1:代理端口 
+git config --global --unset http.proxy 
+git config --global --unset https.proxy 
+
+PR (Pull Request)
+白话: 请拉取我的提交合并到项目 
+--> 
+fork项目
+git remote add origin [mime]
+git remote add upstream [author]
+clone/pull 到本地 
+git checkout [branch]
+git fetch upstream 
+git merge upstream/master 
+git push origin master  
+修改代码测试提交
+到github上选择发起PR 
+
+Tip: 提交PR时候讲解清楚 --> 
+这次改动解决的问题
+主要实现方式和影响范围 
+如何验证, 包括测试命令或截图 
+是否存在需要关注的兼容性问题 
+
