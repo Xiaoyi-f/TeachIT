@@ -1,0 +1,14 @@
+FAQ --> Frequently Asked Questions
+1.git是什么?
+2.为什么要git? 
+
+--> git怎么样? 
+3.git的实现原理
+4.git的本质 
+5.git的使用
+  -- 安装
+  -- 配置 
+  -- 基本命令
+  -- 工作够用
+
+
