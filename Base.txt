@@ -1,0 +1,35 @@
+FAQ --> Frequently Asked Questions
+1.Dos是什么?
+2.Shell是什么?
+3.环境变量是什么? 
+4.环境变量PATH是什么?
+5.系统盘的含义? 
+6.用户的含义? 
+7.文件扩展名的含义?
+8.隐藏文件的含义? 
+
+--> 常用Dos命令有啥?
+9.Windows 常用 Dos 命令 
+10.Mac 常用 Dos 命令 
+
+
+Answer 
+1.Dos == Disk Operating System 磁盘操作系统 系统命令控制界面 
+2.Shell 用户与操作系统内核之间的 "交互工具" [命令 -> Shell解释 -> Dos 内核执行 -> 硬件干活]
+3.环境变量即操作系统中一组 "键值对" 配置, 供系统和程序读取 
+4.环境变量PATH用于告诉系统寻找可执行程序位置的路径, 进而实现任意位置执行可执行程序可以正常启动而不被位置限制
+5.系统盘是操作系统存放核心配置数据的存储空间, 对于系统的正常运行有着密不可分的关系 
+6.用户 = 操作系统中一个 "身份账户", 主要用于隔离资源、配置和权限 
+7.文件扩展名用于标识文件类型    
+8.隐藏文件默认不显示, 通常用于存储配置数据或重要数据 且 通常以 . 开头 
+9.Windows常用Dos命令: dir cd .. cls 
+10.Mac常用Dos命令: ls cd pwd mkdir rmdir cp mv rm cat clear  
+
+Tip: 
+windows终端通常使用GBK编码 --> 编码问题 --> UTF-8
+windows --> 运行框 ctrl shift enter 进入管理员模式 
+windows --> 必会命令 systeminfo / resmon / cleanmgr / services.msc / tcping <ip/domain> <port>
+系统默认保留 "特权端口范围" 0-1023 总共 1024 个
+
+通用终端下载工具: curl 
+curl -sL https://xxx.xx -o xxx

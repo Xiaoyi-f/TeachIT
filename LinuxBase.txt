@@ -1,0 +1,149 @@
+FAQ --> Frequently Asked Questions
+1.Linux是什么?
+2.为什么要Linux? 
+3.Linux文件系统是怎样?
+4.Linux必会命令有啥?
+5.Termux是什么? 
+6.Termux基本使用咋用?
+
+
+Answer 
+1.Linux 是一个操作系统内核，也是一个操作系统的统称
+2.Linux 在服务器市场占绝对主导位置、开源免费、稳定可靠、安全、可定制/裁剪、命令行与脚本强大、开发友好、云计算和容器的基础
+3.Linux 文件系统: 
+/bin 基础命令 
+/sbin 系统管理命令 
+/lib /lib64 系统库文件 
+/etc 系统配置文件 
+/var 动态数据 
+/tmp 临时数据 
+/home 普通用户数据 
+/root root用户数据 
+/dev 设备文件 
+/proc /sys 系统运行相关文件库 
+/usr 用户软件仓库 apt install 
+/opt 可选第三方软件仓库 
+/mnt 挂载点 
+4.Linux必会命令:
+sudo -i 切换到root用户
+mkdir -p 
+rmdir 
+rm -rf 
+ls -la 
+passwd  
+whoami 
+df -h 
+free -h  
+sudo poweroff 
+which <command> 
+5.Termux 是一个 Android 上的终端模拟器 + Linux 
+6.Termux基本使用:
+termux 在 Android 的 Linux 内核上，用 proot + chroot 构建的Linux 用户环境 --> 既不是虚拟机也不是模拟器 Termux 是跑在安卓沙盒里
+termux中root是模拟root(假的 --> 因为一般正式系统,官方都会对系统root权限进行保护以确保手机的安全性)
+distro --> distribution --> 发行(版)
+chroot是linux系统提供的系统调用,必须root权限(内核态); proot是基于ptrace(进程跟踪)实现的用户态模拟chroot
+termux-change-repo # 快速换源
+termux-setup-storage # 给予空间权限 
+~ (英文) 当前等于用户的家目录 
+pkg install cat # 查看文件内容
+pkg install openssh --> ssh username@ip -p 22 (默认22端口,服务器开启的服务不是这个要手动指定)
+openssh自带scp 将本地文件上传到服务器 或 反传 
+scp <local_file> username@ip:/path/ 
+scp username@ip:/path/<remote_file> ~/path/
+openssh自带sshd 启动ssh服务让别人连接我的主机 
+sshd --> passwd # 手动设置用户密码(必须) --> 同一局域网之间可以连接 -p 8022 
+非服务器公网ip由运营商提供,换个局域网就可能导致变化等
+curl -L ip.cn # 查看自己当前的公网ip -s静默 -L自动重定向 
+env # 查看系统环境变量 
+env | grep xxx 
+
+Tip:
+获取本机公网ip
+手动访问ip.cn网站或者使用以下命令
+curl -L -4 ifconfig.me
+curl -L -6 ifconfig.me 
+
+必会工具:
+## Git
+
+## HBuilderX
+
+## Vscode
+翻译
+Chinese
+Auto Close Tag
+Auto Rename Tag
+Dracula Theme Official
+Error Lens
+HTML CSS Support
+HTMLHint
+Live Server
+Path Intellisense
+Vue(official) 不要使用 vetur(vue2语法校验)
+Markdown Preview Enhanced
+Markdown All in one
+
+## Pycharm / IDEA 
+BlackConnect --> Python 代码格式化连接器
+CodeGlance Pro
+Indent Rainbow
+Inspection Lens 
+Material Theme UI lite
+Rainbow Brackets Lite
+Chinese 
+
+## IDEA 
+MybatisX 
+GenerateAllSetter  
+Auto Filling Java Call Arguments
+
+## Snipaste 
+
+## UTools  
+
+## Postman / Apipost
+
+## 微信开发者工具
+
+## XShell + XFtp 
+
+## Clash for windows --> https://ikuuu.top/user / Watt Toolkit / Clash Plus 
+
+## Navicat 
+右键表选择导入向导可以将数据文件导入表实现行
+右键表选择导出向导可以将表数据行导出为数据文件
+
+## Redis Insight ...
+
+## todesk / 向日葵 
+
+## claudecode/trae/cursor/coze/chatgpt(codex) ... 
+cursor --> http1.1 settings.json(ctrl shift p open user settings(JSON))
+右下角选择代码语言才会有代码语法高亮
+ctrl+x删除当前行 ctrl+ 放大 ctrl-缩小 ctrl+b关闭/展开文件栏
+{
+    "http.proxy": "http://127.0.0.1:7890",
+    "http.proxySupport": "override",
+    "http.proxyStrictSSL": false,
+    "cursor.general.disableHttp2": true
+}
+
+## drawio/xmind/processon 
+
+## ollama
+
+## Typora / MarkText
+
+## Ngrok 内网穿透工具 
+正常网络：内网 → 外网（正向，NAT 允许）
+穿透网络：外网 → 中转服务 → 预先建好的长连接 → 内网（反向，绕过 NAT 限制）
+
+## 小皮面板(phpStudy) 将当前主机变成一个内网服务器
+
+## docker desktop / docker 
+docker desktop 需要 WSL 
+--> 汉化包地址 --> github搜 --> Docker-Desktop-CN
+
+## airportal 推荐空投快传网站 / 软件
+
+## Bandicam 屏幕录制软件 
