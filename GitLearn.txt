@@ -69,6 +69,7 @@ Tip: <origin> == <alias>
 基本命令补充
 git merge <branch>
 git pull <origin> <branch> --allow-unrelated-histories 
+git push --force 
 
 git commit -m '规范说明'
 -->
