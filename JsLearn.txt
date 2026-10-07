@@ -73,9 +73,28 @@ window.dispatchEvent(new CustomEvent("eventName", {
   detail: data 
 }))
 
-window.addEventListener("eventName", (event) => {
+handler = (event) => {
   const res = event.detail 
-})
+}
+
+window.addEventListener("eventName", handler)
+window.removeEventListener("eventName", handler)
+
+## 事件 
+@click @dbclick @click.right 
+@mousedown @mouseup @resize 
+@mouseenter @mouseleave @mousemove 
+@input @focus @keydown="handleKeyDown"
+@keyup.enter @keyup.esc @change 
+@keyup.up @keyup.down @keyup.left @keyup.right 
+@contextmenu.prevent.stop="handleContextMenu" 
+
+const handleKeyDown = (event) => {
+  if (event.key == "F12") {
+    event.preventDefault()
+    event.stopPropagation() 
+  }
+}
 
 document.cookie = "key=val; key=val" 
 document.documentElement 

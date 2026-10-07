@@ -1,0 +1,71 @@
+FAQ --> Frequently Asked Questions
+1.TypeScript是什么? 
+2.为什么要TypeScript? 
+3.TypeScript基础语法
+
+
+Answer 
+1.TypeScript是JavaScript的一个超集, 给JavaScript增加 "类型系统", 最后还是要编译回JavaScript才能运行 
+2.因为JS太自由, 项目一大就容易翻车 
+3.TypeScript基础语法:
+## 前言
+npm install typescript --save-dev 
+
+类型声明文件相关
+1.很多库有自带@types 
+2.自定义 declare module 'xxx' { ... }
+/// <reference types="vite/client" />
+
+## 主讲内容
+any unknown void object null undefined / never 
+unknown: 未知类型, 不可使用属性 --> 强制先typeof类型判断才可使用 
+
+type OR = string | number 
+type AND = { name: string } & { age: number } 
+
+interface User {
+  readonly id: number 
+  name: string 
+  age?: number 
+  [key: string]: any 
+}
+
+abstract class Abs {
+  abstract abstractMethod(): void 
+  static staticMethod() {}
+}
+
+class Person implements User {
+  constructor(
+    public readonly id: number,
+    public name: string, 
+    protected age: number = 0,
+    private secret: string = "" 
+  ) {}
+}
+
+namespace Space {
+  export const val = 0 
+  export function func() {}
+}
+
+function func<T = string>(x: T): T {
+  return x 
+}
+
+interface HasLength<T> {
+  length: T 
+}
+
+function getLength<T extends HasLength<number>>(x: T): number {
+  return x.length 
+} 
+
+class Stack<T> {
+  private items: T[] = []
+}
+
+const element = document.querySelector("querySelector") as HTMLElement 
+
+
+
