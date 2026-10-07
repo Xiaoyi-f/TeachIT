@@ -1,0 +1,125 @@
+FAQ --> Frequently Asked Questions
+1.python包管理工具是什么?
+2.python社区发布项目怎么操作?
+3.python基础语法
+
+
+Answer
+1.python包管理工具默认是 pip 
+--> 
+install uninstall 
+freeze > requirements.txt 
+install -r requirements.txt 
+config list / config set 
+
+2.python社区发布项目配置文件与核心命令
+pyproject.toml 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "your_project_name"  # 包名注意唯一性,否则上传可能驳回报错
+version = "0.1.0"
+description = "your_project_description"
+authors = [
+    {name = "your_name", email = "your_email"},
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.6"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic" :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: OS Independent" 
+]
+requires-python = ">=3.8" 
+
+[project.urls]
+Website = "https://website.com" 
+Repository = "https://github.com/xxx" 
+Documentation = "https://docs.com/xxx"
+Changelog = "https://changelog.com"
+"Bug Tracker" = "https://bugtracker.com"
+
+pip install build twine  # 安装构建和上传工具 
+--> 项目根目录 --> python网站 用户名__token__ 密码即对应 API Token
+python -m build 
+
+twine upload --repository testpypi dist/*  # 上传测试   
+pip install --index-url https://test.pypi.org/simple/ your-package-name  # 安装测试 
+
+twine upload dist/*  # 正式上传 
+
+--> toml配置中递增版本号等 发布新版本 
+python -m build 
+twine upload dist/*  
+
+3.python基础语法
+del 
+print(6 + 6j, sep="", end="\n", flush=True)
+
+string = "Hello World" 
+len(string) type(string) == str 
+string --> count find index upper lower strip replace 
+string.join(string.split(" ", 1))
+
+list_var = [1, 2, 3]
+--> pop(idx) insert(idx, item) remove append
+
+tuple_var = tuple((i for i in range(10))) 
+for index, item in enumerate(tuple_var)
+
+set_var = {i for i in range(10)}
+frozen_set = frozenset(set_var)
+--> add discard remove update 
+union intersection difference 
+
+dict_var = {key: value for key, value in zip(range(10), range(10))} # zip(*zipped)
+for key, value in dict_var.items() 
+--> update pop(key_str) setdefault(key_str, value) get(key_str, default)
+
+global nonlocal return 
+
+from functools import wraps, reduce 
+
+def mime(*args, **kwargs):
+  def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+      print("Before") 
+      result = func(*args, **kwargs) 
+      print("After")
+      return result 
+    return wrapper 
+  return decorator 
+
+with open("file", "rwab+", encoding="utf-8") as file: 
+  file.read() 
+  file.readline() 
+  file.tell() 
+  file.seek(0) 
+  file.write("Hello World")
+  file.writelines(["Hello", "World"])
+
+obj = object() 
+hasattr(obj, "attr")
+getattr(obj, "attr")
+setattr(obj, "attr", value)
+delattr(obj, "attr")
+
+def generator():
+  yield 1
+  yield 2 
+  yield 3 
+
+gen = generator() 
+next(gen)
+
+
+Tip: 
+conda create -n conda_env_name python=3.x.x 
+conda env list 
+conda activate conda_env_name 
+conda deactivate 
+--> jupyter notebook 
