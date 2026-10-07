@@ -1,0 +1,151 @@
+FAQ --> Frequently Asked Questions
+1.JavaScript是什么? 
+2.为什么要JavaScript? 
+3.JavaScript和Java有什么区别?
+4.Node.js是什么?
+5.JavaScript和Node.js有什么关系? 
+6.ECMAScript(ES)是什么? 
+7.JavaScript基础语法
+
+
+Answer
+1.JavaScript是一种运行在浏览器里的脚本语言, 主要用于让网页 "活" 起来 
+2.JavaScript使得网页更接近于用户, 创建更丰富的用户体验, 让网页从 "静态文档" 变成 "可交互应用" 
+3.Java是一种强类型静态且严谨的服务端语言(JVM), JavaScript是一种弱类型动态脚本语言(浏览器/Node.js)   
+4.Node.js是把JavaScript从浏览器 "搬" 到服务器上运行的一个运行时, 底层是V8引擎, 使得JavaScript具有服务端能力 
+5.JavaScript是语言, Node.js是运行它的环境之一 
+6.ECMAScript是JavaScript的 语言规范 / 标准 
+7.JavaScript基础语法:
+const array = [1, 2, 3] 
+const iter = array[Symbol.iterator]() 
+iter.next()  // { value: 1, done: false }
+JS对于不存在的字段一般认定为 undefined 
+number string boolean undefined null symbol object 
+Number String Boolean Object   
+
+// 异步
+const promise = new Promise((resolve, reject) => {
+  if (true) {
+    resolve(data) 
+  } else {
+    reject(new Error("err"))
+  }
+})
+
+promise.then((data) => {
+  // 行为
+}, (err) => {
+  // 错误处理 
+})
+
+function* generator() {
+  yield val 
+} 
+
+const iter = generator() 
+iter.next() 
+
+// Promise 语法糖 --> 协程异步 await 让出控制权 
+async await console.log() console.error()
+Object.keys() Object.values() Object.entries() 
+delete 删除对象可配置属性 
+
+class User extends Object {
+  constructor(name, xx) {
+    super()
+    this.name = name 
+    this.secret = xx 
+  }
+
+  useSuperMethod() {
+    super.superMethod() 
+  }
+}
+
+const user = new User("name") 
+`{}` ? : typeof ...var [key] instanceof继承关系/原型链判断 
+
+let [a, b, c] = [1, 2, 3] 
+let {a, b, c} = {a: 1, b: 2, c: 3} 
+
+setTimeout setInterval clearTimeout clearInterval 
+window.dispatchEvent(new CustomEvent("eventName", {
+  detail: data 
+}))
+
+window.addEventListener("eventName", (event) => {
+  const res = event.detail 
+})
+
+document.cookie = "key=val; key=val" 
+document.documentElement 
+document.querySelector() 
+document.querySelectorAll() 
+object.getAttribute() 
+object.setAttribute(attr, val) 
+
+JSON.stringify(obj) 
+JSON.parse(str) 
+localStorage / sessionStorage 
+getItem(key) setItem(key, val) removeItem(key) clear() 
+
+array.length string.length 
+array.map((val, idx) => {}) 
+array.filter((val, idx) => {}) 
+array.forEach((val, idx) => {}) 
+array.find((val, idx) => {}) 
+array.includes(val) 
+pop push shift unshift slice 
+splice(start, deleteCount, ...items)
+
+for (const key in obj) {} 
+for (const val of string) {} 
+
+String(val).trim() 
+window.scrollTo(x, y) 
+
+/* URI参数编码 */
+encodeURIComponent(rawStr) encodeURI(url)
+decodeURIComponent(encodedStr) decodeURI(url)
+
+try {} catch (err) {} finally {} 
+
+const now = new Date() 
+getFullYear() getMonth() getDate() 
+getHours() getMinutes() getSeconds() 
+
+// Map 
+const map = new Map() 
+map.has("key") 
+map.set("key", "value") 
+map.get("key") 
+map.delete("key")
+map.clear() 
+map.size 
+
+// Set 
+const set = new Set() 
+Array.from(set) 
+set.add("value")
+set.delete("value") 
+set.size 
+
+// Proxy 
+const obj = { name: "name", age: "age" }
+const proxy = new Proxy(obj, {
+  get(target, attr, receiver) {
+    return Reflect.get(target, attr, receiver)
+  },
+
+  set(target, attr, value, receiver) {
+    return Reflect.set(target, attr, value, receiver)
+  }
+})
+
+// Reflect 
+const user = { age: 20 } 
+Reflect.has(user, "age") 
+Reflect.get(user, "age", receiver) 
+Reflect.set(user, "age", 22, receiver) 
+Reflect.deleteProperty(user, "age")
+

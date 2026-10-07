@@ -83,7 +83,7 @@ Vue(official) 不要使用 vetur(vue2语法校验)
 Markdown Preview Enhanced
 Markdown All in one
 
-## Pycharm / IDEA 
+## Pycharm [Alt enter]
 BlackConnect --> Python 代码格式化连接器
 CodeGlance Pro
 Indent Rainbow
@@ -92,7 +92,7 @@ Material Theme UI lite
 Rainbow Brackets Lite
 Chinese 
 
-## IDEA 
+## IDEA [Alt enter]
 MybatisX 
 GenerateAllSetter  
 Auto Filling Java Call Arguments
