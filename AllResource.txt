@@ -1,0 +1,81 @@
+多看各大厂公众号 GitHub Gitee 
+https://yun.itheima.com/subject/aiappmap/index.html 
+http://rencaiya.vip/college/postcourse
+https://www.mianshiya.com/
+https://www.xiaolinnote.com/
+https://notes.kamacoder.com/
+https://javaguide.cn/
+https://leetcode.cn/
+https://www.nowcoder.com/
+https://xiaolincoding.com/
+https://www.codefather.cn/
+https://www.datawhale.cn/  --> 学完去看openai等源码
+https://www.runoob.com/
+https://cainiaoya.com/
+https://modelcontextprotocol.io/docs/getting-started/intro
+https://skillsmp.com/
+https://github.com/anthropics/skills/tree/main/skills
+https://www.sanfengyun.com/
+https://examcrafts.com/
+https://roadmap.sh/
+https://market.frostfox.ai/
+https://waimao21.com/  --> 外贸百科 
+
+虚拟API网站:
+https://fakestoreapi.com/ --> 对应Url网站自带实体 
+
+辅助UI设计的AI网站: 
+https://app.flowstep.ai/
+https://v0.app/
+https://pixso.cn/
+https://modao.cc/
+https://ardot.tencent.com/
+https://www.doubao.com/
+https://mastergo.com/
+
+讯飞数字人网站:
+https://virtual-man.xfyun.cn/console/applications --> 注意免费接口单通道的单页访问问题
+
+免费Api:
+http://api.qingyunke.com/
+
+文档解析Agent / Ai:
+https://mineru.net/
+
+模型统一API网站: 
+https://openrouter.ai/
+https://cloud.siliconflow.cn/
+
+AI社区:
+https://huggingface.co/
+
+AI试验场:
+https://www.kaggle.com/
+
+接单网站 -> 以即其他各大平台:
+https://www.goofish.com/
+https://www.proginn.com/
+https://www.yuanjisong.com/
+https://devlg.com/
+
+中国软件著作权认证平台:
+https://rz.csia.org.cn/
+
+易版权:
+https://www.yibanquan.com.cn/
+
+中国版权保护中心:
+https://www.ccopyright.com.cn/
+
+百度翻译开放平台 -- 每天有一定次数免费接口调用:
+https://fanyi-api.baidu.com/
+
+虚拟商品专用小铺网站
+https://pay.ldxp.cn/
+
+OCS网课助手 -- 刷课工具
+https://docs.ocsjs.com/
+
+问卷星 问卷调查 数据支撑
+https://www.wjx.cn/
+
