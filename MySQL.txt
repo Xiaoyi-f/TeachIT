@@ -1,0 +1,125 @@
+1.MySQL是什么?
+2.为什么要MySQL?
+3.MySQL怎么用? 
+
+
+Answer
+1.MySQL是一款开源、关系型数据库管理系统 
+2.MySQL成熟稳定、生态极强, 支持 ACID, 支持索引, 支持多表关联、约束, 轻量且部署简单 
+3.MySQL使用 
+下载安装 
+cd xxx/bin 
+mysqld --initialize-insecure 
+mysqld --install MySQL 
+确保服务启动 
+
+mysql -P 3306 -u root -p 
+ALTER USER 'root@localhost' IDENTIFIED BY '你的新密码'; 
+exit; 
+
+// 加载sql文件并且执行 
+source <xxx.sql>  
+
+mysql --help | grep my.cnf 
+# [mysqld]
+bind-address = 0.0.0.0 
+# 配置服务监听网卡 
+
+MySQL自带数据库:
+mysql: 核心权限库 
+information_schema: 元数据虚拟库 
+performance_schema: 底层性能监控库 
+sys: 简化性能视图库 
+
+# DDL 数据定义语言
+DROP DATABASE IF EXISTS `xxx_db`;
+CREATE DATABASE `xxx_db`; 
+USE `xxx_db`; 
+SHOW DATABASES; 
+
+SHOW CREATE DATABASE `database_name`; 
+ALTER DATABASE `database_name` 
+DEFAULT CHARACTER SET utf8mb4; 
+DEFAULT COLLATE utf8mb4_unicode_cli; 
+
+CREATE TABLE `table_name` (
+  `column_name` column_type [PRIMARY KEY | NOT NULL | DEFAULT value | UNIQUE] AUTO_INCREMENT COMMENT 'column comment',
+  CONSTRAINT `constraint_name`
+  FOREIGN KEY (`column_name`) 
+  REFERENCES `referenced_table_name` (`referenced_column_name`)
+  [ON DELETE CASCADE] [ON UPDATE CASCADE]
+);
+
+ALTER TABLE `table_name` DROP FOREIGN KEY `constraint_name`;
+ALTER TABLE `table_name` RENAME TO `new_table_name`; 
+ALTER TABLE `table_name` DROP COLUMN `column_name`; 
+ALTER TABLE `table_name` MODIFY COLUMN `column_name` column_type; 
+ALTER TABLE `table_name` ADD COLUMN `column_name` column_type [约束条件] [FIRST | ALTER `column_name`];
+
+CREATE INDEX `index_table_name_column` ON `table_name` (`column_name`, `column_name`, ...);
+SHOW INDEX FROM `table_name`; 
+DROP INDEX `index_name` ON `table_name`; 
+
+TRUNCATE TABLE <table_name> 
+
+# DML 数据操作语言 
+INSERT INTO <table_name>
+(`column_name`, `column_name`, ...)
+VALUES 
+('value', 'value', ...),
+('value', 'value', ...);
+
+DELETE FROM <table_name> WHERE <column_name> = 'value'; 
+
+UPDATE <table_name> SET <column_name> = 'value' WHERE <column_name> = 'value'; 
+
+# DQL 数据查询语言 
+SELECT * FROM `table_name` LIMIT n; 
+SELECT `column_name`, `column_name`, ... FROM `table_name`; 
+
+-- 条件符: = < > ! BETWEEN AND OR NOT IN LIKE 
+SELECT * FROM <table_name> WHERE <column_name> 条件符 'value'; 
+SELECT * FROM <table_name> ORDER BY <column_name> [ASC | DESC];
+
+SELECT DISTINCT ...; 
+SELECT COUNT(DISTINCT `column_name`)
+
+-- 聚合函数 
+SELECT AVG(`column_name`) AS '平均值' FROM `table_name` WHERE condition;
+SELECT COUNT(`column_name`) AS '数量' FROM  `table_name` WHERE condition; 
+SELECT MAX(`column_name`) AS '最大值' FROM `table_name` WHERE condition; 
+SELECT MIN(`column_name`) AS '最小值' FROM `table_name` WHERE condition; 
+SELECT SUM(`column_name`) AS '和' FROM `table_name` WHERE condition; 
+
+SELECT DATE_FORMAT(`column_name`, '%Y-%m-%d %H:%i:%s'); 
+
+SELECT `column_name`, SUM(`column_name`) FROM `table_name` GROUP BY `column_name` HAVING 判断式; 
+
+-- 多表连接查询 
+SELECT * FROM `table_name` INNER JOIN `table_name` ON table_name.column_name = other_table_name.column_name;  
+SELECT * FROM `table_name` LEFT JOIN `table_name` ON table_name.column_name = other_table_name.column_name; 
+SELECT * FROM `table_name` RIGHT JOIN `table_name` ON table_name.column_name = other_table_name.column_name; 
+
+SELECT * FROM `table_name` WHERE column_name IN (SELECT column_name FROM `table_name` ...);
+SELECT * FROM `table_name` WHERE column_name > ALL(SELECT column_name FROM `table_name` ...);
+SELECT * FROM `table_name` WHERE column_name = ANY(SELECT column_name FROM `table_name` ...);
+
+# DCL 数据控制语言 
+SHOW VARIABLES LIKE 'port'; 
+SHOW VARIABLES LIKE '%engine%'; 
+
+SHOW VARIABLES WHERE Variable_name = 'general_log'; 
+SET GLOBAL general_log = ON; 
+SHOW VARIABLES WHERE Variable_name = 'general_log_file'; 
+SET GLOBAL general_log_file = 'absolutePath';
+
+# TCL 事务控制语言 
+START TRANSACTION; 
+COMMIT;
+ROLLBACK; 
+
+SAVEPOINT savepoint_name; 
+ROLLBACK TO savepoint_name; 
+RELEASE SAVEPOINT savepoint_name; 
+
+
