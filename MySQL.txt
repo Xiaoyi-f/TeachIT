@@ -31,6 +31,29 @@ information_schema: 元数据虚拟库
 performance_schema: 底层性能监控库 
 sys: 简化性能视图库 
 
+数据类型: 
+1.常用数值类型:
+TINYINT 
+INT 
+BIGINT 
+FLOAT
+DOUBLE 
+DECIMAL(N, M) 
+
+2.常用字符串类型 
+CHAR 
+VARCHAR 
+TINYTEXT 
+BLOB 
+TEXT 
+LONGBLOB
+LONGTEXT 
+
+3.日期时间类型 
+DATE --> YYYY-MM-DD
+TIME --> HH:MM:SS 
+
+
 # DDL 数据定义语言
 DROP DATABASE IF EXISTS `xxx_db`;
 CREATE DATABASE `xxx_db` IF NOT EXISTS `xxx_db`; 
@@ -51,11 +74,12 @@ CREATE TABLE `table_name` (
   [ON DELETE CASCADE] [ON UPDATE CASCADE]
 ) COMMENT 'table comment';
 
+ALTER TABLE `table_name` ADD COLUMN `column_name` column_type COMMENT "备注" [约束条件] [FIRST | AFTER `column_name`];
+ALTER TABLE `table_name` MODIFY COLUMN `column_name` column_type COMMENT "备注"; 
+ALTER TABLE `table_name` DROP COLUMN `column_name`; 
 ALTER TABLE `table_name` DROP FOREIGN KEY `constraint_name`;
 ALTER TABLE `table_name` RENAME TO `new_table_name`; 
-ALTER TABLE `table_name` DROP COLUMN `column_name`; 
-ALTER TABLE `table_name` MODIFY COLUMN `column_name` column_type; 
-ALTER TABLE `table_name` ADD COLUMN `column_name` column_type [约束条件] [FIRST | ALTER `column_name`];
+DROP TABLE IF EXISTS `table_name`;
 
 CREATE INDEX `index_table_name_column` ON `table_name` (`column_name`, `column_name`, ...);
 SHOW INDEX FROM `table_name`; 
@@ -63,7 +87,12 @@ DROP INDEX `index_name` ON `table_name`;
 
 TRUNCATE TABLE <table_name> 
 
+
 # DML 数据操作语言 
+INSERT INTO <table_name> VALUES ('value', 'value', ...);
+
+INSERT INTO <table_name> (`column_name`, `column_name`, ...) VALUES ('value', 'value', ...);
+
 INSERT INTO <table_name>
 (`column_name`, `column_name`, ...)
 VALUES 
@@ -72,38 +101,55 @@ VALUES
 
 DELETE FROM <table_name> WHERE <column_name> = 'value'; 
 
-UPDATE <table_name> SET <column_name> = 'value' WHERE <column_name> = 'value'; 
+UPDATE <table_name> SET <column_name> = 'value', <column_name> = 'value' WHERE <column_name> = 'value'; 
 
 # DQL 数据查询语言 
-SELECT * FROM `table_name` LIMIT n; 
-SELECT `column_name`, `column_name`, ... FROM `table_name`; 
+SELECT 
+        字段列表
+FROM 
+        表名列表 
+WHERE   
+        条件列表 
+GROUP BY 
+        分组字段列表 
+HAVING 
+        分组后条件列表 
+ORDER BY 
+        排序字段列表 
+LIMIT 
+        分页参数 
 
--- 条件符: = < > ! BETWEEN AND OR NOT IN LIKE 
-SELECT * FROM <table_name> WHERE <column_name> 条件符 'value'; 
-SELECT * FROM <table_name> ORDER BY <column_name> [ASC | DESC];
+-- 字段去重查询 
+SELECT DISTINCT <column_name> FROM 表名; 
 
-SELECT DISTINCT ...; 
-SELECT COUNT(DISTINCT `column_name`)
+-- 条件查询 
+SELECT 字段列表 FROM 表明 WHERE 条件列表; 
 
--- 聚合函数 
-SELECT AVG(`column_name`) AS '平均值' FROM `table_name` WHERE condition;
-SELECT COUNT(`column_name`) AS '数量' FROM  `table_name` WHERE condition; 
-SELECT MAX(`column_name`) AS '最大值' FROM `table_name` WHERE condition; 
-SELECT MIN(`column_name`) AS '最小值' FROM `table_name` WHERE condition; 
-SELECT SUM(`column_name`) AS '和' FROM `table_name` WHERE condition; 
+比较运算符:
+> >= < <= != [BETWEEN ... AND ...] IN(...) LIKE [IS NULL] 
 
-SELECT DATE_FORMAT(`column_name`, '%Y-%m-%d %H:%i:%s'); 
+逻辑运算符:
+AND OR NOT 
 
-SELECT `column_name`, SUM(`column_name`) FROM `table_name` GROUP BY `column_name` HAVING 判断式; 
+-- 聚合函数 忽略空值 对NULL值不作为统计 
+COUNT MAX MIN SUM AVG -- 参数为列名 
 
--- 多表连接查询 
-SELECT * FROM `table_name` INNER JOIN `table_name` ON table_name.column_name = other_table_name.column_name;  
-SELECT * FROM `table_name` LEFT JOIN `table_name` ON table_name.column_name = other_table_name.column_name; 
-SELECT * FROM `table_name` RIGHT JOIN `table_name` ON table_name.column_name = other_table_name.column_name; 
+-- 分组之后, 查询的字段一般为聚合函数和分组字段, 查询其他字段无任何意义, 执行顺序 where > 聚合函数 > having 
+SELECT 字段列表 FROM 表名 [WHERE 条件] GROUP BY 分组字段名 HAVING 分组后过滤条件;
 
-SELECT * FROM `table_name` WHERE column_name IN (SELECT column_name FROM `table_name` ...);
-SELECT * FROM `table_name` WHERE column_name > ALL(SELECT column_name FROM `table_name` ...);
-SELECT * FROM `table_name` WHERE column_name = ANY(SELECT column_name FROM `table_name` ...);
+-- where 是分组之前进行过滤, 不满足where条件不参与分组, 而having是分组之后对结果进行过滤 
+-- 判断条件不同: where 不能对聚合函数进行判断, 而having可以 
+
+SELECT 字段列表 FROM 表名 [WHERE 条件列表] [GROUP BY 分组字段] ORDER BY 字段1 排序方式1, 字段2 排序方式2 ...; 
+排序方式: 
+ASC: 升序 
+DESC: 降序 
+
+-- 分页查询 
+SELECT 字段列表 FROM 表名 LIMIT 起始索引, 查询记录数; 
+起始索引从零开始: 起始索引 = （查询页码 - 1）* 每页显示记录数
+分页查询是数据库方言: MySQL 中是 LIMIT 不同数据库有不同实现 
+
 
 # DCL 数据控制语言 
 SHOW VARIABLES LIKE 'port'; 
@@ -113,6 +159,7 @@ SHOW VARIABLES WHERE Variable_name = 'general_log';
 SET GLOBAL general_log = ON; 
 SHOW VARIABLES WHERE Variable_name = 'general_log_file'; 
 SET GLOBAL general_log_file = 'absolutePath';
+
 
 # TCL 事务控制语言 
 START TRANSACTION; 
