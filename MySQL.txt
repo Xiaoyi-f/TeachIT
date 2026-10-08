@@ -13,7 +13,7 @@ mysqld --initialize-insecure
 mysqld --install MySQL 
 确保服务启动 
 
-mysql -P 3306 -u root -p 
+mysql -h 127.0.0.1 -P 3306 -u root -p 
 ALTER USER 'root@localhost' IDENTIFIED BY '你的新密码'; 
 exit; 
 
@@ -33,13 +33,14 @@ sys: 简化性能视图库
 
 # DDL 数据定义语言
 DROP DATABASE IF EXISTS `xxx_db`;
-CREATE DATABASE `xxx_db`; 
+CREATE DATABASE `xxx_db` IF NOT EXISTS `xxx_db`; 
 USE `xxx_db`; 
 SHOW DATABASES; 
+SELECT DATABASE(); -- 查询当前使用的数据库 
 
 SHOW CREATE DATABASE `database_name`; 
 ALTER DATABASE `database_name` 
-DEFAULT CHARACTER SET utf8mb4; 
+DEFAULT CHARACTER SET utf8mb4; -- MySQL8 版本之后默认的字符集就是 utf8mb4 
 DEFAULT COLLATE utf8mb4_unicode_cli; 
 
 CREATE TABLE `table_name` (
@@ -48,7 +49,7 @@ CREATE TABLE `table_name` (
   FOREIGN KEY (`column_name`) 
   REFERENCES `referenced_table_name` (`referenced_column_name`)
   [ON DELETE CASCADE] [ON UPDATE CASCADE]
-);
+) COMMENT 'table comment';
 
 ALTER TABLE `table_name` DROP FOREIGN KEY `constraint_name`;
 ALTER TABLE `table_name` RENAME TO `new_table_name`; 
@@ -121,5 +122,10 @@ ROLLBACK;
 SAVEPOINT savepoint_name; 
 ROLLBACK TO savepoint_name; 
 RELEASE SAVEPOINT savepoint_name; 
+
+Tip:
+数据库管理系统(DataBase Management System, DBMS) 是操作和管理数据库的大型软件 
+--> 程序员给数据库管理系统发送SQL语句, 再由数据库管理系统操作数据库当中数据 
+
 
 
