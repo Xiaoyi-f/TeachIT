@@ -120,6 +120,14 @@ git config --global https.proxy 127.0.0.1:代理端口
 git config --global --unset http.proxy 
 git config --global --unset https.proxy 
 
+git commit 提交会产生提交对象, 生成唯一commit对象(哈希)
+parent结点即上次提交的哈希对象 
+
+同源祖先概念:
+A --> B --> C (main) 
+     --> D --> E (dev)
+main分支和dev分支的共同祖先是B 
+
 PR (Pull Request)
 白话: 请拉取我的提交合并到项目 
 --> 
