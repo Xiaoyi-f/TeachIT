@@ -22,7 +22,7 @@ Answer
 6.用户 = 操作系统中一个 "身份账户", 主要用于隔离资源、配置和权限 
 7.文件扩展名用于标识文件类型    
 8.隐藏文件默认不显示, 通常用于存储配置数据或重要数据 且 通常以 . 开头 
-9.Windows常用Dos命令: dir cd .. cls 
+9.Windows常用Dos命令: dir cd .. cls
 10.Mac常用Dos命令: ls cd pwd mkdir rmdir cp mv rm cat clear  
 
 Tip: 
