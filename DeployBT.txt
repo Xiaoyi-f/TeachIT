@@ -1,0 +1,126 @@
+注意: 务必下载好面板再进行对应的服务部署,比如: Docker服务等
+--> 因为下载宝塔会影响相关服务
+
+Tip: 99 切换显示 bt 英文面板 临时避免乱码问题
+
+## 准备项目附件 -> AI生成
+    sitemap.xml
+    robots.txt
+
+## 从开发环境到部署配置改动:
+    1.框架的debug模式切换为False状态、CORS配置修改 
+    2.前端VITE_API_BASE_URL类配置域名修改为https://部署域名:5000
+    3.后端数据库DATABASE_URL类配置修改为部署环境数据库相对应的配置
+    4.生产环境Nginx等配置以及监控运行 
+    5.其他...
+
+## 端口放行
+服务器端口放行
+宝塔防火墙端口放行
+开放服务监听网卡地址 -> 0.0.0.0 
+系统防火墙放行端口 (ufw status / ufw allow <port/tcp> / ufw delete allow <port/tcp>)
+
+## 注意点
+Nginx有默认的代理访问超时限制以及上传文件大小限制，可能导致大文件上传失败 --> 需要自行更改对应的配置
+域名备案查询网站: https://beian.miit.gov.cn/
+备案的话一般的服务器/域名销售商网站就可以备案
+
+推荐使用Let's Encrypt的免费证书 
+删除站点重新设置则可恢复默认Nginx配置
+
+注意: 浏览器缓存可能导致网站持续显示为不安全状态，可以打开浏览器的无痕模式重新打开网站试试
+若显示为安全状态，就说明SSL生效 
+微软浏览器打开无痕模式快捷键: ctrl + shift + n 
+
+
+## nginx命令
+nginx -t 检查nginx配置文件是否有问题 
+nginx -s reload 重新加载nginx配置文件 
+systemctl reload nginx 重新加载nginx
+systemctl restart nginx 重启nginx
+ss -tuln | grep 443 检查是否有nginx在监听 443 端口
+ss -tuln | grep 80 检查是否有nginx在监听 80 端口
+
+## 宝塔部署网站项目
+    1.准备好服务器并且装配好系统Linux
+    2.准备好域名
+    3.对域名进行解析，添加A记录，记录值为服务器公网ip
+    4.找到自己服务器的实例，管理安全组规则
+        TCP -> 端口 访问来源限制
+        ICMP -> ping相关
+    5.ssh连接主机，公网ip + 密码
+    6.curl -SO https://download.bt.cn/install/install-ubuntu_6.0.sh && sudo bash install-ubuntu_6.0.sh -y
+        -SO 表示显示错误并且保存为原文件名
+    下载宝塔
+    7.宝塔中文件系统会直接映射主机文件系统
+    8.初次下载宝塔需要配置主机的安全组规则
+    9.之后使用 bt 命令管理宝塔基本操作，具体操作一般进入宝塔网页操作
+    10.进入宝塔面板管理网站，到软件商店下载需要的软件
+        比如:
+        MySQL Nginx phpMyAdmin PHP
+        进程守护管理器 日志清理工具 Linux工具箱
+    11.进入文件 上传项目文件夹/文件 一般是放在 /www/wwwroot/ 项目文件夹 内部文件夹/文件
+    12.进入到对应的文件夹，操作下载需要的额外环境，比如: python的venv和gunicorn(关掉代码中的主函数转而使用这个) --> 可以使用python app.py 进行测试
+    source .venv/bin/activate
+    13.在数据库项中管理数据库
+    14.在网站项中添加站点 根目录选择前端文件夹
+    15.设置进程守护管理器的守护进程，设置命令和操作目录
+    16.为了避免内存不足问题或减缓内存压力，在Linux工具箱中扩大系统的虚拟内存
+    17.为网站申请到SSL证书，实现https
+    18.设置中开启宝塔面板的SSL
+    19.在网站设置中设置配置文件，在下载Nginx的前提下，配置文件中写的即为Nginx配置文件
+        # Tip: 域名是不用写协议前缀的 注意配置SSL证书
+        注意: 优先开启SSL再设置配置文件 SSL相关配置一定要使用自动生成的
+        server {
+            listen 80;
+            listen 443 ssl;
+            http2 on;
+            server_name 域名1 域名2;
+            root 网站的根目录(一般即前端文件夹绝对路径);
+            include 额外配置文件绝对路径;
+            index index.html index.htm;
+
+            # SSL证书相关 宝塔默认的配置代码就有，保持原有就行
+
+            # ~* 表示不区分大小写，后面是正则 常见静态文件后缀都匹配缓存
+            location ~* \.(gif|png|jpg|jpeg|css|js|woff|woff2|svg|ico|mp4|webp|ttf|eot)$ {
+                expires 30d;
+                add_header Cache-Control "public, immutable";
+                access_log off;
+            }
+
+            # 前端路由
+            location / {
+                try_files $uri $uri/ /index.html;
+            }
+
+            location /api {
+                proxy_pass http://127.0.0.1:port;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                add_header Cache-Control "no-cache, no-store, must-revalidate";
+            }
+
+            location /socket/ {
+                proxy_pass http://127.0.0.1:port;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                # WebSocket 长连接超时
+                proxy_connect_timeout 60s;
+                proxy_send_timeout 360s;
+                proxy_read_timeout 360s;
+
+                # 禁用缓冲,实时传输
+                proxy_buffering off;
+            }
+        }
+    20.在站长平台提交网站信息
+

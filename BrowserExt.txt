@@ -1,0 +1,41 @@
+浏览器插件 = manifest + scripts 
+
+结构:
+manifest.json                         声明一切 
+popup.html / popup.css / popup.js     工具栏弹窗页 
+background.js                         后台服务 
+
+# manifest.json 
+{
+  "manifest_version": 3,
+  "name": "extension",
+  "version": "1.0.0",
+  "description": "description",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "打开插件设置",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://*/*", "http://*/*"]
+}
+
+# background.js 
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("插件安装成功")
+  chrome.storage.local.set({ key: value })
+})
+
+async function getKey() {
+  const res = await chrome.storage.local.get("key")
+  return res.key 
+}
+
+Tip: 支持 chrome 和 edge 浏览器

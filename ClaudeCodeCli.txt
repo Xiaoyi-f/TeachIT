@@ -1,0 +1,94 @@
+claudecode会默认将当前目录作为工作目录
+国内deepcode属于同类产品
+进入 claude 按下 / 可以看到提示的各种命令 例如: /mcp /context 
+按 esc 可以返回上一级
+Tip: 使用这类操控电脑的工具注意做好限制 
+上下文都是临时的, 将相关数据保存到文件里才能永久保存
+
+claudecode接国内模型，在控制台中运行的，claudecode只会调用文本模型
+AI Agent智能体 盒子 大多数都有模型的限制，不是什么品牌的模型都能够调用/什么版本的模型都能够调用 
+
+下载方式:
+cmd中原生安装
+winget install Anthropic.ClaudeCode 
+会安装在C盘
+
+claude 命令进入一般 
+
+支持hooks(钩子)功能 --> 让AI在特定时候做特定事情 
+
+npm全局安装(Node.js 18+)
+npm install -g @anthropic-ai/claude-code 
+
+vscode搜索claude code for vscode插件结合使用
+Tip: claude使用项目SKILL不需要压缩SKILL文件夹 
+Claude Code在首次启动时，会生成一个状态文件.claude.json，
+并读取其中的hasCompletedOnboarding字段来判断是否已完成初始化
+如果该字段为true，程序会跳过地域检测、登录引导等初始步骤
+我们手动修改它，就能直接进入可用状态
+claude 
+notepad ./.claude.json
+添加上 "hasCompletedOnboarding": true
+
+claudecode 会将当前文件夹作为工作文件夹 
+所以先进入到对应的文件夹之后再执行 claude 命令
+cd /D 盘符:/ 进入对应的盘
+
+配置模型:
+Mac/Linux: ~/.claude/settings.json
+Windows: C:\Users\你的用户名\.claude\settings.json
+进入以上文件进行配置，没有则手动创建
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.deepseek.com/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "key"
+  }
+}
+
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://api.moonshot.cn/anthropic",
+    "ANTHROPIC_AUTH_TOKEN": "key"
+  }
+}
+// 以上是使用智谱模型的示例
+// 购买智谱API 资源包之后直接填写好配置 即可
+
+命令行文本颜色含义:
+> 用户输入
+白圈: 模型的解释
+灰圈: 模型阅读的文件
+绿圈: 调用工具成功
+红圈: 调用工具报错 
+橙圈: claude 运行中 
+
+基本模式 -> 先plan模式思考再edit模式编辑:
+default 
+
+acceptEdits 自动接受文件编辑和常见文件系统命令 
+会话中按 Shift+Tab 切换到它 或 claude --permission-mode acceptEdits
+
+plan 只分析、读文件、写计划，不改代码 
+会话中按 Shift+Tab 切换到它 或 claude --permission-mode plan
+
+auto 自动执行大多数操作，但带后台安全检查 
+会话中按 Shift+Tab 切换到它 或 claude --permission-mode auto
+
+另外还有几个模式...
+
+Esc Esc 紧急回退 一键撤销Claude最近一次的文件改动 
+
+常用命令:
+claude "/<path>"
+/help 查看帮助
+/init 在项目根目录创建 CLAUDE.md 记忆文件 
+/compact 压缩/总结 对话历史 解决 Token 超限问题 
+/model 模型切换
+/cost 查看当前会话的Token消耗和预估费用
+/clear 清空对话
+
+ctrl + L 清屏
+ctrl + C 中断当前任务
+ctrl + D 退出
+ctrl + O 切换详细输出模式 查看AI的思考过程 
+
