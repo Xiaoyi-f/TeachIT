@@ -104,7 +104,7 @@ git status 查看哪些文件冲突
 >>>>>>> origin/master
 
 手动选择决定保留一个冲突代码, 另外一个删除 
-重新提交 git add -> git commit -> git push  
+重新提交 git add -> git commit -> git merge -> git push  
 产出合并提交历史记录M 
 
 解决意外子git问题
