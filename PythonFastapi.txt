@@ -1,0 +1,27 @@
+import uvicorn 
+if __name__ == "__main__":
+  uvicorn.run("main:app", host="0.0.0.0", port=8000)
+
+from fastapi import FastAPI 
+
+app = FastAPI(
+  title="FastAPI", 
+  description="这是一个FastAPI示例", 
+  version="1.0.0",
+  terms_of_service="http://xxx.xx",
+  contact={
+    "name": "开发者",
+    "url": "http://xxx.xx",
+    "email": "dev@example.com"
+  },
+  license_info={
+    "name": "MIT",
+    "url": "http://xxx.xx" 
+  }
+)
+
+# 内置文档页 --> /docs 自带交互测试API文档界面(Swagger UI) 
+# 内置文档页 --> /redoc 自带注重阅读体验的文档界面(ReDoc) 
+# fastapi dev 命令 开发重启 
+
+
