@@ -24,4 +24,70 @@ app = FastAPI(
 # 内置文档页 --> /redoc 自带注重阅读体验的文档界面(ReDoc) 
 # fastapi dev 命令 开发重启 
 
+from fastapi import APIRouter 
+from fastapi import Header, Cookie 
+from fastapi import UploadFile # 小文件放内存, 大文件自动落盘 
+from pydantic import BaseModel, Field, EmailStr 
+
+# 请求体规范模型 
+class Item(BaseModel):
+  name: str = Field(min_length=1, max_length=100, description="描述")
+  description: str | None = None 
+  price: float | int = Field(default=None, ge=0, description="价格") 
+  email: EmailStr 
+
+router = APIRouter(prefix="/users", tags=["用户模块"])
+
+@router.get("/{item}")
+async async def list_users(item: int, request_body: dict):
+  return "dict 接收请求体" 
+
+@router.post("/item")
+async def read_item(item: Item, user_agent: str = Header(None), session_token: str = Cookie(None)):
+  return {"User-Agent": user_agent, "Session-Token": session_token}
+
+from fastapi.responses import RedirectResponse, JSONResponse 
+@app.get("/redirect")
+async def redirect():
+  return RedirectResponse(url="/item")
+
+# 响应头给浏览器看的, 浏览器自行做出对应的决策
+@app.get("/json-response")
+async def json_response():
+  content = {"message": "hello world"}
+  headers = {"X-Token": "1234"}
+  return JSONResponse(content=content, headers=headers)
+
+import shutil 
+@app.post("/uploadfile")
+async def create_upload_file(file: UploadFile):
+  # data = await file.read()
+  with open(f"uploads/{file.filename}", "wb") as buffer: 
+    shutil.copyfileobj(file.file, buffer)
+  return {"filename": file.filename, "content-type": file.content_type, "size": file.size}
+
+@app.post("/uploadfiles")
+async def create_upload_files(files: list[UploadFile]):
+  return {"filenames": [file.filename for file in files]}
+
+from fastapi import Depends 
+
+def get_db():
+  db = "database_connection" 
+  try: 
+    yield db 
+  finally:
+    print("关闭数据库连接")
+
+# 请求结束执行 finally 
+@app.get("/item")
+async def read_items(db: str = Depends(get_db)):
+  return {"db": db}
+
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware 
+app.add_middleware(HTTPSRedirectMiddleware)
+
+from fastapi.middleware.gzip import GZipMiddleware 
+app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
