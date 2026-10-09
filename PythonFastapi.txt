@@ -88,6 +88,33 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 app.add_middleware(HTTPSRedirectMiddleware)
 
 from fastapi.middleware.gzip import GZipMiddleware 
-app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+from fastapi.middleware.cors import CORSMiddleware 
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=[
+    "http://localhost:3000",
+    "http://localhost:8080" 
+  ],
+  allow_credentials=True,
+  allow_methods=["*"], # 允许跨域使用所有HTTP请求方法 
+  allow_headers=["*"],
+  max_age=21600 # 设置浏览器对某些请求头的预检缓存时长 
+)
+
+import json 
+from fastapi.responses import StreamingResponse 
+
+@app.get("/sse/xxx")
+async def sse_xxx():
+  async def gen():
+    yield f"data: {json.dumps({"status": "connected"})}\n\n"
+    yield f"event: event_name\n", 
+    yield f"data: {json.dumps({"data": "data"})}\n\n"
+
+  return StreamingResponse(gen(), media_type="text/event-stream", headers={
+    "Cache-Control": "no-cache", 
+    "X-Accel-Buffering": "no" 
+  })
 

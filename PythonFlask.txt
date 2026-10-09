@@ -18,7 +18,7 @@ from functools import wraps
 app = Flask(__name__) 
 app.debug = False 
 app.config.from_object('Config') 
-CORS(app, supports_credentials=True, origins=[])
+CORS(app, supports_credentials=True, origins="*", methods="*", allow_headers="*", max_age=21600)
 
 # pyjwt 
 import jwt 
