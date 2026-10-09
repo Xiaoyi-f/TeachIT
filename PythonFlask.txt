@@ -1,0 +1,91 @@
+class Config:
+  SECRET_KEY = "secret key"
+  SQLALCHEMY_DATABASE_URI = "mysql+pymysql://user_name:password@url:port/db_name" 
+  SQLALCHEMY_TRACK_MODIFICATIONS = False 
+  # 关闭修改追踪 关闭后不会自动触发 session 提交, 正常业务代码依然需要手动 db.session.commit()
+
+  # Nginx 反向代理一般也有上传限制(默认 1MB ...) 避免服务器内存一下被打满
+  MAX_CONTENT_LENGTH = 50 *1024 * 1024 # 50MB 限制前端上传文件最大大小 文件过大则Flask 直接抛出 RequestEntityTooLarge 413 错误, 拒绝接收请求体
+  SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,
+    "pool_recycle": 600 
+  }
+
+from flask import Flask, jsonify, request, make_response, current_app, Blueprint
+from flask_cors import CORS 
+from functools import wraps 
+
+app = Flask(__name__) 
+app.debug = False 
+app.config.from_object('Config') 
+CORS(app, supports_credentials=True, origins=[])
+
+# pyjwt 
+import jwt 
+import json 
+
+payload = {"user_id": "userId", "exp": datetime.datetime.now(datetime.timezone.utf) + datetime.timedelta(days=7), "iat": datetime.datetime.now(datetime.timezone.utc)}
+token = jwt.encode(payload, current_app.config["SECRET_KEY"], algorithm="HS256")
+
+def verify_token(token):
+  try:
+    payload = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+  except jwt.ExpiredSignatureError:
+    return None 
+  except jwt.InvalidTokenError: 
+    return None 
+
+  return payload 
+
+def require_auth(func):
+  @wraps(func)
+  def decorated(*args, **kwargs):
+    auth = request.headers.get("Authorization")
+    token = auth.replace("Bearer ", "")
+    user_account = verify_token(token)
+    if not user_account:
+      return jsonify({"msg": "未登录或登录已过期"})
+
+    kwargs["user_id"] = payload["user_id"]
+    return func(*args, **kwargs) 
+  return decorated 
+
+xxx_bp = Blueprint("xxx", __name__) 
+
+@xxx_bp.route("/<int:num>/<float:decimal>/<string:name>", methods=["GET", "POST", "PUT", "DELETE"])
+def demo(num, decimal, name):
+  request.args.get("key", type=type)
+  request.json / request.cookies / request.files -> files["key"].save("path") 
+  resp = make_response(data)
+  resp.set_cookie(
+    "key",
+    "value",
+    max_age=xxx, # 单位 s 
+    domain="xxx.xx",
+    samesite="Strict/Lax", 
+    httponly=True, # 开启后前端无法操作cookie 
+    secure=True # cookie 只会在 https 请求下才会被浏览器发送给后端
+  )
+
+  resp.delete_cookie("key") # 删除前端 token 携带, 但是生成的 token 本质仍存在, 需要等待过期清除 
+
+  return jsonify({"message": message, "data": data, "code": code})
+
+
+# SSE 协议 
+from flask import Response 
+
+@app.route("/sse/xxx")
+def xxx():
+  def gen():
+    yield f"data: {json.dumps({"status": "connected"})}\n\n"
+    yield f"event: event_name\n" 
+    yield f"data: {json.dumps({"data": "data"})}\n\n" 
+
+  resp = Response(gen(), mimetype="text/event-stream")
+  resp.headers["X-Accel-Buffering"] = "no" 
+  resp.headers["Cache-Control"] = "no-cache" 
+  return resp 
+
+  
+
