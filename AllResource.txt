@@ -46,6 +46,9 @@ https://mineru.net/
 https://openrouter.ai/
 https://cloud.siliconflow.cn/
 
+阿里云百炼:
+https://bailian.console.aliyun.com/
+
 AI社区:
 https://huggingface.co/
 
