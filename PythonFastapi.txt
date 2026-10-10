@@ -103,6 +103,7 @@ app.add_middleware(
   max_age=21600 # 设置浏览器对某些请求头的预检缓存时长 
 )
 
+# SSE 
 import json 
 from fastapi.responses import StreamingResponse 
 

@@ -318,7 +318,8 @@ const socket = io("http://example.com", {
   reconnectionDelay: 1000, 
   reconnectionAttempts: 5,
   transports: ["websocket"],
-  timeout: 10000 
+  timeout: 10000,
+  auth: { token: "TOKEN" }
 })
 
 // 内置事件监听 

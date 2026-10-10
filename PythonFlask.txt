@@ -90,3 +90,76 @@ def xxx():
 # app.run(host="0.0.0.0", port=5000)
 # gunicorn -w 4 -b 0.0.0.0:5000 app:app 
 # gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 4 -b 0.0.0.0:5000 app:app 
+
+# pip install flask-sqlalchemy pymysql 
+from flask_sqlalchemy import SQLAlchemy 
+from sqlalchemy import func, and_, or_, not_ 
+from datetime import datetime, date 
+
+db = SQLAlchemy()
+
+def init(app):
+  db.init_app(app) 
+  with app.app_context():
+    db.create_all()
+
+class BaseModel(db.Model):
+  __abstract__ = True # 配置该类不被映射 
+
+  def to_dict(self):
+    return {field.name: getattr(self, field.name) for field in self.__table__.c}
+
+class Table(BaseModel):
+  __tablename__ = "table_name" 
+
+  field = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  """
+  数值类型:
+  db.Boolean 
+  db.Integer 
+  db.BigInteger 
+  db.Float
+  db.Double 
+  db.Numeric(N, M)
+
+  字符串/二进制类型:
+  db.CHAR(length) 
+  db.String(length)
+  db.Text 
+  db.LargeBinary 
+
+  日期时间类型:
+  datetime.date  
+  datetime.time 
+  """
+
+# 增
+demo = Table()
+db.session.add(demo)
+db.session.commit()
+
+# 删 
+demo = Table.query.get(id)
+db.session.delete(demo)
+db.session.commit()
+
+# 改 
+demo = Table.query.get(id)
+demo.field = "value" 
+db.session.commit()
+
+# 查 
+demo = Table.query.filter(Table.field布尔表达式).first()
+demo = Table.query.filter(Table.field布尔表达式).all()
+demo = Table.query.filter(Table.field布尔表达式).order_by(func.random()).all()
+demo = Table.query.filter_by().all() # 直接写 字段名=值 不用写 Table 
+demo = Table.query.get("primary_key")
+
+# 分页查询 error_out --> 页码不存在时是否抛出异常 
+pagination = Table.query.order_by(Table.id.asc()).paginate(page=cur_page, per_page=page_size, error_out=False)
+--> pagination.items
+
+# 将挂起改动刷入数据库, 但不提交事务 
+db.session.flush()
+
+

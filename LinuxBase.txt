@@ -57,6 +57,18 @@ curl -L ip.cn # 查看自己当前的公网ip -s静默 -L自动重定向
 env # 查看系统环境变量 
 env | grep xxx 
 
+Tip: 
+Linux中常用 ftp 工具, 以 Ubuntu/Centos 为例 
+1.安装: [Ubuntu --> sudo apt-get install vsftpd] [CentOS --> sudo yum install vsftpd -y]
+2.创建用户与目录: 创建一个专用用户(如: ftpuser), 并设定其家目录, 比如: sudo useradd -d /home/ftpuser ftpuser, 然后 sudo passwd ftpuser 设置密码 
+3.核心配置: 编辑配置文件 /etc/vsftpd.conf 
+-- anonymous_enable=NO 
+-- local_enable=YES 
+-- write_enable=YES 
+-- chroot_local_user=YES 
+4.开放防火墙: FTP默认用21端口, 需要在防火墙
+5.启动服务: sudo systemctl start vsftpd, 并 sudo systemctl enable vsftpd 设置开机自启
+
 Tip:
 获取本机公网ip
 手动访问ip.cn网站或者使用以下命令

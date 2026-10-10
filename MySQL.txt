@@ -13,6 +13,12 @@ mysqld --initialize-insecure
 mysqld --install MySQL 
 确保服务启动 
 
+Tip: ACID (原子性 一致性 隔离性 持久性)
+原子性: 一个事务是不可分割的, 如果A扣钱则B必加钱 
+一致性: 事务不能破坏数据库的完整性约束 
+隔离性: 多个事务同时运行时, 不能互相看到中间状态, 也不能互相干扰 
+持久性: 事务一旦 commit 成功, 数据必须永久保存 
+
 mysql -h 127.0.0.1 -P 3306 -u root -p 
 ALTER USER 'root@localhost' IDENTIFIED BY '你的新密码'; 
 exit; 
