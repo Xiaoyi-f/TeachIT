@@ -81,6 +81,12 @@ for key, value in dict_var.items()
 
 global nonlocal return 
 
+match var:
+  case value | other_value:
+    pass 
+  case _: 
+    pass 
+
 from functools import wraps, reduce 
 
 def mime(*args, **kwargs):
@@ -115,6 +121,9 @@ def generator():
 
 gen = generator() 
 next(gen)
+
+iterator = iter(list_var)
+next(iterator)
 
 # 可以修改 __lt__ 协议 实现排序判断逻辑重定义 
 sorted_data = sorted(list_var, key=lambda x: x // 2, reverse=True)
