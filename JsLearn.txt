@@ -203,6 +203,7 @@ eventSource.addEventListener("customEvent", (event) => {
 
 if (eventSource) eventSource.close()
 
+
 /* IndexDB */
 const DB_NAME = "dbName" 
 const DB_VERSION = 1 
@@ -250,3 +251,91 @@ export async function saveToDB(json: object, html: string): Promise<void> {
     }
   })
 }
+
+
+/* Axios */
+import axios from "axios" 
+import { ElMessage } from "element-plus" 
+
+const requests = axios.create({
+  baseURL: "http://baseURL.com", 
+  timeout: 10000,
+  withCredentials: true,
+  headers: {}
+})
+
+requests.interceptors.request.use(
+  (config) => {
+    return config 
+  },
+  (err) => {
+    return Promise.reject(err)
+  }
+)
+
+requests.interceptors.response.use(
+  (res) => {
+    const data = res.data 
+    const message = String(data.message)
+
+    if (message !== "undefined") {
+      ElMessage({
+        message: message,
+        type: "error",
+        duration: 3000, 
+        offset: 56,
+        showClose: true 
+      })
+
+      return Promise.reject(new Error(message))
+    }
+
+    return data 
+  },
+  (err) => {
+    if (err.code === "ECONNABORTED" || err.code === "ERR_CANCELED") {
+      return Promise.reject(new Error("请求中断"))
+    }
+
+    return Promise.reject(err)
+  }
+)
+
+export default requests 
+
+// data 请求体, params 查询参数 
+requests.get(url, { params: params })
+requests.post(url, data, { params: params })
+requests.put(url, data, { params: params })
+requests.delete(url, { params: params })
+
+
+/* socket.io-client */
+import { io } from "socket.io-client" 
+
+const socket = io("http://example.com", {
+  reconnection: true,
+  reconnectionDelay: 1000, 
+  reconnectionAttempts: 5,
+  transports: ["websocket"],
+  timeout: 10000 
+})
+
+// 内置事件监听 
+socket.on("connect", () => {})
+socket.on("connect_error", (err) => {})
+socket.on("disconnect", (reason) => {})
+
+// 发送数据 
+socket.emit("customEvent", {})
+
+// 监听数据 
+socket.on("customEvent", (data) => {})
+
+// 单次监听 
+socket.once("customEvent", (data) => {})
+
+// 删除监听器 
+socket.off("customEvent")
+
+
