@@ -129,8 +129,8 @@ class Table(BaseModel):
   db.LargeBinary 
 
   日期时间类型:
-  datetime.date  
-  datetime.time 
+  db.Date --> datetime.date  
+  db.Time --> datetime.time 
   """
 
 # 增
@@ -157,7 +157,7 @@ demo = Table.query.get("primary_key")
 
 # 分页查询 error_out --> 页码不存在时是否抛出异常 
 pagination = Table.query.order_by(Table.id.asc()).paginate(page=cur_page, per_page=page_size, error_out=False)
---> pagination.items
+--> pagination.items pagination.total 
 
 # 将挂起改动刷入数据库, 但不提交事务 
 db.session.flush()

@@ -119,3 +119,88 @@ async def sse_xxx():
     "X-Accel-Buffering": "no" 
   })
 
+
+# pip install sqlmodel aiomysql 
+from sqlmodel import SQLModel, Field, Session, create_engine, func, select 
+from sqlalchemy import and_, or_, not_ 
+from datetime import date, time  
+
+engine = create_engine("mysql+aiomysql://root:password@127.0.0.1:3306/dbname")
+
+async def init_db():
+  async with engine.begin() as conn:
+    await conn.run_sync(SQLModel.metadata.create_all)
+
+class BaseModel(SQLModel):
+  __abstract__ = True 
+
+  def to_dict(self):
+    return {field.name: getattr(self, field.name) for field in self.__table__.c} 
+
+class Table(BaseModel, table=True):
+  __tablename__ = "table_name" 
+
+  field: int = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
+  """
+  数值类型:
+  bool --> Boolean 
+  int --> Integer / BigInteger 
+  float --> Float / Double 
+  Decimal --> Numeric(N, M) Field(sa_type=Numeric(N, M))
+
+  字符串/二进制类型:
+  str --> CHAR(length) Field(sa_type=CHAR(length))
+  str --> String(length) Field(max_length=length)
+  str --> Text Field(sa_type=Text)
+  bytes --> LargeBinary 
+
+  日期时间类型:
+  date --> Date 
+  time --> Time 
+  """
+
+# 增
+async def create_demo():
+  demo = Table()
+  async with Session(engine) as session: 
+    session.add(demo)
+    await session.commit()
+
+# 删 
+async def delete_demo():
+  async with Session(engine) as session: 
+    demo = await session.get(Table, id_val)
+    if demo:
+      session.delete(demo)
+      await session.commit()
+
+# 改 
+async def update_demo(id_val: int): 
+  async with Session(engine) as session: 
+    demo = await session.get(Table, id_val)
+    if demo:
+      demo.field = "new_value" 
+      await session.commit()
+
+# 查 
+async def query_demo():
+  stat = select(Table).filter_by(field=value) 
+  stat = select(Table).where(Table.field布尔表达式)
+  stat = select(Table).where(Table.field布尔表达式).order_by(func.random())
+
+  async with Session(engine) as session: 
+    demo = await session.exec(stat).first()
+    # await session.exec(stat).all()
+
+# 分页查询 
+async def page_query(cur_page: int, page_size: int):
+  offset_val = (cur_page - 1) * page_size 
+  stat = select(Table).order_by(Table.id.asc()).offset(offset_val).limit(page_size)
+  count_table = select(func.count()).select_from(Table)
+
+  async with Session(engine) as session: 
+    items = await session.exec(stat).all()
+    total = await session.exec(count_table).scalar_one()
+
+    await session.flush()
+
