@@ -1,0 +1,48 @@
+/* keywords */
+byte short char --> int 
+long float double boolean 
+
+private public protected 
+
+abstract class extends interface implements new static final 
+
+break continue return 
+
+switch case default 
+
+try catch throw throws finally 
+
+import package 
+
+true false 
+
+super this void 
+
+L F 
+
+== // 引址基值 
+
+Scanner sc = new Scanner(System.in);
+sc.hasNextLine();
+
+String line = sc.nextLine();
+char sc.next().charAt(0); 
+
+int[] arr = new int[10];
+int[] arr = {1, 2, 3, 4, 5}
+
+for (int i = 0; i < arr.length; i++) {
+  System.out.println(arr[i]);
+}
+
+String str = "Hello_Java"; 
+boolean strBool = str.equals("Hello_Java");
+
+StringBuilder sb = new StringBuilder("Hello");
+sb.append("StringBuilder")
+
+String s = sb.toString(); 
+
+str.matches("regex_expr")
+str.split("regex_expr")
+
