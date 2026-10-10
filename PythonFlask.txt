@@ -112,7 +112,7 @@ class BaseModel(db.Model):
 class Table(BaseModel):
   __tablename__ = "table_name" 
 
-  field = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  field = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False, unique=True, default=0, db.ForeignKey("table.column", ondelete="CASCADE", onupdate="CASCADE"))
   """
   数值类型:
   db.Boolean 

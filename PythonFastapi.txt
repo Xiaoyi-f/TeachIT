@@ -121,7 +121,7 @@ async def sse_xxx():
 
 
 # pip install sqlmodel aiomysql 
-from sqlmodel import SQLModel, Field, Session, create_engine, func, select 
+from sqlmodel import SQLModel, Field, Session, Relationship, create_engine, func, select 
 from sqlalchemy import and_, or_, not_ 
 from datetime import date, time  
 
@@ -140,7 +140,8 @@ class BaseModel(SQLModel):
 class Table(BaseModel, table=True):
   __tablename__ = "table_name" 
 
-  field: int = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True})
+  field: int = Field(default=None, primary_key=True, sa_column_kwargs={"autoincrement": True}, nullable=False, unique=True, default=None)
+  foreign_field: int = Field(sa_column=Column(Integer, ForeignKey=("table.column", ondelete="CASCADE", onupdate="CASCADE"), nullable=False))
   """
   数值类型:
   bool --> Boolean 
