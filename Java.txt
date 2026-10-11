@@ -353,3 +353,5 @@ public final int getPriority();
 // 设置守护线程 
 thread.setDaemon(true);
 
+/* 线程安全问题 */
+
