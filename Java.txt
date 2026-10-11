@@ -380,5 +380,103 @@ class TicketTask implements Runnable {
 static synchronized void method() {}
 private synchronized void method() {}
 
+/* Lock锁: 更灵活 */
+import java.util.concurrent.locks.ReentrantLock;
 
+public class ThreadTest {
+  public static void main(String[] args) {
+    TicketTask task = new TicketTask(); 
+
+    Thread thread = new Thread(task, "窗口A"); 
+    Thread otherThread = new Thread(task, "窗口B");
+
+    thread.start(); 
+    otherThread.start(); 
+  }
+}
+
+class TicketTask implements Runnable {
+  int tickets = 1;
+  ReentrantLock lock = new ReentrantLock(); 
+
+  @override 
+  public void run() {
+    while (true) {
+      try {
+        lock.lock(); 
+        if (tickets == 0) {
+          break; 
+        }
+
+        System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
+        tickets--;
+      } finally {
+        lock.unlock();
+      }
+    }
+  }
+}
+
+/* 线程池 */
+--> 减少线程的创建和销毁的开销 
+// JDK自带线程池, 了解 --> 开发通常无法做到精细配置, 不咋用 
+// 自定义线程池 
+ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler)
+7个核心参数:
+1.核心线程数量 (正式员工)
+2.最大线程数量 (正式员工 + 临时工)
+3.空闲时间 
+4.时间单位 
+5.任务队列 (指定排队人数)
+6.线程对象工厂 
+7.拒绝策略 
+
+package com.learn.pool;
+
+import java.util.concurrent.*; 
+
+public class ThreadPoolDemo {
+  /* 
+    自定义线程池:
+    1.有界队列 new ArrayBlockingQueue<>(N)
+    2.无界队列 new LinkedBlockingQueue<>()
+  */
+  public static void main(String[] args) {
+    ThreadPoolExecutor pool = new ThreadPoolExecutor(
+      2, 5, 60, TimeUnit.SECONDS,
+      new ArrayBlockingQueue<>(10),
+      Executors.defaultThreadFactory(),
+      new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+
+    for (int i = 1; i <= 16; i++) {
+      pool.submit(new Runnable() {
+        @override 
+        public void run() {
+          System.out.println(Thread.currentThread().getName() + "--- 提交了任务");
+        }
+      });
+    }
+  }
+}
+
+拒绝策略:
+ThreadPoolExecutor.AbortPolicy 丢弃任务并抛出RejectedExecutionException异常 (默认)
+ThreadPoolExecutor.DiscardPolicy 丢弃任务, 但是不抛出异常, 这是不推荐的做法 
+ThreadPoolExecutor.DiscardOldestPolicy 抛弃队列中等待最久的任务, 然后把当前任务加入队列中 
+ThreadPoolExecutor.CallerRunsPolicy 调用任务的run()方法, 绕过线程池直接执行 
+
+临时线程什么时候创建?
+  线程任务数 > 核心线程数 + 任务队列的数量 
+什么时候会开启拒绝策略?
+  线程任务数 > 最大线程数 + 任务队列的数量 
+
+/**
+ * 网络编程 
+ * IP: 网络门牌号 
+ * 端口: 一个端口号只能被一个应用程序占用, 1024以内为知名网络服务/应用, 一般已经被占用 <= 65535
+ * 协议: 通信算法约定好的一套规则/格式, 保证两台设备能看懂互相发的数据 
+ *   UDP协议: 面向无连接的通信协议 --> 广播 
+ *   TCP协议: 面向连接的通信协议 --> 三次握手与四次挥手(服务器收到断开申请还会再把最后一些数据处理完再发送确认信息) --> 传输安全 
+ */
 
