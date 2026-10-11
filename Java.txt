@@ -354,4 +354,24 @@ public final int getPriority();
 thread.setDaemon(true);
 
 /* 线程安全问题 */
+--> 资源默认共用 --> 由于并行/并发机制, 代码分线程分行块被执行而产生对齐问题 --> 需要锁机制 
+// 锁对象可以是任何对象, 但是需要保证多条线程的锁对象是同一把锁 
+// 注意: 利用锁实现同步可以解决对齐问题/数据安全问题, 但是也会降低程序运行的效率 
+class TicketTask implements Runnable {
+  int tickets = 1; 
 
+  @override 
+  public void run() {
+    while (true) {
+      // 同步代码块 
+      synchronized (TicketTask.class) {
+        if (tickets == 0) {
+          break;
+        }
+
+        System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
+        tickets--;
+      }
+    }
+  }
+}
