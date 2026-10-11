@@ -585,38 +585,6 @@ if ("func".equals(method.getName())) {
 }
 
 /* 代理 */
-import java.lang.reflect.*;
-
-public class ProxyDemo {
-
-    interface UserService {
-        void add(String name);
-    }
-
-    static class UserServiceImpl implements UserService {
-        public void add(String name) {
-            System.out.println("add " + name);
-        }
-    }
-
-    public static void main(String[] args) {
-        UserService target = new UserServiceImpl();
-
-        // JDK 动态代理：基于接口
-        UserService proxy = (UserService) Proxy.newProxyInstance(
-                target.getClass().getClassLoader(),
-                target.getClass().getInterfaces(),
-                (p, method, a) -> {
-                    System.out.println("before " + method.getName());
-                    Object result = method.invoke(target, a);
-                    System.out.println("after " + method.getName());
-                    return result;
-                }
-        );
-
-        proxy.add("张三");
-    }
-}
 
 
 
