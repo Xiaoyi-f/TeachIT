@@ -55,6 +55,7 @@ boolean strBool = str.equals("Hello_Java"); // 逻辑值比较
 char[] charArray = str.toCharArray();
 
 // StringBuilder 拼接 内容都在同一块空间并没有大量开辟空间 
+// StringBuilder 底层实现: char[]（JDK8） / byte[]（JDK9+）
 StringBuilder sb = new StringBuilder("Hello");
 sb.append("StringBuilder")
 sb.delete(beginIndex, endIndex); // [beginIndex, endIndex)
