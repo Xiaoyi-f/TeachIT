@@ -545,3 +545,78 @@ public Classloader getClassLoader() // 获取该类的类加载器对象
 
 /* 反射: 框架技术的灵魂 */
 // 在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法，对于任意一个对象，都能够调用它的任意属性和方法，这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制
+// 获取字节码对象
+1.Class.forName("全类名"); // 全类名 = 包.类名 
+2.类名.class 
+3.对象.getClass(); 
+
+Object obj = new Object(); 
+Class clazz = obj.getClass(); 
+
+// Class clazz = Class.forName("PACKAGE.CLASSNAME");
+
+Field[] fields = clazz.getDeclaredFields(); // 获取所有成员变量
+Field publicFields = clazz.getFields(); // 只获取公有成员变量 
+for (Field field : fields) {
+  System.out.println(field.getName()); // 获取成员变量名
+  System.out.println(field.getType()); // 变量类型 (字节码对象)
+}
+
+Method[] methods = clazz.getDeclaredMethods(); // 获取所有方法
+Method publicMethods = clazz.getMethods(); // 只获取公有方法 
+
+Parameter[] parameters = method.getParameters(); // JDK8+ 支持 
+
+for (Method method : methods) {
+  System.out.println(method.getName()); // 获取方法名
+  System.out.println(method.getReturnType()); // 返回值类型 (字节码对象)
+}
+
+for (Parameter parameter : parameters) {
+  String parameterName = parameter.getName();
+  Class parameterType = parameter.getType();
+  System.out.println(parameterName + ": " + parameterType);
+}
+// 调用方法
+if ("func".equals(method.getName())) {
+  // 若调用私有方法需要添加这句赋予权限
+  // method.setAccessible(true);  
+  method.invoke(clazz.newInstance(), args) 
+}
+
+/* 代理 */
+import java.lang.reflect.*;
+
+public class ProxyDemo {
+
+    interface UserService {
+        void add(String name);
+    }
+
+    static class UserServiceImpl implements UserService {
+        public void add(String name) {
+            System.out.println("add " + name);
+        }
+    }
+
+    public static void main(String[] args) {
+        UserService target = new UserServiceImpl();
+
+        // JDK 动态代理：基于接口
+        UserService proxy = (UserService) Proxy.newProxyInstance(
+                target.getClass().getClassLoader(),
+                target.getClass().getInterfaces(),
+                (p, method, a) -> {
+                    System.out.println("before " + method.getName());
+                    Object result = method.invoke(target, a);
+                    System.out.println("after " + method.getName());
+                    return result;
+                }
+        );
+
+        proxy.add("张三");
+    }
+}
+
+
+
