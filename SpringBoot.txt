@@ -1,0 +1,9 @@
+/**
+ * %JAVA_HOME%
+ * %MAVEN_HOME%
+ * %CATALINA_HOME%
+ * Tomcat -核心命令-> startup shutdown 
+ * IDEA配置Tomcat --> 文件启动下拉框编辑配置 --> Tomcat Server 
+ * Servlet --> java语言编写的运行在服务器端的程序 --> 中间人 
+ * web.xml 配置 Servlet / @WebServlet注解 配置 Servlet 
+ */
