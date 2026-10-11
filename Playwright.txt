@@ -2,6 +2,8 @@
 byte short char --> int 
 long float double boolean 
 
+Byte Short Character Integer Long Float Double Boolean 
+
 private public protected 
 
 abstract class extends interface implements new static final 
@@ -36,13 +38,81 @@ for (int i = 0; i < arr.length; i++) {
 }
 
 String str = "Hello_Java"; 
-boolean strBool = str.equals("Hello_Java");
+// new 出来的字符串也会从字符串常量池中复用值, 但是会再次在堆中创建新对象再复用, 而对应的变量指向堆中新对象 
 
+/*
+当字符串进行 + 拼接时候, 底层会创建出来一个 StringBuilder 对象, 调用该对象 append 方法在内部完成拼接, 拼好之后再调用该对象的 toString 方法完成类型转换 
+String str = "abc"; 
+String other_str = "a" + "b" + "c";
+System.out.println(str == other_str); // true 
+*/
+
+str.equalsIgnoreCase(other_str); // 忽略大小写进行比较 
+
+boolean strBool = str.equals("Hello_Java"); // 逻辑值比较 
+// 规则: equals 结果为 true 则 两个对象的hashCode必须相同 结果为 false 则两个对象的hashCode可同(hash碰撞)可不同
+
+char[] charArray = str.toCharArray();
+
+// StringBuilder 拼接 内容都在同一块空间并没有大量开辟空间 
 StringBuilder sb = new StringBuilder("Hello");
 sb.append("StringBuilder")
+sb.delete(beginIndex, endIndex); // [beginIndex, endIndex)
+sb.reverse(); 
+sb.length(); 
 
 String s = sb.toString(); 
 
-str.matches("regex_expr")
-str.split("regex_expr")
+str.length(); 
+str.replace(old, new); 
+str.substring(beginIndex, endIndex); // [beginIndex, endIndex)
+str.matches("^.*?[^a-z1-9]{1,8}$")
+str.split("^.*?[^a-z1-9]{1,8}$")
+
+Wrapper.valueOf(Base val); 
+Wrapper.parseInt(Wrapper val); 
+
+object.baseValue();
+object.toString(); 
+
+import java.lang.Math; 
+
+double max(); 
+double min(); 
+double abs(); 
+double sqrt(); 
+double ceil();
+double floor(); 
+double pow(a, b); 
+double random(); // [0.0, 1.0) 
+long round(); // 四舍五入 
+
+// 泛型: Java泛型底层是类型擦除, 擦除之后全部变成 Object, 而基本类型不是 Object 子类, 不能向上转型为 Object, 所以泛型不能直接放基本类型 
+
+/**
+ * 集合 
+ * Collection
+ *   List 
+ *   Set 
+ * Map
+ * 
+ * Tip: 不加泛型 集合 亦可以 存储不同类型数据, 加泛型是为了约束 
+ */
+
+Collection<Type> collection = new ArrayList<>(); // 查快改慢 
+Collection<Type> collection = new LinkedList<>(); // 查慢改快 
+collection.add(TypeData);
+collection.remove(TypeData);
+collection.clear(); 
+collection.contains(TypeData); 
+collection.isEmpty(); 
+collection.size(); 
+
+List<Type> arrayList = new ArrayList<>();
+arrayList.add(int idx, TypeData);
+arrayList.get(int idx); 
+arrayList.set(int idx, TypeData); 
+arrayList.remove(int idx); 
+
+List<Type> linkedList = new LinkedList<>();
 
