@@ -375,3 +375,10 @@ class TicketTask implements Runnable {
     }
   }
 }
+
+// 同步方法 --> 静态方法(锁对象是类字节码对象) 与 非静态方法(this对象)
+static synchronized void method() {}
+private synchronized void method() {}
+
+
+
