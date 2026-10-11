@@ -1,0 +1,352 @@
+/* keywords */
+byte short char --> int 
+long float double boolean 
+
+Byte Short Character Integer Long Float Double Boolean 
+
+private public protected 
+
+abstract class extends interface implements new static final 
+
+break continue return 
+
+switch case default 
+
+try catch throw throws finally 
+
+import package 
+
+true false 
+
+super this void 
+
+L F 
+
+== // 引址基值 
+
+Scanner sc = new Scanner(System.in);
+sc.hasNextLine();
+
+String line = sc.nextLine();
+char sc.next().charAt(0); 
+
+int[] arr = new int[10];
+int[] arr = {1, 2, 3, 4, 5}
+
+for (int i = 0; i < arr.length; i++) {
+  System.out.println(arr[i]);
+}
+
+String str = "Hello_Java"; 
+// new 出来的字符串也会从字符串常量池中复用值, 但是会再次在堆中创建新对象再复用, 而对应的变量指向堆中新对象 
+
+/*
+当字符串进行 + 拼接时候, 底层会创建出来一个 StringBuilder 对象, 调用该对象 append 方法在内部完成拼接, 拼好之后再调用该对象的 toString 方法完成类型转换 
+String str = "abc"; 
+String other_str = "a" + "b" + "c";
+System.out.println(str == other_str); // true 
+*/
+
+str.equalsIgnoreCase(other_str); // 忽略大小写进行比较 
+
+boolean strBool = str.equals("Hello_Java"); // 逻辑值比较 
+// 规则: equals 结果为 true 则 两个对象的hashCode必须相同 结果为 false 则两个对象的hashCode可同(hash碰撞)可不同
+
+char[] charArray = str.toCharArray();
+
+// StringBuilder 拼接 内容都在同一块空间并没有大量开辟空间 
+StringBuilder sb = new StringBuilder("Hello");
+sb.append("StringBuilder")
+sb.delete(beginIndex, endIndex); // [beginIndex, endIndex)
+sb.reverse(); 
+sb.length(); 
+
+String s = sb.toString(); 
+
+str.length(); 
+str.replace(old, new); 
+str.substring(beginIndex, endIndex); // [beginIndex, endIndex)
+str.matches("^.*?[^a-z1-9]{1,8}$")
+str.split("^.*?[^a-z1-9]{1,8}$")
+
+Wrapper.valueOf(Base val); 
+Wrapper.parseInt(Wrapper val); 
+
+object.baseValue();
+object.toString(); 
+
+import java.lang.Math; 
+
+double max(); 
+double min(); 
+double abs(); 
+double sqrt(); 
+double ceil();
+double floor(); 
+double pow(a, b); 
+double random(); // [0.0, 1.0) 
+long round(); // 四舍五入 
+
+import java.time.format.DateTimeFormatter; 
+import java.time.LocalDateTime; 
+
+LocalDateTime now = LocalDateTime.now(); 
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+// 泛型: Java泛型底层是类型擦除, 擦除之后全部变成 Object, 而基本类型不是 Object 子类, 不能向上转型为 Object, 所以泛型不能直接放基本类型 
+
+/**
+ * 集合 
+ * Collection
+ *   List 
+ *   Set 
+ * Map
+ * 
+ * Tip: 不加泛型 集合 亦可以 存储不同类型数据, 加泛型是为了约束 
+ */
+
+Collection<Type> collection = new ArrayList<>(); // 查快改慢 
+Collection<Type> collection = new LinkedList<>(); // 查慢改快 
+collection.add(TypeData);
+collection.remove(TypeData);
+collection.clear(); 
+collection.contains(TypeData); 
+collection.isEmpty(); 
+collection.size(); 
+
+List<Type> arrayList = new ArrayList<>();
+arrayList.add(int idx, TypeData);
+arrayList.get(int idx); 
+arrayList.set(int idx, TypeData); 
+arrayList.remove(int idx); 
+
+List<Type> linkedList = new LinkedList<>();
+linkedList.addFirst(TypeData); 
+linkedList.addLast(TypeData); 
+linkedList.getFirst(); 
+linkedList.getLast(); 
+linkedList.removeFirst(); 
+linkedList.removeLast(); 
+
+// 纯无序 
+Set<Type> set = new HashSet<>(); 
+
+// 维护迭代顺序 
+Set<Type> set = new LinkedHashSet<>(); 
+
+// 纯无序 
+Map<KeyType, ValueType> map = new HashMap<>(); 
+Map<KeyType, ValueType> map = new LinkedHashMap<>(); 
+
+// Map 常用方法 
+Set map.keySet(); 
+Collection map.values(); 
+Set<Map.Entry> map.entrySet(); 
+Value map.get(Key); 
+Value map.put(Key, Value); 
+Value map.remove(Key); 
+map.clear(); 
+map.containsKey(Key); 
+map.containsValue(Value); 
+map.isEmpty(); 
+map.size(); 
+
+Iterator<Type> iter = collection.iterator(); 
+while (iter.hasNext()) {
+  Type item = iter.next(); 
+}
+
+ListIterator<Type> listIter = list.listIterator(); 
+while (listIter.hasNext() && listIter.hasPrevious()) {
+  Type nextItem = listIter.next(); 
+  Type previousItem = listIter.previous(); 
+}
+
+try {
+} catch (Exception err) {
+} finally {
+}
+
+// lambda 表达式 
+() -> {}
+
+// 方法引用 --> JDK8+ 对 lambda 表达式 进行简化 
+collection.forEach(item::function)
+
+/* File管理文件元数据 */ 
+File(String pathName); 
+
+createNewFile(); 
+mkdirs(); 
+mkdir(); 
+
+exists(); 
+isDirectory(); 
+isFile(); 
+
+dir.list(); 
+getName(); 
+getParent(); 
+listFiles(); 
+getAbsolutePath(); 
+
+// 注意: 增强for对于引用类型会改动内部 
+public static void getAllFilePath(File file) {
+  File[] files = file.listFiles(); 
+
+  // 增强for常用于 Collection / Array 
+  for (File file : files) {
+    if (file.isFile()) {
+      System.out.println(file.getAbsolutePath());
+    } else {
+      getAllFilePath(file); 
+    }
+  }
+}
+
+/**
+ * IO流
+ * 输入流 --> 读取数据 从硬盘读到内存 
+ * 输出流 --> 写入数据 从内存写到硬盘
+ * 万能字节流 + 字符流 
+ * Tip: 注意文件夹存在性 
+ * 字节流抽象基类:
+ *   InputStream 
+ *   OutputStream 
+ * 字符流抽象基类:
+ *   Reader 
+ *   Writer   
+ */
+
+import java.nio.charset.StandardCharsets;
+
+FileInputStream fis = new FileInputStream("path"); 
+FileOutputStream fos = new FileOutputStream("path", true); // true 表示追加模式  
+
+fis.read(); // 一次读取一个字节, 没有内容可读返回 -1 
+byte[] buf = new byte[1024];
+fis.read(buf); // 返回实际读取到的字节数, 不保证填满数组 
+
+byte[] data = "HelloJava".getBytes(StandardCharsets.UTF_8);
+fos.write(data);
+
+fis.close();
+
+fos.flush()
+fos.close();
+
+// 封装源流,提供缓冲区,提高效率 减少系统从用户态到内核态的调用次数 缓冲区属于JVM堆内存[用户态] --> 默认1024*8字节即1KB
+BufferedInputStream bis = new BufferedInputStream(new FileInputStream("path")); 
+BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("path", true));
+
+InputStreamReader isr = new InputStreamReader(new FileInputStream("path"));
+OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream("path")); 
+
+BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("in.txt"), StandardCharsets.UTF_8));
+BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out.txt", true), StandardCharsets.UTF_8))
+
+// throws 方法异常签名, 抛出异常, 交给调用者处理, 调用者可以使用 try-catch 接住异常 
+// throw new Exception("异常信息") 主动抛出异常
+
+/* 多线程 */
+// 并行: 同一时刻, 有多个指令在多个CPU上 [同时] 执行
+// 并发: 同一时刻, 有多个指令在单个或多个CPU上 [交替] 执行 
+// 进程: 计算机中的程序关于某数据集合上的一次运行活动, 是系统进行资源分配的基本单位 --> 独立性、动态性、并发性 
+// 线程: 进程可以同时执行多个任务, 每个任务就是线程, 线程是CPU调度的基本单位 
+// java默认是多线程的: 运行程序的主线程 main, 垃圾回收线程 监控程序运行产生的垃圾 并且不定时的进行清理 ... 
+
+/* 开启线程方式一: 传统 */
+package com.learn.thread; 
+
+// 并行/并发由操作系统调控 
+public class ThreadDemo {
+  public static void main(String[] args) {
+    MyThread mt = new MyThread(); 
+    mt.start(); 
+  }
+}
+
+class MyThread extends Thread {
+  @override 
+  public void run() {
+    for (int i = 0; i <= 99; i++) {
+      System.out.println("线程任务执行" + i);
+    }
+  }
+}
+
+/* 开启线程方式二: 无返回值 */
+package com.learn.thread; 
+
+public class ThreadDemo {
+  public static void main(String[] args) {
+    MyRunnable mr = new MyRunnable();
+    Thread thread = new Thread(mr, "threadName"); 
+    Thread otherThread = new Thread(mr, "threadName"); 
+
+    thread.start();
+    otherThread.start();
+  }
+}
+
+// 实现接口方式, 还可以继承其他类 
+class MyRunnable implements Runnable {
+  @override 
+  public void run() {
+    for (int i = 0; i <= 99; i++) {
+      System.out.println("自己的线程任务" + i);
+    }
+  }
+}
+
+/* 开启线程方式三: 带返回值 */
+package com.learn.thread; 
+
+import java.util.concurrent.Callable; 
+import java.util.concurrent.ExecutionException; 
+import java.util.concurrent.FutureTask; 
+
+public class ThreadDemo {
+  public static void main(String[] args) throws ExecutionException, InterruptedException {
+    MyCallable mc = new MyCallable(); 
+    FutureTask<Integer> task = new FutureTask<>(mc); 
+    FutureTask<Integer> otherTask = new FutureTask<>(mc); 
+
+    Thread thread = new Thread(task, "threadName"); 
+    Thread otherThread = new Thread(otherTask, "threadName");
+
+    thread.start();
+    otherThread.start(); 
+
+    Integer result = task.get(); 
+    System.out.println("task 返回的结果为:" + result);
+
+    Integer otherResult = otherTask.get(); 
+    System.out.println("otherTask 返回的结果为:" + otherResult);
+  }
+}
+
+class MyCallable implements Callable<Integer> {
+  @override 
+  public Integer call() throws Exception {
+    int sum = 0; 
+    for (int i = 0; i <= 99; i++) {
+      sum += i; 
+    }
+
+    return sum;
+  }
+}
+
+thread.getName(); 
+thread.setName("threadName");
+static Thread currentThread(); 
+static void sleep(long time); // 单位 ms 
+
+/* 线程优先级 */
+// 线程调度方式有两种: 抢占式调度和非抢占式调度, 抢占式调度具有随机性, 非抢占式调度则是有顺序的执行, Java中使用的是抢占式调度风格, 即允许随机性执行 
+// 线程优先级越高, 抢到CPU的概率越大 优先级: 1-10 (默认5)
+
+public setPriority(int newPriority); 
+public final int getPriority(); 
+
