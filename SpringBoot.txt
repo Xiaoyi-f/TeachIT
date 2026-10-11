@@ -2,6 +2,7 @@
  * %JAVA_HOME%
  * %MAVEN_HOME%
  * %CATALINA_HOME%
+ * Maven 基本配置 --> conf/settings.xml 和 repository仓库位置 
  * Tomcat -核心命令-> startup shutdown 
  * IDEA配置Tomcat --> 文件启动下拉框编辑配置 --> Tomcat Server 
  * Servlet --> java语言编写的运行在服务器端的程序 --> 中间人 
