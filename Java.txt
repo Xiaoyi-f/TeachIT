@@ -480,3 +480,37 @@ ThreadPoolExecutor.CallerRunsPolicy 调用任务的run()方法, 绕过线程池�
  *   TCP协议: 面向连接的通信协议 --> 三次握手与四次挥手(服务器收到断开申请还会再把最后一些数据处理完再发送确认信息) --> 传输安全 
  */
 
+/* 枚举 */
+package com.leanr.enum; 
+
+public class EnumTest {
+  public static void main(String[] args) {
+    useSeason(Season.WINTER);
+
+    System.out.println(Season.SPRING.ordinal());
+    System.out.println(Season.SUMMER.ordinal());
+    System.out.println(Season.AUTUMN.ordinal());
+    System.out.println(Season.WINTER.ordinal());
+  }
+
+  public static void useSeason(Season season) {
+    switch (season) {
+      case SPRING:
+        System.out.println("春季");
+        break; 
+      case SUMMER:
+        System.out.println("夏季"); 
+        break; 
+      case AUTUMN:
+        System.out.println("秋季");
+        break; 
+      case WINTER:
+        System.out.println("冬季");
+        break; 
+    }
+  }
+}
+
+enum Season {
+  SPRING, SUMMER, AUTUMN, WINTER 
+}
