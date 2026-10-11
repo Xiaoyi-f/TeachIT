@@ -514,3 +514,22 @@ public class EnumTest {
 enum Season {
   SPRING, SUMMER, AUTUMN, WINTER 
 }
+
+/* 类加载器 */
+--> 负责将类的字节码加载到方法区 
+加载时机: 用到的时候加载 
+加载过程: 加载 -> 链接 -> 初始化 
+
+1.加载: 通过包名 + 类名, 获取这个类, 准备用流进行传输 --> 将类加载到内存 --> 加载完毕创建一个class对象 
+2.链接: 验证类是否符合 JVM 规范, 安全性检查 --> 准备 (未static变量分配空间, 设置默认值 -- 静态区) --> 解析
+3.初始化: 根据程序员编码制定的主观计划去初始化类变量和其他资源 
+
+类加载器的分类 -- 存在父子关系(上下级关系) -- 非代码层面 extends 而是 逻辑层面 关系:
+Bootstrap class loader: 启动类加载器, 虚拟机的内置类加载器, 通常表示为null --> 负责加载 JDK 自带类 
+Platform class loader: 平台类加载器, 负责JDK中一些特殊模块 --> 负责加载 lin/modules 内部的类 
+  -> JDK9 之前是 Extension Class Loader 扩展类加载器 --> 负责加载 jre/lib/ext 内部的类 
+Application class loader: 应用程序类加载器 
+自定义类加载器: 上级为 Application 
+
+
+
