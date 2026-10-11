@@ -9,5 +9,5 @@ App.vue 页面路口文件
 main.js 项目入口文件 
 
 manifest.json 应用配置文件, 用于指定应用名称、图标、权限等 
-pages.json    
+pages.json 全局配置文件     
 
