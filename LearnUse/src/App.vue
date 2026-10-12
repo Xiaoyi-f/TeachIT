@@ -460,6 +460,12 @@ $color-warn: #d97757;
 $radius: 10px;
 $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
 
+@font-face {
+  font-family: "MyFont";
+  src: url("path") format("filetype"); // woff2 woff truetype(ttf) opentype(otf)
+  font-display: swap;
+}
+
 /* 基础 */
 #main-wrap {
   font-family: $font-family;
@@ -467,6 +473,7 @@ $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
   background-color: $color-bg;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  // font-family: "MyFont";
 }
 
 .container {

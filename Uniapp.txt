@@ -46,5 +46,14 @@ pages.json 形式 --> pages针对性页面配置优先级更高:
 Uniapp特殊语法:
 <view>等价替代div</view>
 <picker :value="val" :range="options">等价替代select</picker>
+<radio-group @change="radioChange">
+  <label v-for="(item, index) in items" :key="item.name">
+    <radio :value="item.name" :checked="item.checked">{{ item.value }}</radio>
+  </label>
+</radio-group>
+--> items: [ { name: "name", value: "value" } ]
 
-
+<style>
+@import url("absolutePath");
+@import "relativePath";
+</style>
