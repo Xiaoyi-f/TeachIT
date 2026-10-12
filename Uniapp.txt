@@ -1,6 +1,8 @@
 Uniapp是DCloud出品, 基于 Vue 的国产跨前端框架, 写一套代码, 编译打包之后可以发布到多个平台 
 HBuilderX是DCloud出品的一个编辑器开发工具 
 
+Uniapp是基于Vue语法开发的, 核心是Vue, 但不是标准Vue项目, uni-app v1 基于 Vue2, uni-app v3 基于 Vue3 + Vite 
+
 微信开发者平台 --> 微信小程序开发必会 --> 微信开发者工具 
 
 HBuilderX 工具 -> 设置 -> 运行配置 -> 配置微信开发者工具路径 -> 微信开发者工具设置的安全选项开启服务端口 -> Uniapp项目 HBuilderX 运行 -> 运行到小程序模拟器 
@@ -10,4 +12,34 @@ main.js 项目入口文件
 
 manifest.json 应用配置文件, 用于指定应用名称、图标、权限等 
 pages.json 全局配置文件     
+
+一个Vue文件就是一个单文件组件 
+
+pages.json 常见配置项属性:
+navigationBarTextStyle: 'black/white'
+navigationBarTitleText: '导航栏标题内容'
+navigationBarBackgroundColor: '#ddd'
+navigationBarShadow: '导航栏阴影'
+navigationStyle: 'default/custom'
+disableScroll: false 
+backgroundColor: '#ddd'
+backgroundTextStyle: 'dark/light'
+enablePullDownRefresh: false 
+onReachBottomDistance: 50 
+pageOrientation: 'auto/portrait/landscape'
+usingComponents: {
+  "component-name": "component-path"
+}
+
+pages.json 形式 --> pages针对性页面配置优先级更高:
+{
+  "pages": [
+    {
+      "path": "pages/xxx/index",
+      "style": {}
+    }
+  ],
+
+  "globalStyle": {}
+}
 
