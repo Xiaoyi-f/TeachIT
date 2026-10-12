@@ -114,6 +114,25 @@ uni.reLaunch({url})   // 可以跳 tabBar url 可带参 返回键直接退出小
 uni.switchTab({url})  // 只能跳 tabBar url 不能带参 --> switchTab 
 uni.navigateBack({delta})  // delta 代表返回上N页 --> navigateBack 
 
+// uni.request --> 建议手动封装四大请求方法 
+uni.request({
+  url: 'url',    // 允许带手动拼接查询参数, 但是框架不会对这个进行自动编码, 不建议 
+  method: 'GET', // POST PUT DELETE 
+  header: {},
+  timeout: 6000,
+  data: {
+    key: 'value' // 对于 GET data为查询参数, 对于 POST PUT DELETE data为请求体 --> 框架自动编码 
+  },
+  success(res) {
+    console.log(res.data, res.statusCode, res.header, res.cookies)
+  }
+})
+
+// 打包 
+软件: 登录HBuilderX账号 -> 发行 -> 云打包/其他 -> 公共测试证书 -> manifest.json 获取AppID 
+H5: manifest.json web配置 -> 运行的基础路径 -> ./ 
+小程序: 运行到小程序开发工具 -> 上传 -> 版本号和项目备注 -> 开发者平台小程序管理页面 -> 提交审核 
+
 Tip: APP / 小程序 端 不存在 DOM 对象 --> 同时不支持 @onresize @mouseover 等事件 --> @tap 替代 @click 
 Tip: uniapp 中 路由参数太长可能导致截断/丢失等问题 --> 保证几百个字符内 
 Tip: 全局样式与局部样式冲突时, 局部样式将覆盖对应的全局样式
