@@ -73,6 +73,11 @@ str.split("^.*?[^a-z1-9]{1,8}$")
 Wrapper.valueOf(Base val); 
 Wrapper.parseInt(Wrapper val); 
 
+/*
+1.String.valueOf(str); 直接返回传入字符串对象, 不额外new
+2.String.valueOf(val); 底层调用 new String() 在堆上创建 String 对象, 不会放入常量池 
+*/
+
 object.baseValue();
 object.toString(); 
 
