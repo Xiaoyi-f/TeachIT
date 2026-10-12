@@ -39,15 +39,25 @@ pages.json 形式 --> pages针对性页面配置优先级更高:
       "style": {}
     }
   ],
-
+  "tabBar": {
+    "backgroundColor": "#fafafa", // 可以写顶层CSS配置 
+    "list": [
+      {
+        "pagePath": "path",
+        "text": "text",
+        "iconPath": "iconPath", // 未选中图标
+        "selectedIconPath": "selectedIconPath" // 选中图标 
+      }
+    ]
+  },
   "globalStyle": {}
 }
 
 Uniapp特殊语法:
 <view hover-class="css-class" >等价替代div</view>
 <text selectable="false" user-select="false">等价替代span</text> // text组件内只支持text
-<image>等价替代img</image>
-<navigator>等级替代a</navigator>
+<image src="path" mode="aspectFill/aspectFit/widthFix/heightFix">等价替代img</image>
+<navigator url="path" hover-class="css-class" open-type="navigate/redirect/reLaunch/switchTab/navigateBack" delta="N">等级替代a</navigator>
 <picker :value="val" :range="options">等价替代select</picker>
 <radio-group @change="radioChange">
   <label v-for="(item, index) in items" :key="item.name">
@@ -88,6 +98,26 @@ onPullDownRefresh() {
     uni.stopPullDownRefresh()
   }, 1000)
 }
+
+easycom 是 uni-app 内置的组件自动扫描、自动引入、自动注册机制
+--> 默认前提条件: 组件放在 components 目录下 组件名小写短横线规范 
+--> pages.json --> "easycom": { "autoscan": true } 
+--> pages.json --> "easycom": { "custom": {"正则组件名": "正则替换组件路径"}}
+
+// 页面栈 
+用于存储已经打开、还没有销毁的页面; 新页面入栈, 返回就出栈, 栈最多存10个页面 
+
+// 五大导航跳转
+uni.navigateTo({url}) // 不能跳 tabBar url可带查询参数 页面栈最多10层 --> navigate
+uni.redirectTo({url}) // 不能跳 tabBar 旧页面销毁, 返回键不会回到上一页 --> redirect
+uni.reLaunch({url})   // 可以跳 tabBar url 可带参 返回键直接退出小程序 --> reLaunch  
+uni.switchTab({url})  // 只能跳 tabBar url 不能带参 --> switchTab 
+uni.navigateBack({delta})  // delta 代表返回上N页 --> navigateBack 
+
+Tip: APP / 小程序 端 不存在 DOM 对象 --> 同时不支持 @onresize @mouseover 等事件 --> @tap 替代 @click 
+Tip: uniapp 中 路由参数太长可能导致截断/丢失等问题 --> 保证几百个字符内 
+Tip: 全局样式与局部样式冲突时, 局部样式将覆盖对应的全局样式
+Tip: 在pages.json的pages数组中注册的, 整个页面, 页面最外层原生容器就叫page 
 
 
 
