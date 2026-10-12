@@ -133,6 +133,7 @@ uni.request({
 H5: manifest.json web配置 -> 运行的基础路径 -> ./ 
 小程序: 运行到小程序开发工具 -> 上传 -> 版本号和项目备注 -> 开发者平台小程序管理页面 -> 提交审核 
 
+Tip: npx degit dcloudio/uni-preset-vue#vite program-name 
 Tip: APP / 小程序 端 不存在 DOM 对象 --> 同时不支持 @onresize @mouseover 等事件 --> @tap 替代 @click 
 Tip: uniapp 中 路由参数太长可能导致截断/丢失等问题 --> 保证几百个字符内 
 Tip: 全局样式与局部样式冲突时, 局部样式将覆盖对应的全局样式
