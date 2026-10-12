@@ -43,3 +43,8 @@ pages.json 形式 --> pages针对性页面配置优先级更高:
   "globalStyle": {}
 }
 
+Uniapp特殊语法:
+<view>等价替代div</view>
+<picker :value="val" :range="options">等价替代select</picker>
+
+
