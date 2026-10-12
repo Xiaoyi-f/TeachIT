@@ -1,0 +1,173 @@
+@tsconfig/node24等 可能要单独安装 
+--> ctrl shift p --> reset xxx --> 重启相关服务解决卡报错问题 
+Tip: FPS = Frames Per Second --> 每秒帧数: 体现流畅度 
+
+v-bind:attr 
+v-model 
+v-html 
+v-show 
+v-if v-else-if v-else 
+v-for (content, index/key) in target v-bind:key 
+@event 
+{{}}
+
+// 响应式
+ref() obj.value 
+reactive()
+--> 底层均为 $state 
+ref 改动会触发 $state 
+reactive 整体改动 不会触发 $state更新, 局部改动才会触发 $state更新 
+$state 与 持久化插件 pinia-plugin-persistedstate 改动关联 
+
+import { nextTick } from 'vue' 
+await nextTick()
+
+// 对于 非 public 文件夹下的资源, 需要使用URL构建动态链接字符串, public文件夹下的资源不进行打包构造 
+new URL(path, import.meta.url).href 
+
+// VITE 配置 
+import.meta.env.VITE_XXX 
+VITE_XXX 
+
+import { ElMessage } from 'element-plus' 
+import { ElMessageBox } from 'element-plus' 
+
+ElMessage({
+  message: 'message',
+  type: 'info / warning /success / error', 
+  duration: 2000,
+  offset: 56,
+  showClose: true 
+})
+
+ElMessageBox.confirm(
+  'message',
+  'title',
+  {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消', 
+    type: 'info / warning / success / error', 
+    autofocus: false 
+  }
+)
+
+<router-link to="path"></router-link>
+<router-view></router-view>
+
+onMounted(() => {})
+onUnmounted(() => {})
+
+watch(() => stage.name)
+watch(var, (newVar, oldVar) => {}, {
+  deep: true, 
+  immediate: true 
+})
+
+// 有缓存机制, 保持响应态
+computed(() => {})
+const computed = computed({
+  get() { return xx },
+  set(new) { xx = new }
+})
+
+// 插槽 
+<template>
+  <!-- Vue中slot非真实DOM元素 --> 
+  <slot name="slot">默认内容</slot>
+</template>
+
+<Component>
+  <template #slot>插槽内容</template>
+</Component>
+
+// ref 属性 --> 框架自定义实现 
+<input ref="inputRef"> 
+
+const inputRef = ref(null)
+inputRef.value 
+
+Tip: v-for ref 获取对应的列表[]
+
+// 组件通信 
+
+子组件定义协议 
+const props = defineProps({
+  message: String 
+  count: Number 
+})
+
+// 响应对象二次赋值会切断响应, 解决 
+import { toRefs } from 'vue' 
+const { message, count } = toRefs(props) 
+
+// 父组件传递协议数据 
+<Child message="message" count="123" />
+
+// 子组件声明事件 
+const emit = defineEmits(["event"])
+emit("event", "data")
+
+// 父组件定义事件与接收函数 
+@event="backFunc" // data传递到函数参数 
+
+// 防抖与节流 
+import { debounce, throttle } from 'lodash-es' 
+
+const debounceFunc = debounce(() => {}, time)
+const throttleFunc = throttle(() => {}, time)
+
+debounceFunc.cancel()
+throttleFunc.cancel()
+
+Tip: 创建好函数后利用事件监听器实现事件的绑定 
+
+// 路由器与路由 
+import { useRouter, useRoute } from 'vue-router' 
+
+const router = useRouter()
+const route = useRoute()
+
+route.meta
+route.path
+route.params 
+route.query 
+Tip: 当前激活路由的信息 
+
+router.replace({ path: "path", params: {}, query: {} })
+router.push({ path: "path", params: {}, query: {} })
+
+const routes = [
+  {
+    path: 'path/:id?',
+    name: 'name',
+    component: () => import('component'),
+    children: ...childrenRoutes,
+    meta: { key: "value" }
+  }
+]
+
+// 注意所有页面都会执行路由守卫, 刚跳转过来也会再执行一次 
+router.beforeEach((to, from) => { return true })
+router.afterEach((to, from) => { return true })
+
+createApp(App).use(router).use(createPinia()).use(ElementPlus, zIndex: 999).mount("#app")
+
+// store -- pinia 
+import { defineStore, storeToRefs } from 'pinia' 
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' 
+
+pinia.use(piniaPluginPersistedstate)
+
+export const useXxxStore = defineStore('xxx', () => {
+  return { object }
+}, {
+  persist: {
+    key: "keyName", 
+    storage: localStorage
+  }
+})
+
+const xxxStore = useXxxStore()
+const { xxx } = storeToRefs(xxxStore)
+
+
