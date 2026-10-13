@@ -20,7 +20,6 @@ claude 命令进入一般
 npm全局安装(Node.js 18+)
 npm install -g @anthropic-ai/claude-code 
 
-vscode搜索claude code for vscode插件结合使用
 Tip: claude使用项目SKILL不需要压缩SKILL文件夹 
 Claude Code在首次启动时，会生成一个状态文件.claude.json，
 并读取其中的hasCompletedOnboarding字段来判断是否已完成初始化
@@ -51,8 +50,6 @@ Windows: C:\Users\你的用户名\.claude\settings.json
     "ANTHROPIC_AUTH_TOKEN": "key"
   }
 }
-// 以上是使用智谱模型的示例
-// 购买智谱API 资源包之后直接填写好配置 即可
 
 命令行文本颜色含义:
 > 用户输入

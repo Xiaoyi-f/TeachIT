@@ -73,11 +73,11 @@ git push --force
 
 git commit -m '规范说明'
 -->
-feat: 新功能
-fix: 缺陷修复
-refactor: 代码重构
-docs: 文档更新
-test: 测试相关
+feat: new
+fix: bug 
+refactor: code 
+docs: docs 
+test: test 
 
 .gitignore 文件 
 项目中允许git推送文件配置
