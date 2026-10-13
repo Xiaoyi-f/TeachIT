@@ -306,6 +306,7 @@ const level = ref("")
                 </div>
               </div>
 
+              <!-- 表单域 -->
               <fieldset class="fieldset">
                 <legend>前端方向 (radio 单选)</legend>
                 <div class="option-row">
