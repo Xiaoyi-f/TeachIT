@@ -159,3 +159,5 @@ docker desktop 需要 WSL
 ## airportal 推荐空投快传网站 / 软件
 
 ## Bandicam 屏幕录制软件 
+
+## SkillManager 

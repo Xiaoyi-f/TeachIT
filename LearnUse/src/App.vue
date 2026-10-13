@@ -477,6 +477,7 @@ $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
   background-color: $color-bg;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
+  // 开启字体抗锯齿, 让字体更加顺滑
   // font-family: "MyFont";
 }
 
@@ -694,6 +695,7 @@ a {
 .section-alt {
   background: $color-surface;
   border-block: 1px solid $color-line;
+  // border-block -> 控制上下边框 border-inline -> 控制左右边框
 }
 
 .section-head {
