@@ -1,5 +1,8 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref } from 'vue'
 
+const level = ref("")
+</script>
 <template>
   <div id="main-wrap">
     <noscript>
@@ -31,7 +34,7 @@
     <div class="toast" id="toast"></div>
 
     <main>
-      <!-- 01 HERO 封面 -->
+      <!-- HERO 封面 -->
       <section class="hero" id="home">
         <div class="container hero-grid">
           <div>
@@ -82,7 +85,7 @@
         </div>
       </section>
 
-      <!-- 02 语义化 -->
+      <!-- 01 SEMANTIC 语义化 -->
       <section class="section section-alt" id="semantic">
         <div class="container">
           <div class="section-head">
@@ -123,7 +126,7 @@
         </div>
       </section>
 
-      <!-- 03 表格 -->
+      <!-- 02 TABLE 表格 -->
       <section class="section" id="table">
         <div class="container">
           <div class="section-head">
@@ -185,7 +188,7 @@
         </div>
       </section>
 
-      <!-- 04 布局 -->
+      <!-- 03 LAYOUT 布局 -->
       <section class="section section-alt" id="layout">
         <div class="container">
           <div class="section-head">
@@ -220,7 +223,7 @@
         </div>
       </section>
 
-      <!-- 05 卡片栅格 -->
+      <!-- 04 卡片栅格 -->
       <section class="section" id="cases">
         <div class="container">
           <div class="section-head">
@@ -264,7 +267,7 @@
         </div>
       </section>
 
-      <!-- 06 表单 -->
+      <!-- 05 表单 -->
       <section class="section section-alt" id="form">
         <div class="container">
           <div class="section-head">
@@ -295,12 +298,11 @@
                 </div>
                 <div class="form-field">
                   <label for="level">熟练度</label>
-                  <select class="select" id="level" name="level">
-                    <option value="" selected disabled>请选择</option>
-                    <option value="junior">入门</option>
-                    <option value="mid">进阶</option>
-                    <option value="senior">熟练</option>
-                  </select>
+                  <el-select v-model="level" class="select" id="level" name="level" placeholder="请选择">
+                    <el-option value="junior">入门</el-option>
+                    <el-option value="mid">进阶</el-option>
+                    <el-option value="senior">熟练</el-option>
+                  </el-select>
                 </div>
               </div>
 
@@ -338,7 +340,7 @@
         </div>
       </section>
 
-      <!-- 07 媒体 -->
+      <!-- 06 媒体 -->
       <section class="section" id="media">
         <div class="container">
           <div class="section-head">
@@ -370,7 +372,7 @@
         </div>
       </section>
 
-      <!-- 08 动效 -->
+      <!-- 07 动效 -->
       <section class="section section-alt" id="motion">
         <div class="container">
           <div class="section-head">
