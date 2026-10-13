@@ -132,8 +132,8 @@ PR (Pull Request)
 白话: 请拉取我的提交合并到项目 
 --> 
 fork项目
-git remote add origin [mime]
-git remote add upstream [author]
+git remote add origin [mime_url]
+git remote add upstream [author_url]
 clone/pull 到本地 
 git checkout [branch]
 git fetch upstream 
@@ -143,10 +143,9 @@ git push origin master
 到github上选择发起PR 
 
 Tip: 提交PR时候讲解清楚 --> 
-这次改动解决的问题
-主要实现方式和影响范围 
-如何验证, 包括测试命令或截图 
-是否存在需要关注的兼容性问题 
+这次改动解决的问题 problems
+主要实现方式和影响范围 range 
+如何验证, 包括测试命令或截图 cmd and screenshots 
+是否存在需要关注的兼容性问题 platform problems 
 
-Vue项目模板三块横向分屏Vscode插件:
-Vue SFC Split 插件
+
