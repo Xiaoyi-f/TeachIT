@@ -6,6 +6,7 @@
       <div>您的浏览器未启用 JavaScript, 页面部分交互 (菜单、动效、表单反馈) 将不可用</div>
     </noscript>
 
+    <!-- EmmetDemo: element>element*n[class="className"]{$}+element -->
     <header class="site-header">
       <div class="container header-inner">
         <a href="#home" class="brand">
@@ -30,7 +31,7 @@
     <div class="toast" id="toast"></div>
 
     <main>
-      <!-- 01 HERO -->
+      <!-- 01 HERO 封面 -->
       <section class="hero" id="home">
         <div class="container hero-grid">
           <div>
