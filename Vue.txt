@@ -79,14 +79,6 @@ const computed = computed({
   <template #slot>插槽内容</template>
 </Component>
 
-// ref 属性 --> 框架自定义实现 
-<input ref="inputRef"> 
-
-const inputRef = ref(null)
-inputRef.value 
-
-Tip: v-for ref 获取对应的列表[]
-
 // 组件通信 
 
 子组件定义协议 
