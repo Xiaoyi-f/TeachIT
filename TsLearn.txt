@@ -17,7 +17,7 @@ npm install typescript --save-dev
 /// <reference types="vite/client" />
 
 ## 主讲内容
-any unknown void object null undefined / never 
+any unknown void object null undefined / never ...
 unknown: 未知类型, 不可使用属性 --> 强制先typeof类型判断才可使用 
 
 type AND = { name: string } & { age: number } 
