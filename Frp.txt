@@ -2,5 +2,93 @@ Frp = Fast Reverse Proxy 快速反向代理 --> 开源内网穿透反向代理�
 Frp穿透没有流量限制, 流量消耗是自己的云服务器流量, 而Ngroke穿透工具对于免费版有流量限制
 Frp适合长期稳定内网穿透, Ngroke适合临时调试 
 
-Frp上手:
+Frp = FrpS(Frp Server) + FrpC(Frp Client)
+
+Frp工作原理:
+外网用户 -> 云服务器公网IP 运行FrpS -已建的Frp隧道-> 内网电脑 运行FrpC -> SSH / 网站 等服务 
+
+Tip: 内网电脑主动连接云服务器 -> 外网用户访问云服务器某个端口 -> FrpS通过已经建立的隧道, 把请求转发给内网FrpC -> FrpC把请求交给真正的内网服务 
+
+下载 -> 基本使用:
+/opt/frp/frps.toml 
+-->
+bindPort = 7000 
+
+auth.method = "token" 
+auth.token = "THE_TOKEN"
+
+frps -c frps.toml 启动服务端frps 
+配置frps为Linux系统服务 
+/etc/systemd/system/frps.service 
+-->
+[Unit]
+Description=FRP Server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Restart=on-failure
+RestartSec=5s
+ExecStart=/opt/frp/frps -c /opt/frp/frps.toml
+
+[Install]
+WantedBy=multi-user.target
+-->
+sudo systemctl daemon-reload 
+sudo systemctl enable --now frps 
+
+常用命令:
+# 查看状态
+sudo systemctl status frps
+
+# 重启
+sudo systemctl restart frps
+
+# 停止
+sudo systemctl stop frps
+
+# 查看实时日志
+sudo journalctl -u frps -f
+
+
+假设前提与frpc配置:
+云服务器公网 IP：203.0.113.10
+服务端连接端口：7000
+内网电脑已开启 SSH
+SSH 在内网电脑的 22 端口运行
+希望通过云服务器的 6000 端口连接 SSH
+内网运行网站网址 http://127.0.0.1:3000
+
+编辑frpc.toml 
+-->
+serverAddr = "203.0.113.10"
+serverPort = 7000
+
+auth.method = "token"
+auth.token = "请替换成与服务端相同的密码"
+
+[[proxies]]
+name = "home-ssh"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 22
+remotePort = 6000
+
+[[proxies]]
+name = "local-web"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3000
+remotePort = 8080
+-->
+frpc -c frpc.toml 
+
+测试通过Frp连接内网SSH:
+ssh -p 6000 用户名@203.0.113.10 
+
+Tip: 登录使用的是内网电脑的 SSH 用户名和密码或密钥 -> 6000只是公网入口端口, 内网实际 SSH 端口仍是 22 
+
+测试访问网站: http://203.0.113.10:8080
 
