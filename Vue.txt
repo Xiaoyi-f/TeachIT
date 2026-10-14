@@ -34,7 +34,7 @@ import { ElMessageBox } from 'element-plus'
 
 ElMessage({
   message: 'message',
-  type: 'info / warning /success / error', 
+  type: 'info / warning / success / error', 
   duration: 2000,
   offset: 56,
   showClose: true 
