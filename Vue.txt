@@ -59,8 +59,7 @@ onUnmounted(() => {})
 
 watch(() => stage.name)
 watch(var, (newVar, oldVar) => {}, {
-  deep: true, 
-  immediate: true 
+  deep: true 
 })
 
 // 有缓存机制, 保持响应态
