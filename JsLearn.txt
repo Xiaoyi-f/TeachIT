@@ -78,7 +78,7 @@ class User extends Object {
 }
 
 const user = new User("name") 
-`{}` ? : typeof ...var [key] instanceof继承关系/原型链判断 
+`${}` ? : typeof ...var [key] instanceof继承关系/原型链判断 
 
 let [a, b, c] = [1, 2, 3] 
 let {a, b, c} = {a: 1, b: 2, c: 3} 
