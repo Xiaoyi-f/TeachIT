@@ -1,0 +1,229 @@
+MCP(Model Context Protocol) 
+RPC(Remote Procedure Call) 远程过程调用: 通信理念,让一台计算机可以像调用本地函数一样调用另外一台计算机上的函数且支持跨语言
+JSON-RPC: RPC的一种实现,使用JSON作为数据格式,属于应用层消息格式标准
+
+MCP服务端功能: 工具 资源 提示 
+MCP客户端功能: Root Sampling
+
+MCP服务流程:
+1. 客户端Agent -[启动mcpServer]-> mcpServer <-> 建立连接
+2. 客户端Agent -[询问与记录工具信息]-> mcpServer 
+3. 用户输入 -> 客户端Agent -[发送指令/提示词(可调用工具)]-> model 
+-[调用MCP]-> 客户端Agent -[调用MCP]-> mcpServer -[返回结果]-> 
+客户端Agent -> model -> 客户端Agent -> 用户  
+
+SDK:
+PyPI平台 mcp 
+TypeScript @modelcontextprotocol/mcp 
+
+# npm install mcp 
+# npm install mcp[cli]
+mcp version 
+
+三个核心架构层: 应用层 会话层 传输层 
+协议规范: 上层消息固定是 JSON-RPC 2.0,但底层传输不只有 HTTP POST,还有 stdio、可扩展 WebSocket/TCP 等
+
+Agent使用MCP配置格式标准:
+# 本地
+{
+  "mcpServers": {
+    "mainMCP": {
+      "disabled": false,
+      "timeout": 60, 
+      "command": "python",
+      "args": [
+        "mainMCP.py"
+      ],
+      "transportType": "stdio", // 本地
+      "cwd": "path/dir"
+    }
+  }
+}
+
+# 远程 底层协议规范: HTTP POST + JSON-RPC2.0
+{
+  "mcpServers": {
+    "mainMCP": {
+      "disabled": false,
+      "timeout": 60,
+      "transportType": "streamable_http", // 远程
+      "url": "http://xxx.xx/mcp"
+    }
+  }
+}
+
+# 若Agent程序不支持自动管理MCP客户端则需要手动写 MCP Client 不能单纯依赖配置
+
+
+# stdio模式
+"""
+若使用streamable_http模式
+将StdioClientTransport替换为
+from mcp.client.streamable_http import streamable_http_client 
+
+async with streamable_http_client(url="http://xxx.xx/api/mcp") as transport:
+"""
+import asyncio 
+from mcp import ClientSession, StdioClientTransport 
+from openai import AsyncOpenAI
+
+CMD = ["cmd_first", "cmd_second"]
+
+LLM_CLIENT = AsyncOpenAI(api_key="api_key", base_url="base_url")
+MODEL_NAME = "model_name"
+
+async def main():
+    transport = StdioClientTransport(command=CMD) # 建立传输通道 
+    async with ClientSession(transport) as session: # 创建Client会话 --> 子进程 
+        await session.initialize() 
+        print("MCP Client 与 xxx MCP Server 建立连接成功!")
+
+        tools_resp = await session.list_tools() # 查询所有可用工具
+        mcp_tools = tools_resp.tools
+
+        # 把MCP工具结构转换为LLM能够识别的Function Calling 格式 
+        llm_tools = []
+        for tool in mcp_tools:
+            llm_tools.append({
+              "type": "function",
+              "function": {
+                  "name": tool.name,
+                  "description": tool.description,
+                  "parameters": tool.inputSchema 
+              }
+            })
+
+        # 发起对话,把工具清单交给LLM 
+        messages = [{
+          "role": "user", "content": "question"
+        }]
+
+        resp = await LLM_CLIENT.chat.completions.create(
+          model=MODEL_NAME,
+          messages=messages,
+          tools=llm_tools
+        )
+
+        msg = resp.choices[0].message 
+
+        if msg.tool_calls:
+            for tool_call in msg.tool_calls:
+                func_name = tool_call.function.name 
+                func_args = eval(tool_call.function.arguments)
+
+                print(f"LLM 请求调用工具: {func_name} ({func_args})")
+
+                # MCP Client 调用 MCP Server 工具函数 
+                tool_result = await session.call_tool(name=func_name, arguments=func_args)
+
+                messages.append(msg.model_dump())
+                messages.append({
+                  "role": "tool",
+                  "tool_call_id": tool_call.id,
+                  "content": "\n".join([cont.text for cont in tool_result.content])
+                })
+
+                # 再次请求 LLM 结合工具返回内容生成最终回答 
+                final_resp = await LLM_CLIENT.chat.completions.create(
+                  model=MODEL_NAME,
+                  messages=messages 
+                )
+
+                print(f"\n最终回答: {final_resp.choices[0].message.content}")
+        else: 
+            print(f"LLM 回复: {msg.content}")        
+ 
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+# 实现一个简短查询天气预报或天气预警的mcpServer
+import httpx 
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("weather", log_level="ERROR")
+NWS_API_BASE =  "https://api.weather.gov"
+USER_AGENT = "weather-app/1.0" 
+
+async def make_nws_request(url):
+    """Make a request to the NWS API with proper error handling."""
+    headers = {
+      "User-Agent": USER_AGENT,
+      "Accept": "application/geo+json"
+    }
+    async with httpx.AsyncClient() as client:
+        try: 
+            response = await client.get(url, headers=headers, timeout=30.0)
+            response.raise_for_status() # 自动检测状态码,若表示错误则抛出异常
+            return response.json()
+        except Exception:
+            return None
+
+def format_alert(feature):
+    """Format an alert feature into a readable string."""
+    props = feature["properties"]
+    return f"""
+    Event: {props.get("event", "Unknown")}
+    Area: {props.get("areaDesc", "Unknown")}
+    Severity: {props.get("severity", "Unknown")}
+    Description: {props.get("description", "No description available")}
+    Instructions: {props.get("instruction", "No specific instructions provided")}
+    """
+
+@mcp.tool()
+async def get_alerts(state):
+    """
+    Get weather alerts for a US state.
+    Args:
+        state (str): Two-letter US state code (eg: CA, NY)
+    """
+    url = f"{NWS_API_BASE}/alerts/active/area/{state}"
+    data = await make_nws_request(url)
+    
+    if not data or "features" not in data:
+        return "Unable to fetch alerts or no alerts found."
+
+    if not data["features"]:
+        return "No active alerts found for this state."
+
+    alerts = [format_alert(feature) for feature in data["features"]]
+    return "\n---\n".join(alerts)
+
+@mcp.tool()
+async def get_forecast(latitude, longitude):
+    """
+    Get a weather forecast for a location.
+    Args:
+        latitude (float): Latitude of the location
+        longitude (float): Longitude of the location
+    """
+    points_url = f"{NWS_API_BASE}/points/{latitude},{longitude}"
+    points_data = await make_nws_request(points_url)
+
+    if not points_data:
+        return "Unable to fetch weather forecast for this location."
+
+    forecast_url = points_data["properties"]["forecast"]
+    forecast_data = await make_nws_request(forecast_url)
+
+    if not forecast_data:
+        return "Unable to fetch detailed forecast."
+
+    periods = forecast_data["properties"]["periods"]
+    forecasts = []
+    for period in periods[:5]:
+        forecast = f"""
+        {period["name"]}:
+        Temperature: {period["temperature"]} degree(s) {period["temperatureUnit"]}
+        Wind: {period["windSpeed"]} {period["windDirection"]}
+        Forecast: {period["detailedForecast"]}
+        """
+        forecasts.append(forecast)
+      
+      return "\n---\n".join(forecasts)
+
+if __name__ == "__main__":
+    # mcp 封装异步 transport=" stdio / streamable_http --> host='xxx' port='xxx' path='/api/mcp' "
+    mcp.run(transport="stdio")
+
+

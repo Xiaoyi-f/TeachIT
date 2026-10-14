@@ -1,0 +1,86 @@
+# https://mineru.net/apiManage/docs
+# 文件大小限制在200MB以内 页面数量限制在200页以内 批量解析单次申请链接限制在50条以内
+from dotenv import load_dotenv
+from langchain_core.tools import tool
+import requests
+import os
+
+load_dotenv()
+MAIN_URL = os.getenv("MINERU_BASE_URL")
+MAIN_TOKEN = os.getenv("MINERU_API_KEY")
+BACK_TOKEN = os.getenv("MINERU_API_BACK_KEY")
+
+token = MAIN_TOKEN
+header = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {token}"
+}
+
+"""单文件上传"""
+@tool 
+def single_parse(file_url):
+    url = MAIN_URL + "/extract/task"
+    
+    single_data = {
+        "url": file_url,
+        "model_version": "vlm"
+    }
+    
+    res = requests.post(url,headers=header,json=single_data)
+    print(res.status_code)
+    print(res.json())
+    print(res.json()["data"]) # data.task_id
+
+
+"""单文件上传任务执行结果查看"""
+@tool 
+def single_result(single_task_id):
+    task_id = single_task_id
+    url = MAIN_URL + f"/extract/task/{task_id}"
+    
+    res = requests.get(url, headers=header)
+    print(res.status_code)
+    print(res.json())
+    print(res.json()["data"])
+    # data.full_zip_url
+    # data.state --> failed(data.err_msg) / pending / running / done
+
+
+"""批量文件上传"""
+@tool 
+def batch_parse(files_obj):
+    url = MAIN_URL + "/extract/task/batch"
+    
+    # [{"url": "https://cdn-mineru.openxlab.org.cn/demo/example.pdf", "data_id": "abcd"}]
+    batch_data = {
+        "files": files_obj,
+        "model_version": "vlm"
+    }
+    try:
+        response = requests.post(url, headers=header, json=batch_data)
+        if response.status_code == 200:
+            result = response.json()
+            print(f'response success.\n result:\n{result}')
+            if result["code"] == 0:
+                batch_id = result["data"]["batch_id"]
+                print(f'batch_id:{batch_id}')
+            else:
+                print(f'submit task failed,reason:{result["msg"]}')
+        else:
+            print('response not success. status:{} ,result:{}'.format(response.status_code, response))
+    except Exception as err:
+        print(err)
+
+
+"""批量文件上传任务执行结果查看"""
+@tool 
+def batch_result(files_batch_id):
+    batch_id = files_batch_id
+    url = MAIN_URL + f"/extract-results/batch/{batch_id}"
+    
+    res = requests.get(url, headers=header)
+    print(res.status_code)
+    print(res.json())
+    print(res.json()["data"])
+    # data.extract_result --> [{file_name: xx, state: xx, err_msg: xx, full_zip_url: xx}]
+    

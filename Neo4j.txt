@@ -1,0 +1,211 @@
+neo4j是一种NoSQL无表数据库,基于图论,处理实体-关系的图形数据结构速度快
+知识图谱是一种语义网络: LPG 和 RDF 
+默认就自带一个 neo4j 库，服务一启动就存在
+LPG: 标签属性图
+RDF: 资源描述图
+
+Graph RAG: 传统向量 RAG 的升级范式,核心是把原始文档抽取为 实体-关系 知识图谱,融合「向量语义检索 + 图结构遍历推理」双能力给大模型提供上下文
+
+Tip: cypher文件 类 sql文件 实现Schema代码 
+
+构建元素: 
+节点
+属性
+关系
+标签
+
+数据浏览器(安装Neo4j之后,可以访问Neo4j的数据浏览器)
+
+Neo4j使用java和scala实现,主要依赖java环境
+5.x系列中5.26LTS是最后一个支持java17版本的
+https://dist.neo4j.org/neo4j-community-5.26.27-windows.zip
+之后版本需要java21以及以上版本
+AuraDB 云服务版Neo4j 
+
+基本使用
+neo4j 提示指令 
+neo4j console 控制台启动服务
+// HTTP enabled on localhost:7474 表示可以从对应的域名范文数据浏览器 
+
+// 执行cypher脚本
+cypher-shell -u <user> -d <db_name> -f <xxx.cypher> 
+
+https://neo4j.ac.cn/docs/cypher-manual/current/introduction/
+Cypher neo4j专属的一个查询语言 简称CQL
+eg: (fox)<-[:KNOWS]-(周瑜)-[:KNOWS]->(诸葛亮)-[:KNOWS]->(fox)
+eg: (elementVar:Tag {key: "value"}) 
+
+基本讲解:
+一串节点+关系连起来的链条称为路径
+路径中关系数量表示路径的长度
+Cypher中字符串使用双引号或单引号表示都可以
+变量可以给结点/关系取名字,用于引用属性数据,非强制需要 
+elementVar: 结点变量 
+relationVar: 关系变量
+:LabelName 表示标签 eg: node:LabelName1:LabelName2 表示node同时拥有两个标签
+:RELATION_TYPE 表示节点之间的关系类型 eg: (fox)-[:KNOWS]->(周瑜)
+- 表示无向关系 eg: -[e:knows]- 带有属性和关系类型的无向关系
+--> 或 <-- 表示有向关系 中间可插入关系类型 没有关系类型则任何关系都会匹配到相关节点
+{key: value} 字典表示对节点或关系的描述即属性 不带空格/中文/中横线的键名不用引号,否则使用反引号
+AS 别名 词若无空格/中文/中横线则不用引号否则使用反引号
+element: 冒号前面的一般表示变量  
+() 表示节点
+
+
+基本类型(支持嵌套):
+字符串
+整数
+浮点数
+布尔值
+[] 列表
+{} 字典
+
+
+length(字符串/数组/路径) 
+split(字符串, 分隔符)
+
+聚合函数:
+collect() 多值合并为列表
+count() 匹配统计到的条目数量
+sum()
+avg()
+min()
+max()
+
+// 约束 一般先写好约束再进行实际的创建
+CREATE CONSTRAINT ON (node) ASSERT node.propertyName IS [UNIQUE / NOT NULL]
+
+MATCH (node) RETURN nodeVar 
+MATCH (node) OPTIONAL MATCH (node) RETURN nodeVar1, nodeVar2 相当于SQL的LEFT JOIN,匹配不到返回null
+MATCH (node) WHERE nodeVar.property = "value" RETURN nodeVar 条件查询 
+
+条件符: 
+= > < != >= <= BETWEEN AND OR IN IS NOT NULL 
+[STARTS WITH / ENDS WITH / CONTAINS]  
+exists(路径) 判断某个关系是否存在 
+=~ "^.*?[^0-9]+.{n, m}$" // 正则匹配
+all() any() 
+
+CREATE (node)
+
+MERGE 整条语句是原子操作,在并发环境下使用时要确保唯一性约束
+MERGE (node) RETURN nodeVar 若模式存在则匹配,不存在则创建 
+
+// +=只能用来表示节点属性的增加/合并 ON 模式匹配断言 
+MATCH (node) ON CREATE SET node += {property: value} 
+MATCH (node) ON MATCH SET node += {property: value}   
+
+MATCH (node) SET element.property = value 
+
+// 多重匹配有笛卡尔积效应
+MATCH (node1)
+MATCH (node2)
+
+SET // 赋值使用
+
+// 删除节点必须要先删除所有关系,单纯删除不用DETACH关键词
+MATCH (node) DETACH DELETE nodeVar 删除节点关联所有关系并删除节点
+
+MATCH (node) REMOVE nodeVar.LabelName 
+MATCH (node) REMOVE nodeVar.propertyName
+
+MATCH (node) RETURN nodeVar, nodeVar.propertyName, nodeVar.property + value AS 
+
+// WITH将数据操作后往下传递使用
+MATCH (node) WITH nodeVar, count(nodeVar) AS count  WHERE count > val MATCH (node) RETURN nodeVar 
+MATCH (node) WITH nodeVar ORDER BY nodeVar.property [DESC / ASC] SKIP n LIMIT m RETURN nodeVar
+
+// 展开列表依次使用,批量创建节点
+UNWIND ["Alice", "Bob"] AS name
+CREATE (:Person {name: name})
+
+// 规范CSV文件第一行为表头字段
+// CSV文件常用 UTF-8无BOM 编码
+// row.attr attr为CSV文件中定义的字段
+LOAD CSV WITH HEADERS FROM "file://path" AS row 
+MERGE (node) // 其中使用CSV字段,给每一行数据都操作 
+
+// CSV中所有单元格读出来默认都是字符串,要转类型
+toBoolean() // 可以用于字符串/数字 不可用于null 或 利用条件判断转布尔类型
+toInteger()
+toFloat()
+date()
+datetime()
+toString()
+
+CREATE INDEX ON :Label(propertyName1, propertyName2, ...)
+SHOW INDEXES 
+DROP INDEX ON :Label(propertyName)
+
+CREATE DATABASE dbName
+:USE dbName 
+DROP DATABASE dbName 
+
+// 事务(ACID)
+
+:BEGIN 
+// 行为
+:ROLLBACK
+// 行为
+:COMMIT 
+
+// neo4j 支持 GDS --> 支持实现 Louvain社区算法 
+// 找到 neo4j-community-5.26.27 对应的 GDS-2.13.x 下载 
+// 投影概念: 算法不能直接在硬盘的原数据上跑（太慢），必须先复制一份到内存（电脑内存条）里，这个复制动作就是投影
+// 下载好 GDS 之后 将 jar文件 复制粘贴到 neo4j安装目录的 plugins 文件夹 重启neo4j
+// docker容器内挂载插件  
+
+# pip install graphdatascience 下载GDS驱动 不同于 neo4j驱动 
+from graphdatascience import GraphDataScience 
+
+gds = GraphDataScience("bolt://localhost:7687", auth=("neo4j", "password"))
+
+# 投影 res['nodeCount'] 获取结点数 res['relationshipCount'] 获取关系数
+G, res = gds.graph.project("graph", "*", "*", {"orientation": "UNDIRECTED"}) # 名称 结点 关系 强行转无向图
+
+# 执行 Louvain社区算法 并且 将数据写回neo4j
+result_write = gds.louvain.write(G, writeProperty="community_id")
+# result_write["communityCount"] 获取发现社区数
+# result_write["modularity"] 获取模块度 --> 越接近1则分得越好  
+
+G.drop() # 释放内存
+
+
+# pip install neo4j
+from neo4j import GraphDatabase 
+
+URI = "neo4j://localhost:7687"
+AUTH = ("neo4j", "password")
+
+# 禁止使用f字符串
+def transaction(tx):
+    result = tx.run("CQL $var", var="var")
+    """
+    records = result.data()
+    summary = result.consume()
+    """
+    return "完成" 
+
+with GraphDatabase.driver(URI, auth=AUTH) as driver:
+    """
+    return (records, summary, keys)
+    records: 实际查询到的数据 [Record, ...][index].字段名称
+    summary: 元信息
+    keys: RETURN 后的字段 ["node", ...]
+    """
+    records, summary, keys = driver.execute_query(
+      """
+      CQL $var 
+      """,
+      var="var",
+      database="database_name"
+    )
+    
+    with driver.session(database="database_name") as session:
+        # 只读查询
+        read_result = session.execute_read(transaction)
+        # 读写查询
+        write_result = session.execute_write(transaction)
+        print(result)
+
+

@@ -1,0 +1,58 @@
+# pip install matplotlib 
+
+import matplotlib.pyplot as plt 
+
+plt.style.use("ggplot") # 使用类Excel风格
+# plt.style.use("seaborn-v0_8") # 使用小清新风格 pip install seaborn 
+# plt.style.use("dark_background") # 使用酷炫黑背景风格 
+
+# 设置中文字体，防止中文显示为方块
+plt.rcParams['font.sans-serif'] = ['SimHei']
+
+# 坐标轴上的负号，不要用 Unicode 的减号，改用 ASCII 的连字符 -
+plt.rcParams['axes.unicode_minus'] = False
+
+# figure 画布 
+# axes 坐标系 
+
+w, h = 8, 6 
+# 创建画布和坐标系
+figure, axes = plt.subplots(figsize=(w, h)) # 单位: 英寸
+
+x = [1, 2, 3, 4, 5]
+y = [2, 4, 6, 8, 10]
+height = [5, 3, 7, 2, 6]
+
+"""绘折现/曲线图 x y 传递数据列表"""
+axes.plot(x, y, label="图例名字", color="red", linestyle="- -", linewidth=2) # --表示虚线 -表示实线 'None'表示不画线只画点 线宽单位: 点 
+
+# 装饰细节
+axes.set_title("标题", fontsize=16) 
+axes.set_xlabel("X轴", fontsize=12)
+axes.set_ylabel("Y轴", fontsize=12)
+axes.legend() # 显示图例 
+
+axes.grid(True, linestyle="dotted", alpha=0.6) # alpha 透明度 --表示虚线 -表示实线 dotted表示点线 
+axes.set_xlim([0, 10]) # 固定坐标轴范围 
+
+"""绘柱状图 x height 传递数据列表"""
+bars = axes.bar(x, height, width=0.5, color=["red", "blue"]) # widht表述柱宽度 color表示各个柱子颜色 
+
+# 柱子上方显示数值 
+for bar in bars:
+    height = bar.get_height()
+    axes.text(bar.get_x() + bar.get_width() / 2, height + 0.5, f"{height}", ha="center", va="bottom")
+
+"""绘散点图 x y 传递数据列表"""
+axes.scatter(x, y, s=50, c="red", alpha=0.5) # s表示散点大小 c表示颜色 alpha表示透明度
+
+# 多子图 --> 从左到右 从上到下 
+axes[0, 0].plot(x, y)
+axes[0, 1].scatter(x, y)
+axes[1, 0].bar(x, height)
+
+plt.tight_layout() # 自动调整排版 
+plt.show() # 展示 
+plt.savefig("xxx.png", dpi=300) # 保存高清图 dpi表示图片清晰度 
+
+

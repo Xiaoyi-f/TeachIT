@@ -1,0 +1,146 @@
+# Excel python版 数据清洗
+# pip install pandas
+# 若还需要处理Excel pip install openpyxl
+import pandas as pd
+
+# 导入数据表
+df = pd.read_excel('Excel文件名.xlsx')
+
+# 查看数据概况
+df.head()  # 方法中可以传递整数参数 n，返回数据的头部 n 行
+df.tail()  # 方法中可以传递整数参数 n，返回数据的尾部 n 行
+df.shape  # 返回数据表的行数和列数：(行数, 列数)
+df.columns  # 返回数据表的列名
+df.dtypes  # 返回数据表所有列的数据类型
+df['key'].dtype  # 返回对应列的数据类型，object 表示文本，int 表示整数
+df.describe()  # 返回数据表的描述性统计信息，主要用于数字列
+df.info()  # 返回数据表的信息
+
+# 取出列数据
+skill = df['技能']
+subdf = df[['技能', '技能等级']]
+
+# 筛选数据
+python_jobs = df[
+    df['技能要求'].str.contains('Python', na=False)
+]  # na=False 避免空值返回 NaN
+
+high_pay = df[
+    pd.to_numeric(
+        df['薪资待遇'].str.extract(r'(\d+)', expand=False),
+        errors='coerce'
+    ) > 20
+]
+
+condition1 = df['技能要求'].str.contains('Python', na=False)
+condition2 = df['技能要求'].str.contains('Flask', na=False)
+result = df[condition1 & condition2]  # 可以使用 &、|、~
+
+# 去重
+df_unique = df.drop_duplicates(
+    subset=['岗位名称']
+)  # 按“岗位名称”去重，只保留第一次出现的
+
+df_unique = df.drop_duplicates(
+    subset=['岗位名称', '公司']
+)  # 按多列去重：岗位名称 + 公司
+
+# 查看去重后的行数
+print(f"去重前: {len(df)} 条")
+print(f"去重后: {len(df_unique)} 条")
+
+# 创建数据表
+df = pd.DataFrame(
+    {
+        '列名1': ['行1', '行2', '行3', '行4', '行5', '行6'],
+        '列名2': pd.date_range(
+            '20260619',
+            periods=6,
+            freq='D'
+        )  # nD(日)、nH(时)、nmin(分)、ns(秒)、nW(周)
+    },
+    columns=['列名1', '列名2']
+)
+
+# 处理空值
+print(df.isnull().sum())
+
+# 输出示例：
+# 岗位名称     0    # 有 0 行岗位名称为空
+# 公司         5    # 有 5 行公司为空
+# 技能要求    23    # 有 23 行技能要求为空
+
+# 清除技能要求为空的行
+df_clean = df.dropna(subset=['技能要求'])
+
+# 如果公司为空，填充为“未知”
+df['公司'] = df['公司'].fillna('未知')
+
+# 删除所有存在空值的行
+df_clean = df.dropna()
+
+# 新增列，apply 函数比较灵活
+def extract_first_skill(skill_str):
+    if pd.isna(skill_str):
+        return '未知'
+
+    return skill_str.split(',')[0]
+
+
+df['核心技能'] = df['技能要求'].apply(extract_first_skill)
+
+# 分组统计
+avg_salary = df.groupby('岗位名称')['薪资'].mean()  # 计算各岗位的平均薪资
+job_count = df['岗位名称'].value_counts()  # 统计每个岗位的出现次数
+
+# 合并数据
+# 读取三个网站的 CSV
+boss_df = pd.read_csv('boss.csv')
+zhilian_df = pd.read_csv('zhilian.csv')
+liepin_df = pd.read_csv('liepin.csv')
+
+# 纵向拼接，行数增加
+all_jobs = pd.concat(
+    [boss_df, zhilian_df, liepin_df],
+    ignore_index=True
+)  # ignore_index=True 表示不保留原来的行号
+
+print(f"总共有 {len(all_jobs)} 条数据")
+
+# 给岗位添加“行业分类”
+industry_df = pd.read_csv('岗位分类.csv')
+
+merged = pd.merge(
+    all_jobs,       # 左表
+    industry_df,    # 右表
+    on='岗位名称',
+    how='left'
+)  # 左连接：保留左表所有行，右表匹配不到的数据填充为 NaN
+
+# 导出数据
+
+# 保存为 CSV
+df_clean.to_csv(
+    '清洗后的招聘数据.csv',
+    index=False
+)  # index=False 表示不保存行号
+
+# 保存为 Excel
+df_clean.to_excel(
+    '清洗后的招聘数据.xlsx',
+    index=False
+)
+
+# 保存为 JSON
+df_clean.to_json(
+    '清洗后的数据.json',
+    orient='records',
+    force_ascii=False,
+    indent=4
+)
+
+# orient='records'：字典列表形式
+# orient='index'：索引键字典
+# orient='columns'：列名键字典
+# orient='split'：包含列名、索引和数据的分割字典
+

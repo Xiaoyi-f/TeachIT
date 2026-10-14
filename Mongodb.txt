@@ -1,0 +1,15 @@
+MongoDB 属于 NoSQL 数据库
+JSON + 二进制数据支持 = BSON (Binary JSON)
+BSON 是 MongoDB 数据存储基本单元 
+wt 文件 MongoDB 默认数据存储引擎(WiredTiger) 在磁盘上存储数据的物理文件 
+
+多个BSON文档进行分页存放, 通过变种B+树索引逻辑实现索引
+MongoDB 以写时复制方式进行数据更新, 而与MySQL不同(更新时给短暂锁, 期间其他线程无法使用), 期间其他线程可以使用旧数据
+通过LRU方式缓存最近使用数据提高响应速度, 相关变动关联JournalBuffer进行文件缓存, 最后触发Checkpoint更新到磁盘, 确保数据不易失
+Tip: Checkpoint 即 把内存里 "脏数据(被修改过但还没落盘的数据)" 批量刷写到磁盘上的物理数据文件(.wt文件)里，并记录一个 "安全存盘点" 的过程
+
+类主副节点(副本)方式安全备份, 提高可用性 
+Config Server 配置管理分片、数据范围
+WiredTiger层 -> Server层[连接管理、解析器、优化器、执行器]
+
+

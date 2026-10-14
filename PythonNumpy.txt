@@ -1,0 +1,303 @@
+"""
+NumPy 常用操作整理
+运行前请确保已安装 numpy: pip install numpy
+外部 CSV 文件示例不存在时会自动跳过。
+"""
+
+import numpy as np
+import numpy.linalg as la
+
+
+# 一、创建 ndarray
+# 从列表创建
+data1 = [1, 3, 5, 7]
+w1 = np.array(data1)
+print("从列表创建 w1：", w1)          # [1 3 5 7]
+
+# 从元组创建
+data2 = (2, 4, 6, 8)
+w2 = np.array(data2)
+print("从元组创建 w2：", w2)          # [2 4 6 8]
+
+# 多维数组（嵌套列表）
+data3 = [[1, 2, 3, 4], [5, 6, 7, 8]]
+w3 = np.array(data3)
+print("多维数组 w3：")
+print(w3)
+# [[1 2 3 4]
+#  [5 6 7 8]]
+
+# 格式：np.arange([start,] stop[, step])
+var = np.arange(1, 10, 2)   # 起始1，结束9（不含10），步长2
+print("np.arange(1, 10, 2)：", var)   # [1 3 5 7 9]
+
+# 格式：np.logspace(start, stop, num, endpoint=True, base=10.0) endpoint=True 表示包含终点
+# start, stop 表示 base 的幂，默认 base=10
+var = np.logspace(0, 1, 5)   # 从 10^0 到 10^1，共5个元素
+print("np.logspace(0, 1, 5)：", var) # [0, 0.25, 0.5, 0.75, 1.0] 然后分别计算 10^n 
+# [ 1.          1.77827941  3.16227766  5.62341325 10.        ]
+
+arr = np.linspace(0, 4 * np.pi, 20)
+print("等差数列:", arr) 
+
+arr.tolist() # 转为列表 
+
+# 单位为弧度 
+sin_value = np.sin(arr)
+cos_value = np.cos(arr) 
+tan_value = np.tan(arr)
+
+# 二、np.loadtxt 读取文本/CSV
+# 格式：
+# np.loadtxt(fname, dtype=float, comments='#', delimiter=None,
+#            converters=None, skiprows=0, usecols=None, unpack=False, encoding=None)
+#
+# fname      文件名（相对或绝对路径）
+# dtype      读取后的数据类型，默认 float
+# comments   跳过以该字符开头的行（默认 #）
+# delimiter  分隔符（如逗号 ,）
+# converters 对指定列进行预处理（字典形式）
+# skiprows   跳过的行数（通常跳过表头）
+# usecols    指定读取的列索引（元组或列表）
+# unpack     若为 True，转置输出（每列作为一个向量）
+# encoding   文件编码
+
+# 简单读取示例：需要当前目录有 ShanghaiPM2.5.csv
+try:
+    data_pm = np.loadtxt("ShanghaiPM2.5.csv", delimiter=",", skiprows=1, dtype=float)
+    print("ShanghaiPM2.5.csv 读取结果：\n", data_pm)
+except Exception as e:
+    print("跳过 ShanghaiPM2.5.csv 读取示例：", e)
+
+# 高级读取示例：需要当前目录有 china_nCov.csv
+def isNone(x):
+    # 转换器示例：这里简单返回原值；实际可按需求把空值/异常值转成 np.nan 等 --> np.pi 内置pi 
+    return x
+
+params = dict(
+    fname='china_nCov.csv',
+    delimiter=',',
+    skiprows=1,
+    dtype=str,  # 原 np.str 已弃用，推荐 str
+    usecols=(4, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18), # 只读取的列,默认首列是0号
+    converters={
+        # 实际读取前先执行isNone函数 
+        7: isNone, 8: isNone, 9: isNone, 10: isNone,
+        14: isNone, 15: isNone, 16: isNone, 17: isNone
+    }
+)
+
+try:
+    data_covid = np.loadtxt(**params)
+    print("china_nCov.csv 读取结果：\n", data_covid)
+except Exception as e:
+    print("跳过 china_nCov.csv 读取示例：", e)
+
+
+# 四、数组属性与形状操作
+# shape 形状（行数，列数）
+# dtype 元素数据类型
+# ndim 维度数
+# size 元素总个数
+# reshape(m,n) 更改形状为 m×n
+# T 转置（行列互换）
+
+data = np.array([[1, 2, 3], [4, 5, 6]])
+print("data：\n", data)
+print("shape：", data.shape)   # (2, 3)
+print("dtype：", data.dtype)   # int64，平台可能不同
+print("ndim：", data.ndim)     # 2
+print("size：", data.size)     # 6
+print("T 转置：\n", data.T)    # [[1 4], [2 5], [3 6]]
+
+print("reshape(3, 2)：\n", data.reshape(3, 2))
+
+
+
+# 五、索引与切片
+a = np.array([[1, 2, 3, 4, 5, 6],
+              [7, 8, 9, 10, 11, 12],
+              [13, 14, 15, 16, 17, 18],
+              [19, 20, 21, 22, 23, 24],
+              [25, 26, 27, 28, 29, 30],
+              [31, 32, 33, 34, 35, 36]])
+
+# 获取第1行（两种写法）
+print("a[0] 第1行：", a[0])          # 或 a[-6]
+
+# 获取第3~5行（索引2,3,4）
+print("a[[2,3,4]] 第3~5行：\n", a[[2, 3, 4]])
+
+# 获取第4行第5列（索引3,4）
+print("a[3,4] 第4行第5列：", a[3, 4])
+
+# 获取前3行所有列
+print("a[0:3, :] 前3行所有列：\n", a[0:3, :])   # 或 a[:3, :] 或 a[:3,]
+
+# 获取第2~5列（索引1到4）
+print("a[:, 1:5] 第2~5列：\n", a[:, 1:5])
+
+# 获取第2~4行（索引1~3）且第3~5列（索引2~4）
+print("a[1:4, 2:5]：\n", a[1:4, 2:5])
+
+
+
+# 六、去重与合并
+# 删除重复的行（axis=0）
+data_dup = np.array([[1, 2], [1, 2], [3, 4], [3, 4]])
+print("np.unique(data_dup, axis=0) 删除重复行：\n",
+      np.unique(data_dup, axis=0))
+
+# 删除重复的列（axis=1）
+print("np.unique(data_dup, axis=1) 删除重复列：\n",
+      np.unique(data_dup, axis=1))
+
+# 垂直合并（按行堆叠）
+# 方法：np.vstack((data1, data2)) 或旧写法 np.row_stack((data1, data2))
+data1 = np.array([1, 3, 5, 7])
+data2 = np.array([2, 4, 6, 8])
+
+data_combined = np.vstack((data1, data2))
+print("np.vstack 垂直合并：\n", data_combined)
+
+# 水平合并（按列堆叠）
+# 方法：np.hstack((data1, data2)) 或 np.column_stack((data1, data2))
+data_combined = np.hstack((data1, data2))
+print("np.hstack 水平合并：\n", data_combined)
+
+data_combined = np.column_stack((data1, data2))
+print("np.column_stack 按列堆叠：\n", data_combined)
+
+
+
+# 七、数据查找（np.where）
+data_where = np.array([
+    ['02-15-2020', 'A'],
+    ['02-16-2020', 'B'],
+    ['02-16-2020', 'C'],
+    ['02-17-2020', 'D']
+])
+
+# 支持布尔查找
+mask = sin_value > 0.5 
+selected = arr[mask]
+
+# 查找满足条件的行索引
+indices = np.where(data_where == '02-16-2020')[0]  # 返回行索引数组
+timedata = data_where[indices]                      # 提取这些行
+
+print("满足条件的行索引：", indices)
+print("提取这些行：\n", timedata)
+
+
+# 八、科学计算（numpy.linalg 模块）
+# 常用函数说明：
+# det(ndarray)       计算行列式
+# eig(ndarray)       计算方阵的特征值和特征向量
+# inv(ndarray)       计算方阵的逆矩阵
+# pinv(ndarray)      计算伪逆
+# qr(ndarray)        QR 分解
+# svd(ndarray)       奇异值分解（SVD）
+# solve(A, b)        解线性方程组 Ax = b（A 为方阵）
+# lstsq(A, b)        计算 Ax = b 的最小二乘解
+
+A = np.array([[1, 2], [3, 4]])
+
+det_A = la.det(A)             # 行列式
+eigvals, eigvecs = la.eig(A)  # 特征值和特征向量
+inv_A = la.inv(A)             # 逆矩阵
+
+print("A 的行列式：", det_A)
+print("A 的特征值：", eigvals)
+print("A 的特征向量：\n", eigvecs)
+print("A 的逆矩阵：\n", inv_A)
+
+
+
+# 九、补充点
+# 1. 布尔索引（比 where 更常用的条件筛选）
+arr = np.arange(12).reshape(3, 4)
+print("arr：\n", arr)
+# [[ 0  1  2  3]
+#  [ 4  5  6  7]
+#  [ 8  9 10 11]]
+
+# 筛选出所有大于 5 的元素（一维结果）
+print("arr[arr > 5]：", arr[arr > 5])      # [ 6  7  8  9 10 11]
+
+# 多条件筛选（且用 &，或用 |，括号不能省）
+filtered = arr[(arr > 3) & (arr < 10)]
+print("(arr > 3) & (arr < 10)：", filtered)  # [4 5 6 7 8 9]
+
+# 实战：将小于 5 的数全部替换为 0
+arr[arr < 5] = 0
+print("arr[arr < 5] = 0 后：\n", arr)
+# [[ 0  0  0  0]
+#  [ 0  5  6  7]
+#  [ 8  9 10 11]]
+
+
+# 2. 轴统计（搞懂 Axis=0 和 Axis=1）
+# axis=0 是垂直（跨行，压缩行），axis=1 是水平（跨列，压缩列）
+data_axis = np.array([[1, 2, 3],
+                      [4, 5, 6],
+                      [7, 8, 9]])
+
+# axis=0：把每一列的同位置加起来（即按列求和，行消失）
+print("sum(axis=0)：", data_axis.sum(axis=0))   # [12 15 18]
+
+# axis=1：把每一行的元素加起来（即按行求和，列消失）
+print("sum(axis=1)：", data_axis.sum(axis=1))   # [ 6 15 24]
+
+# 常用的统计：求所有行的平均值
+print("mean(axis=1)：", data_axis.mean(axis=1))  # [2. 5. 8.]
+print("max(axis=0)：", data_axis.max(axis=0))    # [7 8 9]（每列最大值）
+
+
+# 3. 副本（copy）与视图（view）—— 防坑必看
+# 视图（View）：切片默认是视图，修改切片会污染原始数据。
+# 副本（Copy）：用 .copy() 创建独立副本，修改不影响原数组。
+
+original = np.array([1, 2, 3, 4])
+
+# 危险操作（视图）：改切片，原数组也跟着变
+slice_view = original[0:2]
+slice_view[0] = 999
+print("视图修改后 original：", original)   # [999   2   3   4]
+
+# 安全操作（副本）：改副本，原数组纹丝不动
+slice_copy = original[2:4].copy()
+slice_copy[0] = 888
+print("副本修改后 original：", original)   # [999   2   3   4]
+
+
+# 4. 通用数学函数（ufuncs）—— 告别循环
+# 对数组里的每一个元素同时做数学运算，速度比 for 循环快很多。
+
+arr_math = np.array([1, 4, 9, 16])
+
+print("np.sqrt(arr_math)：", np.sqrt(arr_math))        # [1. 2. 3. 4.]
+print("np.exp(arr_math)：", np.exp(arr_math))          # e 的 x 次方
+print("np.log(arr_math)：", np.log(arr_math))          # ln x
+print("np.sin(arr_math)：", np.sin(arr_math))
+print("np.power(arr_math, 3)：", np.power(arr_math, 3))  # 三次方
+
+
+# 5. 广播机制（不同形状数组的运算规则）
+# 当两个数组形状不同时，NumPy 会自动“拉伸”小数组，让它们可以运算。
+
+arr_b = np.array([[1, 2, 3],
+                  [4, 5, 6]])   # 形状 (2, 3)
+
+# 场景1：标量（0维）广播 —— 整体乘以2
+print("arr_b * 2：\n", arr_b * 2)
+
+# 场景2：向量（1维）广播 —— 每一行都加上 [10, 20, 30]
+col = np.array([10, 20, 30])  # 形状 (3,)
+print("arr_b + col：\n", arr_b + col)
+
+# 核心规则：从后往前对齐维度，要么相等，要么其中一个为1。
+# 比如 (2,3) 和 (1,3) 可以算；(2,3) 和 (2,1) 可以算。
+print("广播示例 (2,3) + (1,3)：\n", arr_b + np.array([[10, 20, 30]]))
+print("广播示例 (2,3) + (2,1)：\n", arr_b + np.array([[10], [20]]))
+

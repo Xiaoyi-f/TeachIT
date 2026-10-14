@@ -1,0 +1,56 @@
+官网下载ollama
+设置模型位置,同时配置OLLAMA_MODELS环境变量和OLLAMA运行环境变量 
+官网搜索模型下载使用
+ollama提供短期上下文记忆的实现
+
+聊天窗口中命令 /clear 清理聊天记录 /bye 离开
+
+ollama pull <model>:<version> 下载模型
+ollama run <model>:<version> (下载并)立即启动模型
+ollama list 
+ollama rm <model>:<version>
+ollama run <model>:<version> --verbose 运行时输出详细信息
+
+设置模型配置文件(无后缀) model_config 
+FROM <model>:<version>
+PARAMETER temperature n 
+PARAMETER top_p n 
+PARAMETER top_k n
+SYSTEM """
+系统提示词
+"""
+
+ollama create model_name -f model_config 
+ollama list 
+ollama run model_name
+
+# pip install ollama 
+# curl 域名 测试可访问性
+
+client = ollama.Client(host="http://localhost:11434")
+
+# 单轮生成
+response = client.generate(
+  model=model,
+  prompt="prompt"
+)
+print(response["response"])
+
+# 多轮对话
+response = client.chat(
+  model=model,
+  messages=[
+    {"role": "user", "content": "prompt"}
+  ]
+)
+print(response["message"]["content"])
+
+
+
+
+
+
+
+
+
+

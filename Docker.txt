@@ -1,0 +1,202 @@
+镜像: 一个只读模版, 包含对应的版本的所有依赖文件
+容器: 镜像运行起来后的实例
+DockerDesktop: 一个图形化管理界面 
+前置: 电脑开启硬件虚拟化、虚拟机容器等功能, wsl --install 安装 WSL 
+关键配置: Settings -> Resources -> Advanced -> DiskImageLocation改为其他盘位置
+
+Images 页面 搜索对应的需求镜像, pull 即可下载
+Host port --> 你电脑上想使用的端口 
+Container port --> 容器内部服务监听的端口 
+
+compose.yml示例 --> compose 为管理者 内建网络将服务服务联系起来  
+services:  # 一个服务通常就是一个容器 
+  background:  # 服务名 随意改  
+    build: .  # 使用当前目录下的 Dockerfile 现场构建镜像 
+    ports: 
+      - "8080:8080"  # 宿主机端口, 容器端口 
+    depends_on:  # 启动顺序 
+      - db 
+      - redis 
+
+  db:
+    image: mysql:8.0 
+    environment:
+      MYSQL_ROOT_PASSWORD: root 
+      MYSQL_DATABASE: db_name 
+    volumes:
+      - mysql_data:/var/lib/mysql  # 将数据持久化保存 宿主机路径:容器内路径  
+    ports:
+      - "6379:6379" 
+
+  redis: 
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "password", "--appendonly", "yes"] 
+    volumes:
+      - redis_data:/data 
+    ports: 
+      - "6379:6379"  
+
+volumes: 
+  mysql_data: 
+    driver: local         
+
+# 有些服务不支持通过environment"常量"配置, 需要使用命令实现相关配置 
+
+docker compose up -d --build 
+docker compose down 
+
+Docker简单来说就是使用容器化技术给应用程序封装独立的运行环境，每个运行环境都是一个容器，运行容器的计算机被称为宿主机
+Docker容器与虚拟机之间的最大区别: Docker容器之间共用同一个系统内核,而每个虚拟机则各自包含一个计算机完整系统内核
+
+Docker镜像就像是模具而容器则像镜像做出来的实体物品
+Docker镜像仓库(dockerhub)是用来存储镜像的地方
+
+# 提示: linux系统自带 sh 终端解释器, bash 为 sh 增强版
+
+sudo apt update // 更新依赖 
+sudo apt install -y apt-transport-https ca-certificates curl gnupg lsb-release // 安装依赖
+
+# 官方源安装
+curl -fsSL https://get.docker.com -o install-docker.sh // 下载安装Docker的脚本
+sudo sh install-docker.sh // 安装Docker
+
+# 清华源安装 
+
+// 配置秘钥 确保安装的软件是安全未被篡改的
+curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg // 添加清华源的GPG秘钥 
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null // 添加清华源Docker软件源
+
+// 核心安装命令
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+// docker-buildx-plugin 高级镜像构建工具 docker buildx version -> build 加强版 
+// docker-compose-plugin 多容器应用管理(容器编排)工具 docker compose version 
+
+# 启动docker并且设置开机自启 ctl = control 
+sudo systemctl start docker 
+sudo systemctl enable docker 
+
+# 配置源与加速
+编辑 /etc/docker/daemon.json 
+{
+  "registry-mirrors": ["https://docker.mirrors.tuna.tsinghua.edu.cn", "https://docker.1panel.live"]
+}
+
+sudo systemctl restart docker 
+// 实际下载还是从dockerhub下载,只是配置了加速
+
+# 核心使用命令
+sudo docker pull <namespace><image><:version> // 拉取镜像
+sudo docker images // 列出所有镜像
+sudo docker run -d --name <container_name> <image> // 运行镜像创建运行实例 -d表示后台运行
+sudo docker ps // 列出所有正在运行的容器 -a 查看所有容器 
+sudo docker start <container_id> // 启动容器 
+sudo docker stop <container_id> // 停止容器
+sudo docker rm -f <container_id> // 删除容器 运行中容器使用-f强制删除
+sudo docker rmi <image> // 删除镜像  
+
+# 容器网络与宿主机网络默认隔离,-p配置让容器与宿主机端口绑定
+sudo docker run -p <host_port>:<container_port> <image>
+
+# 创建容器挂载卷,命名卷挂载(初始容器目录覆盖宿主机目录) -> 数据持久化 
+sudo docker volume create <volume_name> // 自动划分一块系统空间
+sudo docker run -v <volume_name>:<container_path> <image> // 把空间插入容器并且运行,硬链接到容器里的某个文件夹,把容器删了系统空间的数据依旧
+sudo docker volume inspect <volume_name> // 查看挂载卷信息 
+sudo docker volume rm <volume_name> 
+sudo docker volume prune -a // 删除所有未使用的卷
+sudo docker volume list 
+
+
+# 绑定挂载(初始宿主机目录覆盖容器目录) -> 数据持久化
+sudo docker run -v <host_path>:<container_path> <image>
+
+# 设置容器环境变量(从dockerhub搜索对应的镜像找到可以传递的环境变量) 
+sudo docker run -e <PATH=value> -e <PATH=value> <image>
+
+# 设置容器停止立即重启
+sudo docker run -d --restart always <image>
+
+# 设置手动停止的容器不立刻重启,其他情况都立刻重启
+sudo docker run -d --restart unless-stopped <image>
+
+# 查看容器信息
+sudo docker inspect <container_id>
+
+# Dockerfile 文件 
+FROM <image> 
+
+WORKDIR <image_path>
+
+COPY <host_cur_path> <work_cur_path> 
+
+RUN <command>
+
+EXPOSE <port_tip> 
+
+CMD ["command", "command_param"]
+
+# 使用Dockerfile构建镜像
+sudo docker build -t <docker_image_name><:version> <path>
+
+# dockerhub上注册登录账号(默认使用用户名为命名空间)
+# 推送镜像到dockerhub
+sudo docker login 
+sudo docker build -t <namespace><docker_image_name><:version> <path>
+sudo docker push <namespace><docker_image_name><:version>
+
+# docker网络默认为Bridge桥接模式,每个容器分配一个ip
+当你安装 Docker 时，它就在你电脑里悄悄创建了这个虚拟交换机
+所有加入这个 Bridge 的容器，都把网线插到了这个交换机上
+作用：让这些容器之间能互相“打电话”（通信），但外面的世界（你的浏览器、别的电脑）默认打不通它们的电话
+
+这个 Bridge 默认使用一个私有的网段，通常是 172.17.0.0/16
+第一个容器启动，Docker 随手发个 172.17.0.2 给它
+第二个容器启动，发个 172.17.0.3 给它
+关键点：这个 IP 是 Docker 内部自己玩的，你在你的 Windows 电脑上直接 ping 这个 IP 是 ping 不通的（因为没有走出那个虚拟交换机）
+
+容器每次重启，Docker 分配的 IP 是会变动的（可能下次 Redis 变成 172.17.0.4），所以默认的 Bridge 模式并不适合生产环境里的容器间通信
+
+# 生产环境容器网络通信 Docker子网内部自带DNS服务 -> 自定义桥接网络
+sudo docker network create <network_name> 
+docker run -d --name <container_name> --network <network_name> <image>
+
+# 创建一个网关
+docker run -d --name gateway --network <network_name> -p 8080:80 nginx
+
+# Nginx配置中可以直接使用容器名称
+location /api {
+  proxy_pass http://<container_name>:<container_port/>;
+}
+
+# host网络模式,容器网络端口直接使用宿主机网络端口
+sudo docker run -d --network host <image>
+
+# 容器编排技术
+yml配置文件规则:
+1.使用缩进表示层级关系,缩进必须使用空格(通常两个空格)
+2.冒号后面必须跟加空格
+3.列表/数组使用 - 
+  eg:
+    - "item" 
+4.true/false/on/off/yes/no 都可能被视为布尔值 字符串使用双引号
+5.注释使用 #
+6.多行文本
+  | 保留换行符 
+  > 将换行符替换为空格 
+
+创建 docker-compose.yml 文件 
+可以将要执行的命令写好交给AI创建
+sudo docker compose pull // 拉取所有服务镜像
+sudo docker compose up -d // 启动容器编排 
+sudo docker compose -f <file_name> up -d // 启动指定文件编排
+sudo docker compose ps // 查看所有正在运行的容器
+sudo docker compose down // 停止并删除所有正在运行的容器
+sudo docker compose stop // 停止所有正在运行的容器 
+sudo docker compose restart // 重启所有正在运行的容器
+sudo docker compose logs // 查看所有正在运行的容器的日志
+
+# 删除停止的容器、无用网络、构建缓存
+docker system prune
+
+# 进入正在运行的容器内部 
+docker exec -it <container> bash
