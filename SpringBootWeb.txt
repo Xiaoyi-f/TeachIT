@@ -1,0 +1,27 @@
+/**
+ * %JAVA_HOME%
+ * %MAVEN_HOME%
+ * %CATALINA_HOME%
+ * Maven 基本配置 --> conf/settings.xml 和 repository仓库位置 --> 配置镜像 / 配置自定义仓库 --> 镜像仓库(中央/私有/第三方) 与 本地仓库 
+ * Tomcat -核心命令-> startup shutdown 
+ * IDEA配置Tomcat --> 文件启动下拉框编辑配置 --> Tomcat Server 
+ * Servlet --> java语言编写的运行在服务器端的程序 --> 中间人 
+ * web.xml 配置 Servlet / @WebServlet注解 配置 Servlet 
+ * -->
+ * IDEA 巧妙使用Maven工具 
+ * 生命周期九大指令:
+ * 1. clean 删除旧构建结果/当前项目target目录
+ * 2. validate 检验项目的基础构建条件, 只做检查
+ * 3. compile 编译项目代码同时检查是否可以成功编译
+ * 4. test 运行单元测试 
+ * 5. package 打包项目代码 --> JAR包 
+ * 6. verify 验证最终构建成果, 打包之后继续验证项目配置的完整验证, 可能包括集成测试(把多个单元拼起来, 测试多个单元之间相互调用、协作是否正常)等
+ * 7. install 将当前项目生成的包, 保存到本地仓库
+ * 8. site 生成项目说明和报告网站
+ * 9. deploy 将项目发布到远程仓库
+ * default链: validate -> compile -> test -> package -> verify -> install -> deploy 
+ * -->
+ * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
+ */
+
+
