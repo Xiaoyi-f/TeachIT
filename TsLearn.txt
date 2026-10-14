@@ -20,8 +20,8 @@ npm install typescript --save-dev
 any unknown void object null undefined / never 
 unknown: 未知类型, 不可使用属性 --> 强制先typeof类型判断才可使用 
 
-type OR = string | number 
 type AND = { name: string } & { age: number } 
+type OR = string | number 
 
 interface User {
   readonly id: number 
