@@ -139,8 +139,8 @@ String(val).trim()
 window.scrollTo(x, y) 
 
 /* URI参数编码 */
-encodeURIComponent(rawStr) encodeURI(url)
-decodeURIComponent(encodedStr) decodeURI(url)
+encodeURIComponent(rawStr) encodeURI(rawUrl)
+decodeURIComponent(encodedStr) decodeURI(encodedUrl)
 
 try {} catch (err) {} finally {} 
 
@@ -164,6 +164,13 @@ set.add("value")
 set.delete("value") 
 set.size 
 
+// Reflect 
+const user = { age: 20 } 
+Reflect.has(user, "age") 
+Reflect.get(user, "age", receiver) 
+Reflect.set(user, "age", 22, receiver) 
+Reflect.deleteProperty(user, "age")
+
 // Proxy 
 const obj = { name: "name", age: "age" }
 const proxy = new Proxy(obj, {
@@ -175,13 +182,6 @@ const proxy = new Proxy(obj, {
     return Reflect.set(target, attr, value, receiver)
   }
 })
-
-// Reflect 
-const user = { age: 20 } 
-Reflect.has(user, "age") 
-Reflect.get(user, "age", receiver) 
-Reflect.set(user, "age", 22, receiver) 
-Reflect.deleteProperty(user, "age")
 
 /* SSE */
 eventSource = new EventSource("https://example.com/sse")
