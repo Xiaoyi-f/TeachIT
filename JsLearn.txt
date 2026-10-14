@@ -205,36 +205,68 @@ if (eventSource) eventSource.close()
 
 
 /* IndexDB */
-const DB_NAME = "dbName" 
-const DB_VERSION = 1 
-const STORE_NAME = "documents" 
-const DOC_KEY = "currentDoc" 
+const DB_NAME = "dbName"
+const DB_VERSION = 1
+const STORE_NAME = "documents"
+const DOC_KEY = "currentDoc"
 
-interface DocRecord {
-  id: string 
-  json: object 
-  html: string 
-  updatedAt: string  
+export interface DocRecord {
+  id: string
+  json: object
+  html: string
+  updatedAt: string
 }
 
+/* 打开数据库，返回 IDBDatabase */
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexDB.open(DB_NAME, DB_VERSION)
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
+
+    // 首次创建 / 版本升级时建表
     req.onupgradeneeded = () => {
-      const db = req.result 
+      const db = req.result
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: "id" })
       }
     }
 
-    req.onsuccess = () => {
-      resolve(req.result)
-      req.onerror = () => reject(req.error)
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+    req.onblocked = () => reject(new Error("IndexedDB upgrade blocked"))
+  })
+}
+
+/* 保存 (新增或覆盖) 一条文档记录 */
+export async function saveToDB(json: object, html: string): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite")
+    const record: DocRecord = {
+      id: DOC_KEY,
+      json,
+      html,
+      updatedAt: new Date().toISOString(),
+    }
+
+    tx.objectStore(STORE_NAME).put(record)
+
+    tx.oncomplete = () => {
+      db.close()
+      resolve()
+    }
+    tx.onerror = () => {
+      db.close()
+      reject(tx.error)
+    }
+    tx.onabort = () => {
+      db.close()
+      reject(tx.error ?? new Error("Transaction aborted"))
     }
   })
 }
 
-export async function saveToDB(json: object, html: string): Promise<void> {
+/* 读取当前文档, 没有则返回 null */
+export async function loadFromDB(): Promise<DocRecord | null> {
   const db = await openDB()
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readonly")
@@ -242,12 +274,35 @@ export async function saveToDB(json: object, html: string): Promise<void> {
 
     req.onsuccess = () => {
       db.close()
-      resolve(req.result ?? null)
+      resolve((req.result as DocRecord) ?? null)
     }
-
     req.onerror = () => {
       db.close()
       reject(req.error)
+    }
+  })
+}
+
+/* 删除当前文档 */
+export async function deleteFromDB(): Promise<void> {
+  const db = await openDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite")
+    tx.objectStore(STORE_NAME).delete(DOC_KEY)
+
+    tx.oncomplete = () => {
+      db.close()
+      resolve()
+    }
+
+    tx.onerror = () => {
+      db.close()
+      reject(tx.error)
+    }
+
+    tx.onabort = () => {
+      db.close()
+      reject(tx.error ?? new Error("Transaction aborted"))
     }
   })
 }
