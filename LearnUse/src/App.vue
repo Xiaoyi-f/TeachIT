@@ -475,6 +475,12 @@ $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
 800 ~ 999	顶层覆盖（Backdrop/Mask）
 Tip: 底导弹浮通顶 */
 
+/*
+%extend-template {
+  @extend %template;
+}
+*/
+
 @font-face {
   font-family: "MyFont";
   src: url("path") format("filetype"); // woff2 woff truetype(ttf) opentype(otf)
