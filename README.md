@@ -2,7 +2,7 @@
 
 IT 软件开发的学习笔记仓库，用于持续记录和沉淀前端、后端、数据库、运维部署、开发工具等方向的知识点。
 
-## The Original Author: Xiaoyi-f / FollowNie / NieJianBing --> ForIT & Target 
+## The Original Author: Xiaoyi-f / FollowNie / NieJianbing --> ForIT & Target 
 为了辅助小白对于一些难以理解的知识点通过查看本项目笔记对应内容可以快速理解
 为了辅助开发者快速查阅开发笔记或文档, 减少查阅复杂而难以理解的文档时间, 提高效率
 为了促进编程的进步, 提高编程的易学度, 促进编程兴趣爱好者/人才的快速成长

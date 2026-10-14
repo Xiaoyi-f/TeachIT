@@ -3,6 +3,7 @@
  * %MAVEN_HOME%
  * %CATALINA_HOME%
  * Maven 基本配置 --> conf/settings.xml 和 repository仓库位置 --> 配置镜像 / 配置自定义仓库 --> 镜像仓库(中央/私有/第三方) 与 本地仓库 
+ * 坐标: maven中坐标用于描述仓库中资源的位置 --> groupId/artifactId/version 
  * Tomcat -核心命令-> startup shutdown 
  * IDEA配置Tomcat --> 文件启动下拉框编辑配置 --> Tomcat Server 
  * Servlet --> java语言编写的运行在服务器端的程序 --> 中间人 
@@ -24,4 +25,9 @@
  * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
  */
 
+起步依赖 spring-boot-starter-web 内部依赖于 spring-boot-starter-tomcat 由于maven依赖传递性 我们在创建项目时候就已经有 tomcat 依赖, 而我们运行引导类中main方法其实就是启动的springboot内嵌的Tomcat服务器, 而我们开发的项目也会自动部署到该服务器上 
+启动流程: main -> SpringApplication.run() -> application.yml / application.properties -> 创建Spring容器 -> 自动配置 -> Tomcat启动
+
+SSM = Spring + SpringMVC + MyBatis 
+POM = Project Object Model 
 
