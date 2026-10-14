@@ -464,6 +464,17 @@ $color-warn: #d97757;
 $radius: 10px;
 $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
 
+// calc() 跨单位计算
+/* z-index 规范
+层级范围	   用途
+0 ~ 99	  页面内部的基础层级
+100 ~ 199	固定导航、头部（Header）
+200 ~ 299	下拉菜单、弹出层
+300 ~ 499	模态框（Model/Dialog）
+500 ~ 799	通知、消息（Message/Notification）
+800 ~ 999	顶层覆盖（Backdrop/Mask）
+Tip: 底导弹浮通顶 */
+
 @font-face {
   font-family: "MyFont";
   src: url("path") format("filetype"); // woff2 woff truetype(ttf) opentype(otf)
@@ -479,6 +490,7 @@ $shadow: 0 8px 24px rgba(15, 40, 36, 0.08);
   -webkit-font-smoothing: antialiased;
   // 开启字体抗锯齿, 让字体更加顺滑
   // font-family: "MyFont";
+  // backgrund-image background-size background-position
 }
 
 .container {
@@ -575,6 +587,7 @@ a {
     grid-template-columns: 1.1fr 0.9fr;
     gap: 40px;
     align-items: center;
+    // grid-template-columns: repeat(auto-fit / auto-fill, minmax(100px, 1fr))
   }
 
   .hero-kicker {
@@ -637,6 +650,7 @@ a {
     border-radius: 14px;
     box-shadow: 0 20px 50px rgba(15, 40, 36, 0.25);
     overflow: hidden;
+    // overflow-x overflow-y overflow-wrap: break-word; text-overflow: "...";
     transform: rotate(1.5deg);
     transition: transform 0.4s;
 
@@ -792,8 +806,8 @@ a {
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+  border-collapse: collapse; // 合并表格单元格边框
+  table-layout: fixed; // 固定单元格宽度, 不再由内容撑开
   min-width: 560px;
 
   caption {
@@ -835,7 +849,7 @@ a {
   display: block;
   width: 100%;
   height: 8px;
-  appearance: none;
+  appearance: none; // 清除浏览器原生外观
   border-radius: 999px;
   overflow: hidden;
   background: $color-line;
@@ -969,7 +983,7 @@ a {
   .g-item {
     border-radius: 8px;
     display: grid;
-    place-items: center;
+    place-items: center; // 将内容放在水平居中且垂直居中
     color: #fff;
   }
 
@@ -1145,7 +1159,7 @@ a {
   font-size: 0.92rem;
 
   label {
-    display: inline-flex;
+    display: inline-flex; // 父级盒子有行内特性, 不独占整行
     align-items: center;
     gap: 6px;
     font-weight: 400;
@@ -1235,7 +1249,7 @@ a {
   place-items: center;
   font-weight: 900;
   font-size: 1.4rem;
-  animation: floatIn 0.7s ease both;
+  animation: floatIn 0.7s ease both; // infinite
 
   &:nth-child(1) {
     animation-delay: 0s;
@@ -1389,6 +1403,7 @@ a {
   font-size: 0.9rem;
   opacity: 0;
   pointer-events: none;
+  user-select: none;
   transition: opacity 0.3s, transform 0.3s;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
