@@ -28,6 +28,222 @@
 起步依赖 spring-boot-starter-web 内部依赖于 spring-boot-starter-tomcat 由于maven依赖传递性 我们在创建项目时候就已经有 tomcat 依赖, 而我们运行引导类中main方法其实就是启动的springboot内嵌的Tomcat服务器, 而我们开发的项目也会自动部署到该服务器上 
 启动流程: main -> SpringApplication.run() -> application.yml / application.properties -> 创建Spring容器 -> 自动配置 -> Tomcat启动
 
+架构核心三层: 控制层 业务逻辑层 数据访问层 
+Controller层 接收请求, 响应数据 --> Service层 业务逻辑处理 --> Mapper层 / Dao层 / Repository层 数据访问操作
+
+SpringMVC --> Controller层
 SSM = Spring + SpringMVC + MyBatis 
 POM = Project Object Model 
+
+DTO = Data Transfer Object 前端传输而来数据
+VO = View Object 后端返回前端数据 
+
+pom.xml 管理依赖 --> 推荐 mvnrepository.com 快速搜索依赖配置 --> 复制粘贴即可 
+
+软件设计原则: 高内聚低耦合 
+内聚: 软件各个功能模块内部的功能联系 
+耦合: 衡量软件中各个层/模块之间的依赖、关联的程度 
+--> 使程序模块的可重要性、移植性大大增强 
+
+项目源代码核心结构:
+src
+  --> main
+    --> java 
+    --> resources 
+  --> test 
+Tip: 测试集和java集结构形式统一
+
+IOC --> Inversion Of Control 控制反转 
+DI --> Dependency Injection 依赖注入 
+Bean对象 --> IOC容器中创建、管理的对象, 称为Bean对象 
+
+--> application.yml 
+# 服务端口 
+server:
+  port: 8080
+  address: 127.0.0.1
+  servlet: 
+    context-path: /api # 整体路由前缀
+# spring核心配置
+spring:
+  profiles:
+    active: dev # prod --> application-dev.yml application-prod.yml 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver 
+    url: jdbc:mysql://localhost:3306/database 
+    username: root 
+    password: password 
+  devtools:
+    restart:
+      enabled: true 
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml 
+  type-aliases-package: com.example.entity 
+  configuration: 
+    map-underscore-to-camel-case: true 
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 生产务必关掉这个配置, 不要写这个配置 
+# MyBatisPlus配置
+mybatis-plus:
+  # 自动扫描对应的包下所有实体类, XML 里面可以省略前缀包名 
+  type-aliases-package: com.xxx.xxx.xx  # 别名扫描包 --> 给实体类起简短别名  
+  configuration: 
+    map-underscore-to-camel-case: true 
+
+Tip: 注意0开头数据在yml中表示八进制数据, 务必使用引号引起来 
+
+其他依赖/工具:
+Spring Boot DevTools 开发热更新支持
+Lombok 注解生成代码工具 
+SpringConfigurationProcessor 自动生成配置元数据 -> @ConfigurationProperties 把application.yml / application.properties映射成JavaBean
+MySQL Driver MySQL MySQL数据库驱动
+Spring Web HTTP接口制造机
+
+将Service及Dao层的实现类, 交给IOC容器管理 
+在实现类加上 @Component 注解, 代表把当前类产生的对象交给IOC容器管理 --> 非三层架构层级时候
+三层架构层级对应加上 @Controller @Service @Repository 代表有对应的标识的将当前类产生的对象交给IOC容器管理 
+参数 value="beanName" 不设置则默认Bean名称为类名将第一个字母改小写后的名称 
+注解声明Bean之后不一定会生效, 还需要被组件扫描注解 @ComponentScan 扫描 --> 包含在启动类声明注解 @SpringBootApplication 中, 默认扫描的范围是启动类所在包及其子包
+
+为Controller及Service注入运行时所依赖的对象
+eg -->
+@Autowired // 优先按照类/接口查找, 可能产生冲突 
+private UserDao userDao; 
+
+@Resource(name="userServiceImpl") // 优先按照名称找, 名称确保唯一, 尽量避免冲突 --> Spring容器中Bean名称不能重复 
+private UserService userService; 
+
+/* mybatis */
+-JDBC缺点-> 硬编码、操作繁琐 
+IDEA快捷输入:
+sel  -->  select * from <table>
+selc --> select count(*) from <table> <alias> where <alias>
+selw --> select * from <table> <alias> where <alias> 
+ins --> insert into <table> values 
+del --> delete from <table> where 
+tab --> create table <table> () 
+lim --> select * from <table> limit 
+
+1.mybatis核心配置文件配置数据库相关信息 --> <mapper resource="package.XxxMapper.xml" />
+2.mapper.xml映射文件配置 --> XxxMapper.xml
+3.Entity类创建以及相关属性定义 --> getter / setter ... 
+使用:
+  1.加载mybatis核心配置, 获取 SqlSessionFactory  
+  String resource = "mybatis-config.xml";
+  InputStream inputStream = Resources.getResourceAsStream(resource);
+  SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+  
+  2.获取SqlSession对象, 用它来执行sql
+  SqlSession sqlSession = sqlSessionFactory.openSession();
+
+  3.执行sql
+  List<User> users = sqlSession.selectList("namespace.id");
+
+  4.释放资源
+  sqlSesiion.close();
+
+Tip: 
+resultType --> Java类型 --> 通常为实体类 
+编写接口方法 -> 编写SQL -> 执行方法 
+
+实体类 与 SQL 列名对应不上 导致无法自动封装实体类 --> 使用 AS (SQL语句) 起别名 --> SQL片段方式使用 
+--> <include refid="sql_id" />
+--> 建议解决方案:
+// resultType 为全限定类名 
+<resultMap id="resultMapId" type="resultType">
+  <result column="column_name" property="columnName" /> 
+</resultMap> 
+
+<select id="selectAll" resultMap="resultMapId">
+  SQL --> #{arg}--(转?安全占位, 防SQL注入) ${arg}--(SQL拼接, 易被注入)
+</select>
+
+接口散装参数: @Param("arg")int arg 参数传递设计
+接口对象参数
+接口Map参数 
+
+特殊字符处理: 
+方法一: XML 转义字符
+方法二: CDATA区实现纯文本 --> <![CDATA[文本]]>
+
+// 动态SQL 
+<where>
+  <if test="status != null">OGNL 对象图导航语言 - 专门用来从对象读属性、调用方法、做判断</if> 
+</where>
+
+// 基础CRUD命令
+<select id resultMap></select> 
+<insert id useGeneratedKeys="true" keyProperty="id"></insert>
+<update id></update>   
+<delete id>
+  xxx in 
+  <foreach collection="ids" item="id" separator="," open="(" close=")">
+    #{id}
+  </foreach>  
+</delete>
+
+// Tip: 除了配置文件方式以外还有注解的方式实现Batis的SQL配置 
+// 接口方法上注解: @Select @Insert @Update @Delete 
+
+/* mybatis-plus */
+public interface UserMapper extends BaseMapper<User> {}
+// BaseMapper 中 提供好 CRUD 方法 
+
+// 无注解默认情况, 实体类名大驼峰自动转数据库下划线, 名为 id 字段作为主键, 属性名小驼峰自动转数据库下划线
+@TableName("table_name")  
+@TableId(value="id", type=IdType.AUTO) // 交由数据库自动生成 -ASSIGN_ID-> 雪花算法 
+@TableField("plain_field") 
+// 注意 MP 反射解析时 会自动去掉字段 is 前缀, 带有 is 前缀的字段 注意使用注解避免出现问题 
+@TableField(exist=false) // 不需要作为数据库字段, 不进行识别, 数据库没有对应的字段 
+
+/**
+ * 项目配置之 mybatis-plus 配置
+ * mybatis-plus:
+ *   # 自动扫描对应的包下所有实体类, XML 里面可以省略前缀包名 
+ *   type-aliases-package: com.xxx.xxx.xx  # 别名扫描包 --> 给实体类起简短别名  
+ *   configuration: 
+ *     map-underscore-to-camel-case: true 
+ */
+
+// 条件构造器 Wrapper 
+
+// --> Query 查、删、简单更新  
+// 普通版 - 字符串硬编码  
+QueryWrapper<User> qw = new QueryWrapper<>(); 
+
+// Lambda版
+LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
+
+// --> Update 批量/复杂更新
+// 普通版 - 字符串硬编码 
+UpdateWrapper<User> uw = new UpdateWrapper<>();
+
+// Lambda版
+LambdaUpdateWrapper luw = new LambdaUpdateWrapper<>();
+ 
+// 自定义SQL eg -> 
+List<long> ids = List.of(1L, 2L, 4L);
+int amount = 200; 
+// 1.构建条件 
+LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<User>().in(user -> user.getId(), ids);
+// 2.自定义SQL方法调用 
+userMapper.updateBalanceByIds(wrapper, amount);
+// 3.Mapper接口声明 
+void updateBalanceByIds(@Param("ew") LambdaQueryWrapper<User> wrapper, @Param("amount") int amount);
+// 4.自定义 XML SQL 
+<update id="updateBalanceByIds">
+  UPDATE tb_user SET balance = balance - #{amount} ${ew.customSqlSegment}
+</update> 
+
+// Controller负责接口调控, Mapper负责数据管理, Service负责核心业务   
+// 1.写Mapper接口
+public interface UserMapper extends BaseMapper<User> {}
+// 2.写Service接口 
+public interface UserService extends IService<User> {} 
+// 3.写Service实现类 
+@Service 
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {} 
+// --> 常用方法: saveXxx removeXxx updateXxx listXxx lambdaXxx getXxx count page 
+
+
 
