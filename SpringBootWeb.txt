@@ -98,6 +98,7 @@ Lombok 注解生成代码工具
 SpringConfigurationProcessor 自动生成配置元数据 -> @ConfigurationProperties 把application.yml / application.properties映射成JavaBean
 MySQL Driver MySQL MySQL数据库驱动
 Spring Web HTTP接口制造机
+MybatisFramework 
 
 将Service及Dao层的实现类, 交给IOC容器管理 
 在实现类加上 @Component 注解, 代表把当前类产生的对象交给IOC容器管理 --> 非三层架构层级时候
@@ -113,7 +114,7 @@ private UserDao userDao;
 @Resource(name="userServiceImpl") // 优先按照名称找, 名称确保唯一, 尽量避免冲突 --> Spring容器中Bean名称不能重复 
 private UserService userService; 
 
-/* mybatis */
+/* mybatis 半自动ORM框架 */
 -JDBC缺点-> 硬编码、操作繁琐 
 IDEA快捷输入:
 sel  -->  select * from <table>
@@ -124,43 +125,136 @@ del --> delete from <table> where
 tab --> create table <table> () 
 lim --> select * from <table> limit 
 
-1.mybatis核心配置文件配置数据库相关信息 --> <mapper resource="package.XxxMapper.xml" />
-2.mapper.xml映射文件配置 --> XxxMapper.xml
-3.Entity类创建以及相关属性定义 --> getter / setter ... 
-使用:
-  1.加载mybatis核心配置, 获取 SqlSessionFactory  
-  String resource = "mybatis-config.xml";
-  InputStream inputStream = Resources.getResourceAsStream(resource);
-  SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-  
-  2.获取SqlSession对象, 用它来执行sql
-  SqlSession sqlSession = sqlSessionFactory.openSession();
+--> Entity: 通常与数据库表对应
+--> Mapper
 
-  3.执行sql
-  List<User> users = sqlSession.selectList("namespace.id");
+实体类 <-> Mapper接口 <-> Mapper.xml 映射文件 <-> mybatis-config.xml 核心配置文件 <-> 数据库 
 
-  4.释放资源
-  sqlSesiion.close();
+// mybatis-config.xml 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- 1. properties：加载外部properties配置文件（数据库连接信息） -->
+    <!-- db.properties 里面写：driver、url、username、password -->
+    <properties resource="db.properties"/>
+
+    <!-- 2. settings：全局设置，Mybatis的开关、功能配置 -->
+    <settings>
+        <!-- 开启驼峰命名自动映射：数据库 create_time → 实体 createTime 【高频】 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- 日志输出SQL，开发环境打开，看执行的SQL语句 -->
+        <setting name="logImpl" value="SLF4J"/>
+    </settings>
+
+    <!-- 3. typeAliases：给实体类起别名，简化Mapper里resultType书写 -->
+    <typeAliases>
+        <!-- 单个起别名 -->
+        <typeAlias type="com.learn.pojo.User" alias="User"/>
+        <!-- 包扫描：扫描整个包下所有实体，别名默认是类名首字母小写 user -->
+        <package name="com.learn.pojo"/>
+    </typeAliases>
+
+    <!-- 4. environments：配置数据库环境，可以多套环境（开发/测试/生产） -->
+    <!-- default 指定当前使用哪一套环境id -->
+    <environments default="dev">
+        <environment id="dev">
+            <!-- 事务管理器：JDBC事务，交给JDBC管理事务 -->
+            <transactionManager type="JDBC"/>
+            <!-- dataSource 数据源，连接池 -->
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <!-- 5. mappers：注册Mapper映射文件！告诉mybatis去哪里找Mapper.xml -->
+    <mappers>
+        <!-- 方式1：加载单个mapper文件 -->
+        <mapper resource="mapper/UserMapper.xml"/>
+        <!-- 方式2：包扫描（常用！要求Mapper接口和Mapper.xml同名、同包） -->
+        <!-- <package name="com.learn.mapper"/> -->
+    </mappers>
+</configuration>
+
+// UserMapper.xml 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：绑定Mapper接口的全限定类名！必须和接口全类名一致 -->
+<mapper namespace="com.learn.mapper.UserMapper">
+
+    <!-- resultMap：自定义结果映射，数据库字段 -> 实体属性，解决字段名和属性名不一致 -->
+    <resultMap id="UserResultMap" type="User">
+        <!-- id：主键映射；column数据库列名，property实体属性 -->
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <!-- sql片段：抽取公共SQL，<include refid/>复用 -->
+    <sql id="user_base_column">
+        id,user_name,price,create_time
+    </sql>
+
+    <!-- select 查询标签
+         id：对应Mapper接口里面抽象方法名！必须一模一样
+         resultType：返回实体类型（简单映射用）
+         resultMap：返回自定义resultMap（字段不匹配时用）
+         parameterType：传入参数类型（可省略）
+    -->
+    <select id="selectById" resultType="User">
+        SELECT <include refid="user_base_column"/>
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <!-- insert 新增 -->
+    <insert id="insertUser">
+        INSERT INTO user(user_name,price)
+        VALUES(#{userName}, #{price})
+    </insert>
+
+    <!-- update 修改 -->
+    <update id="updateUser">
+        UPDATE user
+        SET user_name = #{userName}, price = #{price}
+        WHERE id = #{id}
+    </update>
+
+    <!-- delete 删除 -->
+    <delete id="deleteById">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+</mapper>
+
+/*
+MySQL与Java类型对应:
+TINYINT --> Byte 
+TINYINT(1) --> Boolean 
+INT --> Integer 
+BIGINT --> Long 
+FLOAT --> Float
+DOUBLE --> Double 
+DECIMAL(N, M) --> BigDecimal 
+
+CHAR / VARCHAR / TINYTEXT / TEXT / LONGTEXT --> String 
+BLOB / LONGBLOB --> byte[]
+
+DATETIME --> LocalDateTime 
+*/
+
+接口散装参数: @Param("arg")int arg 参数传递设计
+接口对象参数 接口Map参数 
 
 Tip: 
 resultType --> Java类型 --> 通常为实体类 
 编写接口方法 -> 编写SQL -> 执行方法 
-
-实体类 与 SQL 列名对应不上 导致无法自动封装实体类 --> 使用 AS (SQL语句) 起别名 --> SQL片段方式使用 
---> <include refid="sql_id" />
---> 建议解决方案:
-// resultType 为全限定类名 
-<resultMap id="resultMapId" type="resultType">
-  <result column="column_name" property="columnName" /> 
-</resultMap> 
-
-<select id="selectAll" resultMap="resultMapId">
-  SQL --> #{arg}--(转?安全占位, 防SQL注入) ${arg}--(SQL拼接, 易被注入)
-</select>
-
-接口散装参数: @Param("arg")int arg 参数传递设计
-接口对象参数
-接口Map参数 
 
 特殊字符处理: 
 方法一: XML 转义字符

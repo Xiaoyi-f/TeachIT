@@ -24,6 +24,10 @@ L F
 
 == // 引址基值 
 
+javac xxx.java 
+java xxx
+java -jar xxx.jar
+
 Scanner sc = new Scanner(System.in);
 sc.hasNextLine();
 
@@ -36,6 +40,16 @@ int[] arr = {1, 2, 3, 4, 5}
 for (int i = 0; i < arr.length; i++) {
   System.out.println(arr[i]);
 }
+
+// java.math.BigDecimal 不可变对象, 运算后返回新对象 
+BigDecimal number = new BigDecimal("10"); // 传递字符串形式不丢失精度 
+BigDecimal otherNumber = new BigDecimal("10");
+
+BigDecimal add = number.add(otherNumber); 
+BigDecimal sub = number.subtract(otherNumber); 
+BigDecimal mul = number.multiply(otherNumber);
+
+BigDecimal theNum = number.setScale(M, RoundingMode.HALF_UP);
 
 String str = "Hello_Java"; 
 // new 出来的字符串也会从字符串常量池中复用值, 但是会再次在堆中创建新对象再复用, 而对应的变量指向堆中新对象 
