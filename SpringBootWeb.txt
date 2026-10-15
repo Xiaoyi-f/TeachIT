@@ -211,7 +211,7 @@ lim --> select * from <table> limit
     <select id="selectById" resultType="User">
         SELECT <include refid="user_base_column"/>
         FROM user
-        WHERE id = #{id}
+        WHERE id = #{uid}
     </select>
 
     <!-- insert 新增 -->
@@ -233,6 +233,15 @@ lim --> select * from <table> limit
     </delete>
 </mapper>
 
+上述增删改查id对应接口方法名
+接口散装参数: @Param("arg")int arg 参数传递设计
+接口对象参数 接口Map参数 
+
+// UserMapper.java 
+public interface UserMapper {
+  User selectUserByParam(@Param("uid") Integer id);
+}
+
 /*
 MySQL与Java类型对应:
 TINYINT --> Byte 
@@ -248,9 +257,6 @@ BLOB / LONGBLOB --> byte[]
 
 DATETIME --> LocalDateTime 
 */
-
-接口散装参数: @Param("arg")int arg 参数传递设计
-接口对象参数 接口Map参数 
 
 Tip: 
 resultType --> Java类型 --> 通常为实体类 
@@ -277,67 +283,30 @@ resultType --> Java类型 --> 通常为实体类
 </delete>
 
 // Tip: 除了配置文件方式以外还有注解的方式实现Batis的SQL配置 
-// 接口方法上注解: @Select @Insert @Update @Delete 
+// 接口方法上注解: @Select @Insert @Update @Delete --> 直接在接口中写注解则不用再到XML写配置 --> 支持三引号 --> 参数即SQL
 
-/* mybatis-plus */
+/* mybatis-plus 增强版 -- 只做增强 */
 public interface UserMapper extends BaseMapper<User> {}
-// BaseMapper 中 提供好 CRUD 方法 
+--> 常用CRUD方法 -- 业务逻辑层实例注入使用:
+userMapper.insert(user);
+userMapper.deleteById(id); 
+userMapper.updateById(user); 
+userMapper.selectById(id); 
+userMapper.selectList(wrapper);
+userMapper.selectCount(wrapper);
 
-// 无注解默认情况, 实体类名大驼峰自动转数据库下划线, 名为 id 字段作为主键, 属性名小驼峰自动转数据库下划线
-@TableName("table_name")  
-@TableId(value="id", type=IdType.AUTO) // 交由数据库自动生成 -ASSIGN_ID-> 雪花算法 
-@TableField("plain_field") 
-// 注意 MP 反射解析时 会自动去掉字段 is 前缀, 带有 is 前缀的字段 注意使用注解避免出现问题 
-@TableField(exist=false) // 不需要作为数据库字段, 不进行识别, 数据库没有对应的字段 
+实体类注解:
+@TableId(value="id", type=IdType.AUTO) // type=ASSIGN_ID 分库分表需要ID全局唯一时候使用 --> 雪花算法 
+private Long id;
 
-/**
- * 项目配置之 mybatis-plus 配置
- * mybatis-plus:
- *   # 自动扫描对应的包下所有实体类, XML 里面可以省略前缀包名 
- *   type-aliases-package: com.xxx.xxx.xx  # 别名扫描包 --> 给实体类起简短别名  
- *   configuration: 
- *     map-underscore-to-camel-case: true 
- */
+@TableField("user_name")
+private String userName;
+// 默认情况下MP可开启驼峰自动对应数据库蛇形
 
-// 条件构造器 Wrapper 
+@TableField(exist=false)
+private String displayName;
+// 表示数据库中该字段不存在, 仅用于类属性
 
-// --> Query 查、删、简单更新  
-// 普通版 - 字符串硬编码  
-QueryWrapper<User> qw = new QueryWrapper<>(); 
-
-// Lambda版
-LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
-
-// --> Update 批量/复杂更新
-// 普通版 - 字符串硬编码 
-UpdateWrapper<User> uw = new UpdateWrapper<>();
-
-// Lambda版
-LambdaUpdateWrapper luw = new LambdaUpdateWrapper<>();
- 
-// 自定义SQL eg -> 
-List<long> ids = List.of(1L, 2L, 4L);
-int amount = 200; 
-// 1.构建条件 
-LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<User>().in(user -> user.getId(), ids);
-// 2.自定义SQL方法调用 
-userMapper.updateBalanceByIds(wrapper, amount);
-// 3.Mapper接口声明 
-void updateBalanceByIds(@Param("ew") LambdaQueryWrapper<User> wrapper, @Param("amount") int amount);
-// 4.自定义 XML SQL 
-<update id="updateBalanceByIds">
-  UPDATE tb_user SET balance = balance - #{amount} ${ew.customSqlSegment}
-</update> 
-
-// Controller负责接口调控, Mapper负责数据管理, Service负责核心业务   
-// 1.写Mapper接口
-public interface UserMapper extends BaseMapper<User> {}
-// 2.写Service接口 
-public interface UserService extends IService<User> {} 
-// 3.写Service实现类 
-@Service 
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {} 
-// --> 常用方法: saveXxx removeXxx updateXxx listXxx lambdaXxx getXxx count page 
 
 
 
