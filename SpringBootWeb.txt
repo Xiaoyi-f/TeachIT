@@ -480,6 +480,9 @@ long pages = result.getPages(); // 总页数
 long current = result.getCurrent(); // 当前页
 long size = result.getSize(); // 每页条数 
 
+// MP 原生没有分页功能 需要在配置类配置添加分页插件 
+interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+
 // 分页查询 -- 返回 Map 
 Page<Map<String, Object>> mapPage = new Page<>(1, 10);
 IPage<Map<String, Object>> result = userService.pageMaps(mapPage, wrapper);
@@ -745,6 +748,60 @@ public void transactionalMethod() {}
 悲观锁: 认为其他请求很可能同时修改这条数据, 所以我先把它锁住, 其他请求暂时无法修改
 
 --> 乐观锁
+优缺点:
+
+优:
+查询时不阻塞其他事务
+并发能力通常较好
+没长时间持有数据库锁的问题
+适合冲突较少场景
+
+缺:
+更新可能失败, 需要冲突处理
+冲突频繁时, 会产生大量失败和重试
+需要携带正确的版本号
+不适合所有复杂业务 
+
+// 实体类
+@version
+private Integer version; 
+// 声明该字段用于乐观锁版本检查 --> 告诉MP
+
+// 配置类 
+@Configuration 
+public class MybatisPlusConfig {
+
+  // 多线程并发修改同一条数据时, 防止覆盖别人新改的数据, 用版本号控制并发更新 
+  
+  @Bean // 把方法返回的对象交给 Spring IOC 容器管理, 注册成 Bean
+  public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+    interceptor.addInnerInterceptor(new OptimisticLockerInterceptor()) // 乐观锁插件 
+    // updateById 时候, 自动在 where 条件拼接 AND version = ? --> SET 部分 自动追加 version = version + 1 
+  };
+
+  return interceptor;
+}
+
+// 事务
+@Transactional(rollbackFor = Exception.class)
+public void updateUsername(Long id, String newName) {
+  User user = userMapper.selectById(id);
+
+  if (user == null) {
+    throw new BusinessException("用户不存在");
+  }
+
+  user.setName(newName);
+
+  int rows = userMapper.updateById(user);
+
+  if (rows == 0) {
+    throw new BusinessException("数据已被其他人修改, 请稍后重试");
+  }
+}
+
 
 */
 

@@ -111,6 +111,8 @@ DELETE FROM <table_name> WHERE <column_name> = 'value';
 
 UPDATE <table_name> SET <column_name> = 'value', <column_name> = 'value' WHERE <column_name> = 'value'; 
 
+--> 后缀子句 FOR UPDATE 表示排它锁 --> 避免并发更新问题 
+
 # DQL 数据查询语言 
 SELECT 
         字段列表
