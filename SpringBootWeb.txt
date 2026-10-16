@@ -97,7 +97,7 @@ Tip: 注意0开头数据在yml中表示八进制数据, 务必使用引号引起
 
 其他依赖/工具:
 Spring Boot DevTools 开发热更新支持
-Lombok 注解生成代码工具 
+Lombok 注解生成代码工具 // 默认只处理普通 非static属性 --> @Data @Getter @Setter @ToString @NoArgsConstructor @AllArgsConstructor @Slf4j 
 SpringConfigurationProcessor 自动生成配置元数据 -> @ConfigurationProperties 把application.yml / application.properties映射成JavaBean
 MySQL Driver MySQL MySQL数据库驱动
 Spring Web HTTP接口制造机
@@ -556,5 +556,189 @@ public class UserController {
 404: 资源不存在
 500: 服务器内部错误
 */
+
+// DTO 类 
+@Data
+public class UserCreateDTO {
+  
+  private String userName; 
+  private String password; 
+  private Integer age = 18; 
+}
+
+UserCreateDTO dto = new UserCreateDTO();
+BeanUtils.copyProperties(dto, user); // dto 转换为 user, 字段名字必须一一对应
+
+-使用-> @RequestBody UserCreateDTO dto --> userService.createUser(dto); 
+
+// VO 类 
+@Data 
+public class UserVO {
+
+  private Long id; 
+  private String userName; 
+  private String nickName; 
+  private Integer status;
+}
+
+UserVO vo = new UserVO();
+BeanUtils.copyProperties(user, vo); // user 转换为 vo, 字段名字必须一一对应 
+return vo;
+
+// 参数校验 --> 添加 spring-boot-starter-validation / jakarta.validation 依赖 
+
+// DTO 添加校验规则
+@Data
+public class UserRegisterDTO {
+
+    @NotBlank(message = "用户名不能为空")
+    @Size(
+        min = 2,
+        max = 20,
+        message = "用户名长度必须在2到20之间"
+    )
+    private String username;
+
+    @NotBlank(message = "密码不能为空")
+    @Pattern(regexp = "^[a-zA-Z0-9_]{6,30}$", message = "密码格式要正确")
+    @Size(
+        min = 6,
+        max = 30,
+        message = "密码长度必须在6到30之间"
+    )
+    private String password;
+
+    @NotBlank(message = "确认密码不能为空")
+    private String confirmPassword;
+
+    @Email(message = "邮箱格式不正确")
+    private String email;
+
+    @NotNull(message = "年龄不能为空")
+    @Min(value = 0, message = "年龄不能小于0")
+    @Max(value = 150, message = "年龄不能大于150")
+    private Integer age;
+}
+
+-使用-> @Valid @RequestBody UserRegisterDTO dto --> @Valid 表示在执行方法之前按照DTO写好的校验规则进行校验 
+
+// 定义 Result<T> 类 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Result<T> {
+
+    private Integer code;
+
+    private String message;
+
+    private T data;
+
+    public static <T> Result<T> success() {
+        return new Result<>(200, "操作成功", null);
+    }
+
+    public static <T> Result<T> success(T data) {
+        return new Result<>(200, "操作成功", data);
+    }
+
+    public static <T> Result<T> success(
+            String message, T data) {
+
+        return new Result<>(200, message, data);
+    }
+
+    public static <T> Result<T> fail(
+            Integer code, String message) {
+
+        return new Result<>(code, message, null);
+    }
+}
+--> Tip: 编译器会自动推断参数从而推断类型自动传递泛型类型, 只有当传递null时候需要手动传递泛型类型 Result.<Type>success(data);
+--> Tip: @NoArgsConstructor @AllArgsConstructor 为 Lombok 提供的自动构建 无参构造函数 和 全参构造函数 注解 
+--> Tip: Result<T> 主要用于统一返回封装类 
+
+// 异常处理
+@Getter
+public class BusinessException
+        extends RuntimeException {
+
+    private final Integer code;
+
+    public BusinessException(String message) {
+        this(400, message);
+    }
+
+    public BusinessException(
+            Integer code, String message) {
+
+        super(message);
+        this.code = code;
+    }
+}
+
+User user = userService.getById(id); 
+
+if (user == null) {
+  throw new BusinessException("用户不存在");
+}
+
+--> 全局异常处理 
+@RestControllerAdvice // 统一处理所有 Controller 产生的异常, 并把返回值转换成 JSON
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(BusinessException.class) // 指定处理哪种异常 
+    public ResponseEntity<Result<Void>>
+    handleBusinessException(BusinessException err) {
+
+        Result<Void> result =
+                Result.fail(err.getCode(), err.getMessage());
+
+        return ResponseEntity
+                .status(err.getCode())
+                .body(result);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Result<Void>>
+    handleValidationException(MethodArgumentNotValidException err) {
+
+        String message = err.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .map(FieldError::getDefaultMessage)
+                .orElse("参数校验失败");
+
+        return ResponseEntity
+                .badRequest()
+                .body(Result.fail(400, message));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Result<Void>>
+    handleUnknownException(Exception err) {
+
+        // 实际项目应记录完整日志
+        err.printStackTrace();
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Result.fail(500, "服务器内部错误"));
+    }
+}
+--> Tip: 不用再写 try catch 
+
+// Service 层 事务处理 -- 多个数据库操作, 要么全部成功(提交事务), 要么全部失败(回滚事务)
+// 使用 @Transactional 不要调用同类方法 
+@Transactional(rollbackFor = Exception.class)
+public void transactionalMethod() {}
+// 切勿吞掉异常, 事务方法必须由Spring管理 --> @Service 
+// 事务不是所有方法都可以回滚, 通常回滚 INSERT / UPDATE / DELETE 操作 
+
+
+
+
+
 
 
