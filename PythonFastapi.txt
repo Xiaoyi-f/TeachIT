@@ -188,6 +188,7 @@ async def query_demo():
   stat = select(Table).filter_by(field=value) 
   stat = select(Table).where(Table.field布尔表达式)
   stat = select(Table).where(Table.field布尔表达式).order_by(func.random())
+  --> with_for_update() 悲观锁方法 
 
   async with Session(engine) as session: 
     demo = await session.exec(stat).first()

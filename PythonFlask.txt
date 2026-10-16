@@ -154,6 +154,7 @@ demo = Table.query.filter(Table.field布尔表达式).all()
 demo = Table.query.filter(Table.field布尔表达式).order_by(func.random()).all()
 demo = Table.query.filter_by().all() # 直接写 字段名=值 不用写 Table 
 demo = Table.query.get("primary_key")
+--> with_for_update() 悲观锁方法 
 
 # 分页查询 error_out --> 页码不存在时是否抛出异常 
 pagination = Table.query.order_by(Table.id.asc()).paginate(page=cur_page, per_page=page_size, error_out=False)
