@@ -821,7 +821,8 @@ public void updateUsername(Long id, String newName) {
 userMapper.selectByIdForUpdate(id); // 对当前事务查询对应的记录加锁 
 */
 
-
+// Spring-AOP --> spring-boot-starter-aop 依赖
+AOP: Aspect Oriented Programming 面向切面编程 即 面向特定方法编程 
 
 
 
