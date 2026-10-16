@@ -83,12 +83,14 @@ mybatis:
   configuration: 
     map-underscore-to-camel-case: true 
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 生产务必关掉这个配置, 不要写这个配置 
-# MyBatisPlus配置
+# MyBatisPlus配置 与 MyBatis 二选一 即可 
 mybatis-plus:
   # 自动扫描对应的包下所有实体类, XML 里面可以省略前缀包名 
+  mapper-locations: classpath:mapper/*.xml 
   type-aliases-package: com.xxx.xxx.xx  # 别名扫描包 --> 给实体类起简短别名  
   configuration: 
     map-underscore-to-camel-case: true 
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 生产务必关掉这个配置, 不要写这个配置 
 
 Tip: 注意0开头数据在yml中表示八进制数据, 务必使用引号引起来 
 
@@ -287,7 +289,7 @@ resultType --> Java类型 --> 通常为实体类
 
 /* mybatis-plus 增强版 -- 只做增强 */
 public interface UserMapper extends BaseMapper<User> {}
---> 常用CRUD方法 -- 业务逻辑层实例注入使用:
+--> 常用简单CRUD方法 -- 业务逻辑层实例注入使用 -- 返回对应实体类:
 userMapper.insert(user);
 userMapper.deleteById(id); 
 userMapper.updateById(user); 
@@ -295,9 +297,18 @@ userMapper.selectById(id);
 userMapper.selectList(wrapper);
 userMapper.selectCount(wrapper);
 
+// Mapper 
+public interface UserMapper extends BaseMapper<User> {}
+
 实体类注解:
-@TableId(value="id", type=IdType.AUTO) // type=ASSIGN_ID 分库分表需要ID全局唯一时候使用 --> 雪花算法 
-private Long id;
+@Data // Lombok 快速自动生成 getter setter toString ...
+public class User {}
+
+@TableName("table_name")
+public class User {}
+
+@TableId(value="id", type=IdType.AUTO) // type=IdType.ASSIGN_ID 分库分表需要ID全局唯一时候使用 --> 雪花算法 
+private Long id; // 一般自动将id作为主键
 
 @TableField("user_name")
 private String userName;
@@ -307,6 +318,100 @@ private String userName;
 private String displayName;
 // 表示数据库中该字段不存在, 仅用于类属性
 
+/* 自定义复杂SQL -- 条件构造器(链式) -- Wrapper */
+AbstractWrapper --> 所有的 [QueryWrapper、UpdateWrapper] --> 硬编码、[LambdaQueryWrapper、LambdaUpdateWrapper] --> 避免硬编码(更推荐/常用) 都继承于 AbstractWrapper 
+
+QueryWrapper<User> wrapper = new QueryWrapper<>(); 
+
+wrapper
+.eq("username", "admin")
+.ne("password", "123456")
+.gt("age", 18)
+.ge("age", 18)
+.lt("age", 18)
+.le("age", 18)
+.like("username", "admin")
+.between("age", 18, 30)
+.in("age", List.of(18, 19, 20))
+.isNotNull("username")
+.orderByAsc("age")
+.orderByDesc("age");
+
+.and(child -> child
+.lt("age", 18)
+.or()
+.gt("age", 60));
 
 
+UpdateWrapper<User> wrapper = new UpdateWrapper<>(); 
 
+wrapper
+// SET 
+.set("username", "admin")
+.set(username != null, "username", username)
+
+// WHERE 
+.eq("id", 1L)
+.ne("age", 18)
+.gt("age", 18)
+.ge("age", 18)
+.lt("age", 18)
+.le("age", 18)
+.like("username", "admin")
+.between("age", 18, 30)
+.in("age", List.of(18, 19, 20))
+.isNotNull("username")
+
+.and(child -> child
+.lt("age", 18)
+.or()
+.gt("age", 60));
+
+
+LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+
+wrapper
+.eq(User::getUsername, "admin")
+.ne(User::getPassword, "123456")
+.gt(User::getAge, 18)
+.ge(User::getAge, 18)
+.lt(User::getAge, 18)
+.le(User::getAge, 18)
+.like(User::getUsername, "admin")
+.between(User::getAge, 18, 30)
+.in(User::getAge, List.of(18, 19, 20))
+.isNotNull(User::getUsername)
+.orderByAsc(User::getAge)
+.orderByDesc(User::getAge)
+
+.and(child -> child
+    .lt(User::getAge, 18)
+    .or()
+    .gt(User::getAge, 60)
+);
+
+
+LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
+
+wrapper
+// SET
+.set(User::getUsername, "admin")
+.set(username != null, User::getUsername, username)
+
+// WHERE
+.eq(User::getId, 1L)
+.ne(User::getAge, 18)
+.gt(User::getAge, 18)
+.ge(User::getAge, 18)
+.lt(User::getAge, 18)
+.le(User::getAge, 18)
+.like(User::getUsername, "admin")
+.between(User::getAge, 18, 30)
+.in(User::getAge, List.of(18, 19, 20))
+.isNotNull(User::getUsername)
+
+.and(child -> child
+    .lt(User::getAge, 18)
+    .or()
+    .gt(User::getAge, 60)
+);

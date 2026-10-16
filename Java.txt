@@ -191,7 +191,8 @@ try {
 () -> {}
 
 // 方法引用 --> JDK8+ 对 lambda 表达式 进行简化 
-collection.forEach(item::function)
+// 底层创建对象实例, 有参数则自动关联传递, 没有则可以理解为空参 lambda 转变
+collection.forEach(ClassName::function)
 
 /* File管理文件元数据 */ 
 File(String pathName); 
