@@ -1,0 +1,122 @@
+依赖示例:
+<dependency>
+  <groupId>com.aliyun.oss</groupId>
+  <artifactId>aliyun-sdk-oss</artifactId>
+  <version>3.17.4</version>
+</dependency>
+
+// 准备阿里云信息
+endpoint --> oss 服务地址 
+access-key-id --> 访问密钥 ID 
+access-key-secret --> 访问密钥 Secret 
+bucket-name --> bucket 名称 
+--> 对于前端 建议设置关联自己的域名 从而确保前端直接显示对应的内容(图片等) 而避免弹出下载 
+
+// application.yml 对应的配置数据 
+aliyun:
+  oss:
+    endpoint: ${OSS_ENDPOINT}
+    access-key-id: ${OSS_ACCESS_KEY_ID}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET}
+    bucket: ${OSS_BUCKET}
+
+// 配置类 从 application.yml 读取配置数据 
+@Configuration 
+public class OssConfig {
+
+  @Value("${aliyun.oss.endpoint}")
+  private String endpoint; 
+
+  @Value("${aliyun.oss.access=key-id}")
+  private String accessKeyId; 
+
+  @Value("${aliyun.oss.access-key-secret}")
+  private String accessKeySecret; 
+
+  // Spring 关闭时 释放客户端资源 -- 连接池中连接和相关对象或相关后台线程和其他运行资源  
+  @Bean(destroyMethod = "shutdown")
+  public OSS ossClient() {
+    return new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+  }
+}
+
+
+// 上传、下载、删除 --> Service 
+@Service 
+public class OssService {
+
+  private final OSS ossClient; 
+  private final String bucket; 
+
+  public OssService(OSS ossClient, @Value("${aliyun.oss.bucket}") String bucket) {
+    this.ossClient = ossClient; 
+    this.bucket = bucket; 
+  }
+
+  public String upload(MultipartFile file) throws IOException {
+    if (file.isEmpty()) {
+      throw new IllegalArgumentException("文件不能为空");
+    }
+
+    // objectKey 为文件在 Bucket 中名字, 不是服务器本地路径 
+    String objectKey = UUID.randomUUID() + "-" + file.getOriginalFilename(); 
+
+    ossClient.putObject(bucket, objectKey, file.getInputStream());
+
+    return objectKey; 
+  }
+}
+
+public InputStream download(String objectKey) {
+  OSSObject object = ossClient.getObject(bucket, objectKey);
+  return object.getObjectContent();
+}
+
+public void delete(String objectKey) {
+  ossClient.deleteObject(bucket, objectKey);
+}
+
+
+// Controller 
+@RestController 
+@RequestMapping("/files")
+public class FileController {
+
+  private final OssService ossService; 
+
+  public FileController(OssService ossService) {
+    this.ossService = ossService; 
+  }
+
+  /*
+  上传注意文件大小限制
+  spring:
+    servlet:
+      multipart:
+        max-file-size: 10MB
+        max-request-size: 10MB 
+  */
+
+  @GetMapping("/download")
+  public void download(@RequestParam String objectKey, HttpServletResponse response) throws IOException {
+    try (InputStream input = ossService.download(objectKey)) {
+      response.setContentType("application/octet-stream"); // 二进制文件数据 
+      response.setHeader("Content-Dispostition", "attachment; filename=\"download\""); // 以附件形式下载处理 文件名为 download 
+
+      input.transferTo(response.getOutputStream()); // 将input中读到的全部数据写入HTTP响应输出流 
+    } finally {
+      // do nothing 
+    }
+  }
+
+  @PostMapping // 前端传递数据类型务必对应为 multipart/form-data 
+  public String upload(@RequestParam("file") MultipartFile file) throws IOException {
+    return ossService.upload(file);
+  }
+
+  @DeleteMapping 
+  public void delete(@RequestParam String objectKey) {
+    ossService.delete(objectKey);
+  }
+}
+
