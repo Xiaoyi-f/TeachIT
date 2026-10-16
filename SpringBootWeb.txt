@@ -484,3 +484,77 @@ long size = result.getSize(); // 每页条数
 Page<Map<String, Object>> mapPage = new Page<>(1, 10);
 IPage<Map<String, Object>> result = userService.pageMaps(mapPage, wrapper);
 
+// 逻辑删除 
+1.实体类标注 
+@TableLogic 
+private Integer deleted; // 0 = 未删除, 1 = 已删除 
+2.yml中配置全局逻辑删除规则 或者 写注解参数 @TableLogic(value = "0", delval = "1")
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-not-delete-value: 0 
+      logic-delete-value: 1
+3.配置和使用逻辑删除则相关 删除操作会变成更新逻辑删除列字段值, 查询操作自动过滤已逻辑删除数据, 更新操作只能更新逻辑删除列字段值表示未删除的行
+-强行查询已逻辑删除行-> wrapper.eq("deleted", 1).or().eq("deleted", 0); // 不使用自动拼接deleted=0, 自己指定查询全部 
+
+--> IDEA MyBatisX 插件使用
+小鸟箭头快速跳转切换 Mapper <-> XML 
+
+连接上数据库之后选中对应的表, 右键 -> MybatisX-Generator 
+-配置->
+base path: 项目模块路径 
+relative package: com.example.entity; 实体包 
+Annotation: Mybatis-Plus3 
+勾选 Lombok 自动加 @Data 注解 和 勾选 Comment 自动生成注释 
+-- Tip: 多表可以按住 ctrl 多选, 一次性批量生成代码 
+--> 一次性自动生成 Entity 实体类 / Mapper 接口 / Mapper.xml 映射文件 / Service 接口 + ServiceImpl 实现类 
+
+
+/* Controller 层面 核心知识 -- 不要让 Controller 直接处理复杂业务 */
+@RestController // 标明REST响应Controller --> 自动将返回数据直接写入HTTP响应体 
+@RequestMapping("/users") // 可以使用任何四个HTTP方法 GET POST PUT DELETE 可以修饰类或方法
+public class UserController {
+
+  @Resource 
+  private UserService userService;
+
+  @GetMapping("/hello") // @PostMapping @PutMapping @DeleteMapping 
+  public String hello(
+    // required = false 表示可以不传递 
+    @RequestParam(required = false) String name, 
+    @RequestParam(required = false, defaultValue = 0) Integer status) {
+
+    return "hello"; // return 实体类对象 自动将实体类转为 JSON 再写入HTTP响应体
+  }
+
+  @PostMapping
+  public boolean add(@RequestBody User user) {
+    // 自动将 JSON 转为 实体类对象, 若前端传递过来的数据不是 Content-Type: application/json 则需要配置好, 确保传递 JSON 
+
+    return userService.save(user);
+  }
+
+  @PutMapping("/{id}")
+  public boolean update(
+    @PathVariable Long id,
+    @RequestBody User user) {
+
+      user.setId(id);
+      return userService.updateById(user);
+    }
+
+    // Tip: 真实项目自定义 DTO 接收, 自定义 VO 返回
+}
+
+/*
+常见HTTP状态码:
+200: 成功
+201: 创建成功
+400: 请求参数错误
+401: 未登录
+403: 没有权限
+404: 资源不存在
+500: 服务器内部错误
+*/
+
+
