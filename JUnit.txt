@@ -1,0 +1,38 @@
+单元测试 --> 集成测试 
+
+public class UserServiceTest {
+
+  @BeforeAll
+  public static void testBeforeAll() {
+    System.out.println("所有测试开始");
+  }
+
+  @AfterAll
+  public static void testAfterAll() {
+    System.out.println("所有测试结束");
+  }
+
+  @BeforeEach
+  public void testBefore() {
+    System.out.println("测试开始");
+  }
+
+  @AfterEach
+  public void testAfter() {
+    System.out.println("测试结束");
+  }
+
+  @Test // @Test 标记的方法必须为 public void 修饰 底层原因与规范 
+  @DisplayName("测试获取用户年龄") // 指定测试名字 
+  public void testGetAge() {
+    Integer age = new UserService().getAge("id");
+
+    Assertions.assertEquals(18, age, "两个值相等");
+    Assertions.assertNotEquals(16, age, "两个值不相等");
+    Assertions.assertNull(age, "值为 null");
+    Assertions.assertNotNull(age, "值不为 null");
+    Assertions.assertTrue(age > 16, "大于 16"); // 检查条件是否为true
+    Assertions.assertFalse(age < 16, "小于 16"); // 检查条件是否为false
+    Assertions.assertSame(age, age, "两个对象引用相等"); // 检查两个对象引用地址是否相等 
+  }
+}

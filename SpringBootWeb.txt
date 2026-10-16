@@ -26,6 +26,10 @@
  * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
  */
 
+基本术语:
+静态资源与动态资源
+C/S架构与B/S架构 
+
 起步依赖 spring-boot-starter-web 内部依赖于 spring-boot-starter-tomcat 由于maven依赖传递性 我们在创建项目时候就已经有 tomcat 依赖, 而我们运行引导类中main方法其实就是启动的springboot内嵌的Tomcat服务器, 而我们开发的项目也会自动部署到该服务器上 
 启动流程: main -> SpringApplication.run() -> application.yml / application.properties -> 创建Spring容器 -> 自动配置 -> Tomcat启动
 
