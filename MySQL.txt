@@ -20,7 +20,7 @@ Tip: ACID (原子性 一致性 隔离性 持久性)
 持久性: 事务一旦 commit 成功, 数据必须永久保存 
 
 mysql -h 127.0.0.1 -P 3306 -u root -p 
-ALTER USER 'root@localhost' IDENTIFIED BY '你的新密码'; 
+ALTER USER 'root'@'localhost' IDENTIFIED BY '你的新密码'; 
 exit; 
 
 // 加载sql文件并且执行 
@@ -62,10 +62,12 @@ TIME --> HH:MM:SS
 
 # DDL 数据定义语言
 DROP DATABASE IF EXISTS `xxx_db`;
-CREATE DATABASE `xxx_db` IF NOT EXISTS `xxx_db`; 
+CREATE DATABASE IF NOT EXISTS `xxx_db`; 
 USE `xxx_db`; 
 SHOW DATABASES; 
+SHOW TABLES;
 SELECT DATABASE(); -- 查询当前使用的数据库 
+SELECT * FROM `table_name`;
 
 SHOW CREATE DATABASE `database_name`; 
 ALTER DATABASE `database_name` 
@@ -73,7 +75,7 @@ DEFAULT CHARACTER SET utf8mb4; -- MySQL8 版本之后默认的字符集就是 ut
 DEFAULT COLLATE utf8mb4_unicode_cli; 
 
 CREATE TABLE `table_name` (
-  `column_name` column_type [PRIMARY KEY | NOT NULL | DEFAULT value | UNIQUE] AUTO_INCREMENT COMMENT 'column comment',
+  `column_name` column_type [NOT NULL | DEFAULT value | UNIQUE] AUTO_INCREMENT PRIMARY KEY COMMENT 'column comment',
   CONSTRAINT `constraint_name`
   FOREIGN KEY (`column_name`) 
   REFERENCES `referenced_table_name` (`referenced_column_name`)
