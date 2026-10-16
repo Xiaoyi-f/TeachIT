@@ -21,6 +21,7 @@
  * 8. site 生成项目说明和报告网站
  * 9. deploy 将项目发布到远程仓库
  * default链: validate -> compile -> test -> package -> verify -> install -> deploy 
+ * pom.xml配置文件一旦变动，记得重新加载，然后把整个项目clean一下，然后再执行
  * -->
  * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
  */
@@ -288,14 +289,14 @@ resultType --> Java类型 --> 通常为实体类
 // 接口方法上注解: @Select @Insert @Update @Delete --> 直接在接口中写注解则不用再到XML写配置 --> 支持三引号 --> 参数即SQL
 
 /* mybatis-plus 增强版 -- 只做增强 */
-public interface UserMapper extends BaseMapper<User> {}
+
 --> 常用简单CRUD方法 -- 业务逻辑层实例注入使用 -- 返回对应实体类:
 userMapper.insert(user);
 userMapper.deleteById(id); 
 userMapper.updateById(user); 
 userMapper.selectById(id); 
-userMapper.selectList(wrapper);
-userMapper.selectCount(wrapper);
+userMapper.selectList(wrapper);  // 返回数量 
+userMapper.selectCount(wrapper); // 返回数据列表 
 
 // Mapper 
 public interface UserMapper extends BaseMapper<User> {}
@@ -415,3 +416,71 @@ wrapper
     .or()
     .gt(User::getAge, 60)
 );
+
+// 自定义SQL
+void updateBalanceByIds(@Param(Constants.WRAPPER) Wrapper<User> wrapper);
+--> XML
+<update id="updateBalanceByIds">
+  UPDATE table_name 
+  SET ${ew.sqlSet}
+  ${ew.customSqlSegment}
+</update>
+--> ew理解: EntityWrapper sqlSet理解: 代表wrapper生成的SET字符串 customSqlSegment理解: 代表wrapper生成的WHERE条件字符串
+
+// 通用Service接口 -> IService, ServiceImpl类 --> IService接口中具体实现 
+// 为了将项目尽可能解耦合, 因而分用Service接口
+public interface UserService extends IService<User> {} // 接口
+
+@Service public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {}
+
+Tip: Controller 注入接口 注入的其实是接口具体实现之后的类对象, Spring容器底层将接口实现类放入容器然后找到实现对应接口的Bean创建好对象返回
+--> 当然也可以直接注入接口实现类, 但是通常直接注入接口名字更加规范和面向接口 
+
+// IService 提供常用方法 -- Service 层面:
+boolean success = userService.save(user); // 对应 Mapper insert 
+List<User> users = List.of(user, otherUser); 
+boolean success = userService.saveBatch(users); 
+
+userService.saveOrUpdate(user); // 主键不存在或数据库中没有记录则新增, 存在且数据库中有记录则更新
+userService.saveOrUpdateBatch(users); 
+
+userService.removeById(id); 
+userService.removeByIds(List.of(id, otherId));
+userService.remove(wrapper); // 根据 wrapper 删除 
+
+userService.updateById(user); 
+userService.update(updateUser, wrapper);
+userService.updateBatchById(List.of(user, otherUser));
+
+userService.getById(id); // 对应 Mapper selectById
+userService.getOne(wrapper, false); // 根据 wrapper 条件查询 查询到多条时候不抛出异常  
+Map<String, Object> userMap = userService.getMap(wrapper); // 根据 wrapper 条件查询 查询结果返回 Map 而不是对象 
+
+List<User> users = userService.list(); // 查询全部数据 
+List<User> users = userService.list(wrapper); // 根据 wrapper 条件查询
+List<User> users = userService.listByIds(List.of(id, otherId));
+List<Map<String, Object>> results = userService.listMaps(wrapper);
+
+// 统计表中记录数量 
+long count = userService.count();
+
+// 条件统计 
+long count = userService.count(wrapper); 
+
+// 分页查询 -- MyBatis-Plus 自带分页实体类 
+Page<User> pageParam = new Page<>(1, 10); // 1 表示当前页数, 10 表示每页条数 
+Page<User> result = userService.page(pageParam); 
+
+Page<User> pageParam = new Page<>(1, 10); 
+Page<User> result = userService.page(pageParam, wrapper); 
+
+List<User> records = result.getRecords(); 
+long total = result.getTotal(); // 符合条件的总数据条数 
+long pages = result.getPages(); // 总页数 
+long current = result.getCurrent(); // 当前页
+long size = result.getSize(); // 每页条数 
+
+// 分页查询 -- 返回 Map 
+Page<Map<String, Object>> mapPage = new Page<>(1, 10);
+IPage<Map<String, Object>> result = userService.pageMaps(mapPage, wrapper);
+
