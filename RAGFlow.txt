@@ -1,0 +1,4 @@
+// 适合内部百人内使用知识库 
+https://github.com/infiniflow/ragflow --> Code / Clone --> Download ZIP 
+
+具体使用看官方文档 
