@@ -827,6 +827,37 @@ public void updateUsername(Long id, String newName) {
 userMapper.selectByIdForUpdate(id); // 对当前事务查询对应的记录加锁 
 */
 
+// jwt application.yml
+jwt:
+  secret: ${JWT_SECRET}
+  expire-hours: 120
+
+// JwtUtils 
+public class JwtUtils {
+
+  @Value("${jwt.secret}")
+  private static final String SECRET_KEY;
+
+  @Value("${jwt.expire-hours * 3600 * 1000}")
+  private static final long EXPIRATION;
+
+  public static String generateToken(Map<String, Object> claims) {
+    return Jwts.builder()
+             .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+             .addClaims(claims)
+             .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+             .compact();
+  }
+
+  public static Claims parseToken(String token) throws Exception {
+    return Jwts.parser()
+             .setSigningKey(SECRET_KEY)
+             .parseClaimsJws(token)
+             .getBody();
+  }
+}
+
+
 // WebFilter
 @Slf4j 
 @WebFilter(urlPatterns = "/*") // 拦截所有请求 
@@ -846,6 +877,12 @@ public class MyFilter implements Filter {
     String requestURI = request.getRequestURI(); // 获取到请求路径 
 
     String token = request.getHeader("token");
+
+    // 响应 401 状态码 
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+    // 校验令牌 
+    JwtUtils.parseToken(token); // 不报错则通过 --> jjwt 依赖 
 
     // 放行 
     filterChain.doFilter(servletRequest, servletResponse);

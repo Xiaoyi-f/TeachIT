@@ -60,6 +60,8 @@ public class OssService {
 
     // objectKey 为文件在 Bucket 中名字, 不是服务器本地路径 
     String objectKey = UUID.randomUUID() + "-" + file.getOriginalFilename(); 
+    // String newFileName = UUID.randomUUID() + originalFilename.substring(originalFilename.lastIndexOf("."));
+
 
     ossClient.putObject(bucket, objectKey, file.getInputStream());
 
