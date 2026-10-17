@@ -901,3 +901,21 @@ AOP: Aspect Oriented Programming 面向切面编程 即 面向特定方法编程
 --> 减少重复代码、代码无侵入、提高开发效率、方便维护 
 --> 类似于业务代码层面 "夹具"
 
+@Slf4j 
+@Aspect 
+@Component 
+public class TimeAspect {
+
+  @Around("execution(* com.example.xxx.service.*.*(..))")
+  public Object recordTime(ProceedingJoinPoint joinPoint) throws Throwable {
+    // 前置夹具处理 
+
+    try {
+      // 返回执行原来业务方法 
+      return xxx; 
+    } finally {
+      // 后置夹具处理 try 代码块有返回依旧会确保执行 
+    }
+  }
+}
+

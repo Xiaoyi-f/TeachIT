@@ -62,5 +62,5 @@ Agent搭建流程:
 
 语音技术: ASR & TTS 
 
-
+A2A: Agent To Agent 协议 --> 多智能体协作 
 
