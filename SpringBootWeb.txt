@@ -33,6 +33,8 @@ C/S架构与B/S架构
 起步依赖 spring-boot-starter-web 内部依赖于 spring-boot-starter-tomcat 由于maven依赖传递性 我们在创建项目时候就已经有 tomcat 依赖, 而我们运行引导类中main方法其实就是启动的springboot内嵌的Tomcat服务器, 而我们开发的项目也会自动部署到该服务器上 
 启动流程: main -> SpringApplication.run() -> application.yml / application.properties -> 创建Spring容器 -> 自动配置 -> Tomcat启动
 
+在 resources 文件夹 创建 banner.txt 文件 将水印文本写入 启动项目就是显示对应的水印 
+
 架构核心三层: 控制层 业务逻辑层 数据访问层 
 Controller层 接收请求, 响应数据 --> Service层 业务逻辑处理 --> Mapper层 / Dao层 / Repository层 数据访问操作
 
