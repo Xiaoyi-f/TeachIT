@@ -827,6 +827,31 @@ public void updateUsername(Long id, String newName) {
 userMapper.selectByIdForUpdate(id); // 对当前事务查询对应的记录加锁 
 */
 
+// WebFilter
+@Slf4j 
+@WebFilter(urlPatterns = "/*") // 拦截所有请求 
+public class MyFilter implements Filter {
+  @Override // 服务器启动执行一次
+  public void init(FilterConfig filterConfig) throws ServletException {
+    log.info("init 初始化方法 ..."); // info warn error 
+  }
+
+  @Override 
+  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    log.info("拦截到请求... 放行前...");
+
+    // 放行 
+    filterChain.doFilter(servletRequest, servletResponse);
+
+    log.info("拦截到请求... 放行后...");
+  }
+
+  @Override // 服务器关闭执行一次 
+  public void destroy() {
+    log.info("destroy 销毁方法...");
+  }
+}
+
 // Spring-AOP --> spring-boot-starter-aop 依赖
 AOP: Aspect Oriented Programming 面向切面编程 即 面向特定方法编程 
 
