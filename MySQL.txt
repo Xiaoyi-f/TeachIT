@@ -59,6 +59,7 @@ LONGTEXT
 DATE --> YYYY-MM-DD
 TIME --> HH:MM:SS 
 
+设计数据库表之前建议设计ER(实体关联)图
 
 # DDL 数据定义语言
 DROP DATABASE IF EXISTS `xxx_db`;

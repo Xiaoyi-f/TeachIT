@@ -62,7 +62,6 @@ public class OssService {
     String objectKey = UUID.randomUUID() + "-" + file.getOriginalFilename(); 
     // String newFileName = UUID.randomUUID() + originalFilename.substring(originalFilename.lastIndexOf("."));
 
-
     ossClient.putObject(bucket, objectKey, file.getInputStream());
 
     return objectKey; 
