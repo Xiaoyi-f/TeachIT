@@ -1,0 +1,60 @@
+@Configuration
+public class SwaggerConfig {
+
+  @Value("${Swagger.enabled}")
+  private boolean enabled; 
+
+  @Bean // 把方法返回的对象注册为Bean
+  public class OpenApiConfig {
+    return new OpenApi()
+                 .info(new Info()
+                             .title("系统接口文档")
+                             .version("1.0.0")
+                             .description("后端 API")
+                 );
+  }
+}
+
+// Controller 
+@Tag(name = "用户管理", description = "用户的新增、查询、修改和删除")
+@RestController
+@RequestMapping("/users")
+public class UserController {}
+
+@Operation(summary = "根据ID查询用户", description = "传入用户ID, 返回用户详细信息")
+@GetMapping("/{id}")
+public Result<UserVO> getById(
+  @Parameter(description = "用户ID", example = "1", required = true) // 说明参数 
+  @PathVariable Long id) {
+  return Result.success(userService.getUserById(id));
+}
+
+// DTO / VO 
+@Schema(description = "用户名", example = "xiaoyi", requiredMode = Schema.RequiredMode.REQUIRED)
+@NotBlank(message = "用户名不能为空")
+private String username; 
+
+--> 隐藏 / 不展示
+@Hidden
+@RestController
+@RequestMapping("/internal")
+public class InternalController {}
+
+@Hidden
+@GetMapping("/test")
+public String test() {
+    return "test";
+}
+
+// application.yml
+springdoc:
+  packages-to-scan: com.example.Controller # 指定扫描的包 
+  api-docs:
+    enabled: false // 生产环境关闭 
+  swagger-ui:
+    enabled: false // 生产环境关闭 
+
+-打开接口文档界面-> 
+http://localhost:port/swagger-ui/index.html 
+http://localhost:port/v3/api-docs 
+
