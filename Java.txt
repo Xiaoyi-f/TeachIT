@@ -54,6 +54,9 @@ BigDecimal theNum = number.setScale(M, RoundingMode.HALF_UP);
 String str = "Hello_Java"; 
 // new 出来的字符串也会从字符串常量池中复用值, 但是会再次在堆中创建新对象再复用, 而对应的变量指向堆中新对象 
 
+str.contains(subString); 
+str.isEmpty();
+
 /*
 当字符串进行 + 拼接时候, 底层会创建出来一个 StringBuilder 对象, 调用该对象 append 方法在内部完成拼接, 拼好之后再调用该对象的 toString 方法完成类型转换 
 String str = "abc"; 

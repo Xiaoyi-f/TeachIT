@@ -840,6 +840,13 @@ public class MyFilter implements Filter {
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
     log.info("拦截到请求... 放行前...");
 
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
+    HttpServletResponse response = (HttpServletResponse) servletResponse; 
+
+    String requestURI = request.getRequestURI(); // 获取到请求路径 
+
+    String token = request.getHeader("token");
+
     // 放行 
     filterChain.doFilter(servletRequest, servletResponse);
 
