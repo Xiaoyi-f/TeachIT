@@ -1,143 +1,549 @@
-开源社区晋升路径指南
+明确建议：
 
-五大主流开源社区的贡献者成长路径全解析
+> **第一目标选 Nacos，第二目标选 Apache RocketMQ Dashboard/Studio，第三阶段再挑战 RocketMQ 核心。**
 
-## 🏛️ Apache 社区：通往 Committer 与 PMC 的"标准路径" -- 第一步
+如果你的目标是：
 
-Apache 社区的晋升路径最为清晰和制度化，是所有 Apache 项目（如 Flink、Dubbo、APISIX 等）的统一标准。
+```text
+Java 软件开发
+进入中大厂
+提高面试竞争力
+尽量早做出有效开源成果
+未来争取 Committer
+```
 
-阶段一：从贡献者（Contributor）到提交者（Committer）
+那么 **Nacos 是目前“求职价值、Java 技术匹配度、贡献难度”之间最均衡的选择**。
 
-基础准备：
+---
 
-订阅项目的开发者邮件列表（如 dev@flink.apache.org）
-签署个人贡献者许可协议（ICLA）
+## 项目选择
 
-核心工作： 高质量、多样化地持续贡献
+### 第一名：Nacos
 
-贡献代码
-参与设计讨论与代码审查（PR Review）
-帮助解答用户问题
-完善文档
+Nacos 适合你的原因：
 
-晋升机制：
+- 使用 Java，和 Spring Boot、微服务方向高度相关；
+- 涉及服务注册发现、配置中心、集群、Raft、Spring 集成；
+- 国内 Java 面试中辨识度较高；
+- 官方明确提供 `good first issue` 和 `contribution welcome` 入口；
+- 可以从文档、控制台、测试、Spring 集成逐渐进入服务端；
+- 官方贡献指南公开了相对明确的 Committer 参考路径：持续贡献、至少约 8 个非琐碎 PR、获得多位 Committer 了解和支持，再由现有 Committer 发起提名。它不是自动晋升，但比多数社区更可规划。([github.com](https://github.com/alibaba/nacos/blob/develop/CONTRIBUTING.md?utm_source=openai))
 
-当贡献得到认可后，现有的 PMC 成员会发起提名，并在 PMC 的私人邮件列表中进行投票。投票通过后，受邀者会收到正式邀请。
+求职价值：
 
-阶段二：从提交者（Committer）到项目管理委员会成员（PMC）
+```text
+普通 CRUD 项目
+    < Redis、MQ、微服务应用项目
+    < 给 Nacos 等知名基础设施提交有效 PR
+    < 长期参与某个模块并能讲清源码和设计
+```
 
-核心转变： 从关注"我能构建什么？"转向思考"项目应该构建什么？以及它是否准备好发布？"。
+不过不要在简历上只写：
 
-所需特质：
+```text
+Nacos Contributor
+```
 
-持续与广泛的贡献：通常需要作为 Committer 活跃至少 6 个月，并展现出对项目整体的理解
-项目全局观：思考项目整体健康和发展方向，而不仅仅是自己或雇主的利益
-熟悉发布流程：积极参与测试和投票候选版本，熟悉 ASF 的发布政策
-社区建设与指导：积极引导和帮助新贡献者，具备社区意识
+应该写清楚：
 
-## 🐍 Python 社区：成为"核心开发者"之路 -- 第四步
+```text
+解决了什么问题
+涉及什么模块
+为什么产生问题
+如何测试
+PR 是否合并
+带来了什么改进
+```
 
-Python 社区的 Committer 被称为 核心开发者（Core Developer） ，代表着极高的信任，需要展现出对 Python 语言长期的承诺。
+### 第二名：Apache RocketMQ Dashboard/Studio
 
-核心要求：
+它比 RocketMQ 核心更容易入门，而且目前后端使用 Spring Boot 3.5 和 Java 21，和你正在学习的 Controller、DTO、鉴权、Redis、Swagger 等知识非常接近。当前社区征集贡献包含 Bug、功能、文档和测试，并提供 `good first issue`、`help wanted` 等入口。([github.com](https://github.com/apache/rocketmq/issues/10600?utm_source=openai))
 
-在相当长的一段时间内，持续贡献高质量、无需大幅返工的代码，并能与其他核心成员良好协作，成为 Python 项目的"大使"。
+适合先做：
 
-提名与投票流程：
+```text
+后端接口
+DTO/VO
+异常处理
+用户权限
+消息查询
+参数校验
+单元测试
+Docker 部署
+```
 
-通常由一位核心开发者作为导师发起提名
-在 Python Discourse 论坛发起为期 7 天的投票
-获得至少 三分之二 的赞成票，提名即通过
-最终由指导委员会（Steering Council）进行确认
+它的好处是：
 
-## ☕ OpenJDK（Java）：清晰的阶梯式成长 -- 第二步
+```text
+容易做出第一个后端 PR
+又能逐步接触 RocketMQ
+```
 
-OpenJDK 社区的角色阶梯非常明确，可以按部就班地成长。
+但长期简历含金量上，应继续从 Dashboard/Studio 进入：
 
-表格
-角色	晋升条件	权限说明
-参与者（Participant）	新人的起点，活跃在邮件列表上	参与讨论
-作者（Author）	贡献约 2 个有意义的变更	拥有提交补丁的权限，但需要一位担保人（Sponsor）帮助合入代码
-提交者（Committer）	贡献约 8 个有意义的变更	可独立推送代码，无需担保人
-审查者（Reviewer）	贡献 32 个重要变更	拥有批准他人代码变更的权限
+```text
+RocketMQ Client
+RocketMQ Broker
+消息存储
+消费重试
+延迟消息
+事务消息
+```
 
-## 🖖 Vue 社区：从贡献者到核心成员 -- 第二步
+RocketMQ 官方欢迎代码、文档、测试和生态工具贡献，并强调持续贡献、代码质量、测试覆盖和维护意愿。([github.com](https://github.com/apache/rocketmq/blob/develop/CONTRIBUTING.md?utm_source=openai))
 
-Vue 社区同样重视贡献，但没有像 Apache 那样严格的制度化流程，更依赖于核心团队的认可。
+### 第三名：Apache SkyWalking
 
-核心路径： 遵循官方的贡献指南开始贡献
+SkyWalking 对高薪后端、云原生、可观测性岗位很有价值，涉及：
 
-关键实践：
+```text
+Java Agent
+字节码增强
+链路追踪
+指标
+日志
+分布式系统
+存储
+性能分析
+```
 
-确保 Pull Request（PR）遵循提交规范
-保持提交历史的清晰
-在 PR 中勾选 "Allow edits from maintainers" 选项，方便维护者直接修改
+但它明显比 Nacos 控制台和 RocketMQ Dashboard 难。官方推荐新人从文档、部署反馈、Bug、`good first issue` 开始，再逐步进入核心源码。([skywalking.apache.org](https://skywalking.apache.org/docs/main/v9.7.0/readme/?utm_source=openai))
 
-成为 Committer：
+它适合成为第二年目标，不建议你现在直接把 Java Agent 当第一个 PR。
 
-当持续提交高质量的 PR，并在代码审查和社区讨论中展现出对 Vue 核心的理解后，核心团队成员会发出加入邀请。
+### 暂时不优先：ShardingSphere
 
-## 🏢 Spring 官方项目：贡献与晋升 -- 第三步
+ShardingSphere 对数据库中间件岗位很有价值，但会涉及：
 
-Spring 官方项目（如 Spring Framework、Spring Boot、Spring Cloud 等）的贡献流程相似，但角色体系相对非正式。
+```text
+SQL Parser
+查询改写
+路由
+分布式事务
+数据库协议
+JDBC
+代理服务
+```
 
-核心贡献流程
+对当前阶段偏难。可以先从官方文档贡献入口开始，但不建议作为你的第一个核心项目。([shardingsphere.apache.org](https://shardingsphere.apache.org/community/en/involved/contribute/document/?utm_source=openai))
 
-1. 签署贡献者许可协议（CLA）
+---
 
-在提交非琐碎的 PR 之前，需要签署 CLA
-Spring 官方正在用开发者原创证书（DCO）逐步取代 CLA
-目前所有提交信息末尾都必须包含 Signed-off-by 签名，表示同意 DCO
+# 最佳路线
 
-2. 遵循代码规范
+不要同时维护四个社区。建议采用：
 
-使用 Spring JavaFormat 插件进行代码格式化
-通过 Checkstyle 检查代码规范
-新的 .java 文件需包含 ASF 许可头部和 @author 标签
-提交信息需遵循规范（主题行不超过 50 字符，正文每行不超过 72 字符等）
+```text
+Nacos：主线项目，占 70% 时间
+RocketMQ Dashboard/Studio：练手项目，占 30% 时间
+```
 
-3. 提交 Pull Request（PR）
+三个月后根据结果选择一条：
 
-PR 需要关联对应的 Issue
-提交 PR 前，确保代码通过所有检查（如 ./gradlew check）
+```text
+Nacos 反馈好、有 PR 合并
+→ 继续深挖 Nacos
 
-从贡献者到 Committer 与 PMC
+RocketMQ 更容易找到任务和导师
+→ 转为 RocketMQ 主线
+```
 
-Spring 官方项目没有公开的、像 Apache 基金会那样标准化的提名与投票流程文档。晋升通常基于持续的、高质量的贡献，并由现有核心团队成员基于社区影响力邀请。
+你的最终求职标签应是：
 
-成为 Committer：当贡献（代码、PR 审查、社区参与）持续且高质量，现有 Committer 可能会邀请加入核心团队，并赋予合并 PR 的权限
-成为 PMC 成员：在 Spring 官方项目中，通常没有明确的"PMC"头衔，其职能由核心团队（Core Team）或项目负责人（Project Lead）承担。晋升为这个层级需要更广泛的社区影响力、对项目方向的深度参与以及长期承诺
+> Java 后端开发者，熟悉 Spring Boot、微服务和中间件，有真实 Nacos/RocketMQ 开源贡献。
 
-## 社区对比总结
-社区	贡献者 → Committer 门槛	Committer → 更高层级	晋升方式
-Apache	持续多样化贡献 + PMC提名投票	活跃6个月+全局观+社区建设	制度化投票
-Python	长期高质量贡献 + 导师提名	（核心开发者即最高技术角色）	2/3赞成票 + 指导委员会确认
-OpenJDK	约2个变更→Author，约8个→Committer	32个重要变更→Reviewer	量化阶梯式
-Vue	持续高质量PR + 社区参与	核心团队邀请	非正式认可制
-Spring	持续高质量贡献 + 核心团队邀请	核心团队/项目负责人	非正式认可制
+而不是：
 
-## Commiter权限管控说明
-🛡️ 第一层：技术防线（你根本“删不掉”核心东西）
-你以为的“Committer 可以删库”，实际上在顶级项目中根本行不通。
+> 同时浅尝很多开源仓库，但没有完整解决过真实问题。
 
-分支保护（Branch Protection）：你虽然有推送权限，但主干分支（main / master）通常是被锁死的。你无法直接 git push --force 到主干。你必须走 PR（Pull Request）流程，并且至少需要 1-2 个其他 Committer 的 Approved（批准），你的代码才能合进去。
+---
 
-强制推送被禁用（Disable Force Push）：哪怕你想用 git push -f 覆盖历史，仓库设置里也禁止了。你只能追加提交，不能抹除历史。
+# 明确时间表
 
-CI/CD 门禁（自动化检查）：你推上来的代码必须经过自动化测试（单元测试、集成测试、代码规范检查）。如果测试不通过，或者代码覆盖率下降，合并按钮直接变灰，你根本合不进去。
+以下计划从 **2026 年 10 月 19 日** 开始，按每周投入 **12～15 小时**设计。如果每周只能投入 6 小时，整体周期大约翻倍。
 
-🧵 第二层：Git 的“分布式”特性（永远有备份）
-Git 是分布式的。哪怕你真的通过某种途径把 GitHub 上的代码删光了，全世界所有克隆了仓库的开发者电脑上都有完整的代码历史。
+## 第一阶段：补齐贡献基础
 
-项目组可以在 5 分钟内用 git push --force 把代码恢复回来。
+### 2026-10-19 至 2026-11-15，共 4 周
 
-你“删库”的唯一结果，就是 GitHub 上多了一条“强制推送”的记录，但代码本身毫发无伤。
+目标：
 
-⚖️ 第三层：声誉与法律后果（你承担不起）
-这是最核心的约束力。在开源社区，你的名字和你的 GitHub ID 是绑定的，永远无法抹去。
+```text
+具备独立拉取、启动、调试和提交 Java 项目的能力
+```
 
-即时撤销权限：如果你乱搞，PMC（项目管理委员会）会在 1 小时内把你的权限收回，并公开声明撤销你的 Committer 身份。
+每周安排：
 
-终身拉黑：Apache、Linux、Spring 等大型基金会之间是有“黑名单”共享的。一旦被标记为“恶意破坏者”，你不仅这辈子再也进不了任何顶级开源项目，你的 GitHub 账号也会被社区联合抵制。
+| 周期 | 学习与产出 |
+|---|---|
+| 第1周 | Git：fork、clone、branch、commit、rebase、PR、解决冲突 |
+| 第2周 | JUnit 5、Mockito、Maven 生命周期、Checkstyle、SpotBugs |
+| 第3周 | Docker、Docker Compose、Linux 日志和端口排查 |
+| 第4周 | 学习微服务基础：注册中心、配置中心、健康检查、服务实例 |
 
-法律追责：你签署的 ICLA（个人贡献者许可协议） 或 DCO（开发者原创证书） 是具备法律效力的。恶意破坏代码库属于“计算机系统破坏”行为，基金会保留追究法律责任的权利。
+必须交付：
+
+```text
+1. 独立 Fork 一个仓库
+2. 能完成 rebase
+3. 能写 Service 单元测试
+4. 能用 Docker 启动 MySQL、Redis
+5. 能读懂 GitHub Actions 失败日志
+```
+
+这阶段仍可提交文档修复，但不要急着接复杂源码 Issue。
+
+---
+
+## 第二阶段：跑通 Nacos
+
+### 2026-11-16 至 2026-12-13，共 4 周
+
+目标：
+
+```text
+能本地启动 Nacos，并理解基本结构
+```
+
+第 1 周：
+
+```text
+本地启动 Nacos
+启动一个 Spring Boot 服务
+完成服务注册
+完成服务发现
+```
+
+第 2 周：
+
+```text
+使用 Nacos 配置中心
+理解配置监听和动态刷新
+做一个最小微服务演示项目
+```
+
+第 3 周：
+
+```text
+阅读 Nacos CONTRIBUTING
+运行格式检查
+运行单元测试
+阅读最近 10 个已合并 PR
+```
+
+第 4 周：
+
+```text
+选择一个文档、测试或控制台问题
+在 Issue 中说明复现结果和处理方案
+```
+
+必须产出一个 GitHub 项目：
+
+```text
+nacos-learning-demo
+├─ user-service
+├─ order-service
+├─ gateway
+├─ docker-compose.yml
+└─ README.md
+```
+
+README 要展示：
+
+```text
+服务注册
+配置管理
+调用关系
+启动步骤
+异常演示
+```
+
+---
+
+## 第三阶段：完成第一个合并 PR
+
+### 2026-12-14 至 2027-01-31，共 7 周
+
+目标：
+
+> 至少提交 2 个合理 PR，争取 1 个合并。
+
+选择顺序：
+
+```text
+1. 文档中可验证的错误
+2. 缺失或错误的单元测试
+3. 异常信息和边界处理
+4. Nacos Console 的小型后端问题
+5. Spring 集成问题
+```
+
+执行规则：
+
+```text
+先找或创建 Issue
+    ↓
+说明复现步骤
+    ↓
+等待维护者确认方向
+    ↓
+修改代码
+    ↓
+补测试
+    ↓
+跑完整检查
+    ↓
+提交小型 PR
+    ↓
+24～72 小时内回应 Review
+```
+
+Nacos 当前贡献指南要求 PR 关联有效 Issue，并建议改动保持小而集中；其提交前检查包括编译、许可证、Checkstyle、SpotBugs、Spotless 和测试。([github.com](https://github.com/alibaba/nacos/blob/develop/CONTRIBUTING.md?utm_source=openai))
+
+截至当前检索，Nacos 的开放 `good first issue` 数量并不多，所以不要只盯着这个标签；还应关注 `contribution welcome`、文档、测试、控制台，以及先复现普通 Bug。([github.com](https://github.com/alibaba/nacos/labels/good%20first%20issue?utm_source=openai))
+
+---
+
+## 第四阶段：用 RocketMQ Studio 增加成功率
+
+### 2027-02-01 至 2027-03-31，共 2 个月
+
+目标：
+
+```text
+完成一个 Spring Boot 中间件管理平台贡献
+```
+
+第一个月：
+
+```text
+部署 RocketMQ
+理解 Topic、Producer、Consumer、Broker、NameServer
+启动 RocketMQ Dashboard/Studio
+读懂一个后端请求的完整调用链
+```
+
+第二个月：
+
+```text
+处理一个后端 Issue
+补 DTO/VO、参数校验或异常处理
+补充单元测试
+提交并维护 PR
+```
+
+推荐选题：
+
+```text
+接口参数校验
+错误响应统一
+消息查询边界
+用户权限
+配置处理
+日志改进
+测试覆盖
+Docker 启动问题
+```
+
+当前 RocketMQ Studio 的贡献活动明确采用 Spring Boot 3.5、Java 21，并鼓励控制 PR 范围、在开发前讨论方向、运行测试和代码检查。([github.com](https://github.com/apache/rocketmq/issues/10600?utm_source=openai))
+
+到 2027 年 3 月底，你的理想成果是：
+
+```text
+Nacos：1～3 个合并 PR
+RocketMQ：1 个合并 PR
+个人项目：1 个完整微服务项目
+技术文章：2～4 篇
+```
+
+---
+
+## 第五阶段：建立模块专长
+
+### 2027-04-01 至 2027-06-30，共 3 个月
+
+只选择一个主项目。
+
+推荐优先级：
+
+```text
+如果 Nacos 已有维护者认识你
+→ 选 Nacos
+
+如果 RocketMQ PR 反馈更积极
+→ 选 RocketMQ
+```
+
+Nacos 可选方向：
+
+```text
+Spring 集成
+配置管理
+控制台后端
+认证鉴权
+SDK
+单元测试
+```
+
+RocketMQ 可选方向：
+
+```text
+Dashboard/Studio 后端
+客户端重试
+消费状态
+管理 API
+消息轨迹
+测试工具
+```
+
+三个月目标：
+
+```text
+再完成 3～5 个非琐碎贡献
+至少参与 5 次有效 Issue 分析
+至少 Review 或测试 3 个别人的 PR
+能讲清一个模块调用链
+```
+
+这里的“有效 Review”不是只写：
+
+```text
+LGTM
+```
+
+而是：
+
+```text
+本地验证
+指出边界情况
+提供日志或测试结果
+提出具体修改建议
+```
+
+---
+
+## 第六阶段：形成求职成果
+
+### 2027-07-01 至 2027-09-30，共 3 个月
+
+这阶段不再只追求 PR 数量，而是形成面试材料。
+
+完成三份内容：
+
+### 1. 源码分析文档
+
+例如：
+
+```text
+Nacos 服务注册完整流程
+Nacos 配置动态刷新原理
+RocketMQ 消息发送与重试流程
+```
+
+### 2. 可运行项目
+
+```text
+Spring Boot
+Nacos
+RocketMQ
+Redis
+MySQL
+Docker Compose
+JWT/Spring Security
+监控和日志
+```
+
+### 3. 开源贡献清单
+
+每个 PR 使用固定结构：
+
+```text
+问题背景
+复现方式
+根本原因
+解决方案
+测试方法
+Review 中学到什么
+PR 地址
+```
+
+理想结果：
+
+```text
+5～10 个有意义的合并 PR
+其中至少 2～3 个代码或测试 PR
+至少一个长期参与的模块
+有维护者持续与你互动
+```
+
+Nacos 官方给出的 Committer 参考包括一系列持续贡献、约 8 个非琐碎补丁、多个现有 Committer 的了解与支持，以及正式提名流程；这可以作为中长期目标，但不能当作到点自动晋升的承诺。([github.com](https://github.com/alibaba/nacos/blob/develop/CONTRIBUTING.md?utm_source=openai))
+
+---
+
+# 求职时间节点
+
+如果你目前仍处于 Spring Boot 入门阶段，现实安排是：
+
+| 时间 | 可达到的求职状态 |
+|---|---|
+| 2026年12月 | 会完成基本后端项目，但开源贡献尚弱 |
+| 2027年3月 | 可在实习或初级 Java 岗简历中写真实开源 PR |
+| 2027年6月 | 有机会形成明显区别于普通 CRUD 简历的中间件经历 |
+| 2027年9月 | 可以冲击更好的校招、实习或社招初级 Java 后端机会 |
+| 2027年底以后 | 若持续贡献，才适合认真争取 Committer 或社区维护角色 |
+
+是否进入大厂或取得高薪，还取决于：
+
+```text
+学历和工作经历
+算法与数据结构
+计算机网络
+操作系统
+数据库
+Java 并发和 JVM
+系统设计
+项目深度
+面试表现
+```
+
+开源贡献是加分项，不能替代这些基础。
+
+---
+
+# 每周固定安排
+
+每周 15 小时建议这样分：
+
+| 内容 | 时间 |
+|---|---:|
+| Java、数据库、网络等基础 | 5 小时 |
+| 项目源码阅读 | 3 小时 |
+| Issue 复现和贡献开发 | 4 小时 |
+| 测试、PR 和社区沟通 | 2 小时 |
+| 总结文章或笔记 | 1 小时 |
+
+不要把全部时间都用来“刷 PR”。高薪岗位最终考察的是你是否真正理解：
+
+```text
+为什么出现问题
+并发时会怎样
+失败时怎样恢复
+如何测试
+怎样权衡性能和一致性
+```
+
+# 最终选择
+
+给你一个完全明确的执行顺序：
+
+```text
+现在开始：Nacos
+第4个月加入：RocketMQ Dashboard/Studio
+第7个月决定：Nacos 或 RocketMQ 只留一个主线
+一年后进阶：SkyWalking 或核心 RocketMQ
+暂不主攻：OpenJDK、Spring Framework Core、ShardingSphere Core
+```
+
+**最简单且对 Java 后端求职最有帮助的第一选择是 Nacos；最容易取得 Apache 项目贡献记录的补充入口，是 RocketMQ Dashboard/Studio。**
+
