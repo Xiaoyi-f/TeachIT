@@ -22,7 +22,7 @@ super this void
 
 L F 
 
-== // 引址基值 
+== // 引址基值 <-- equals 原生没有重写时候底层就是 ==, 但是很多引用类型都已经重写过 
 
 javac xxx.java 
 java xxx
@@ -119,17 +119,18 @@ DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 // 泛型: Java泛型底层是类型擦除, 擦除之后全部变成 Object, 而基本类型不是 Object 子类, 不能向上转型为 Object, 所以泛型不能直接放基本类型 
 
 /**
- * 集合 
- * Collection
- *   List 
- *   Set 
- * Map
+ *  集合
+ *  Collection
+ *    List -> LinkedList / ArrayList 
+ *    Set -> TreeSet / HashSet / LinkedHashSet 
+ *  Map
+ *    TreeMap / LinkedHashMap / HashMap
  * 
  * Tip: 不加泛型 集合 亦可以 存储不同类型数据, 加泛型是为了约束 
  */
 
-Collection<Type> collection = new ArrayList<>(); // 查快改慢 
-Collection<Type> collection = new LinkedList<>(); // 查慢改快 
+Collection<Type> collection = new ArrayList<>(); // 查改快 
+Collection<Type> collection = new LinkedList<>(); // 增删快  
 collection.add(TypeData);
 collection.remove(TypeData);
 collection.clear(); 
@@ -154,7 +155,7 @@ linkedList.removeLast();
 // 纯无序 
 Set<Type> set = new HashSet<>(); 
 
-// 维护迭代顺序 
+// 维护迭代顺序 -- 双链表 
 Set<Type> set = new LinkedHashSet<>(); 
 
 // 纯无序 
@@ -184,6 +185,48 @@ while (listIter.hasNext() && listIter.hasPrevious()) {
   Type nextItem = listIter.next(); 
   Type previousItem = listIter.previous(); 
 }
+
+// 多态
+// 1. 定义父类
+class Animal {
+    public void eat() {
+        System.out.println("动物在吃东西");
+    }
+}
+
+// 2. 定义子类，继承父类
+class Dog extends Animal {
+    @Override
+    public void eat() {
+        System.out.println("狗在吃骨头");
+    }
+
+    // 子类特有的方法！
+    public void bark() {
+        System.out.println("狗在汪汪叫");
+    }
+}
+
+public class TestCast {
+    public static void main(String[] args) {
+        // 向上转型（自动完成）：父类引用指向子类对象
+        Animal animal = new Dog(); 
+        
+        // 1. 调用重写的方法（多态发挥）
+        animal.eat(); // 输出：狗在吃骨头
+        
+        // 2. 尝试调用子类特有方法（编译报错！）
+        // animal.bark(); 
+        // 报错原因：编译看左边，Animal 类里没有 bark() 方法。
+
+        // 3. 向下转型（强制转换）转回来，必须类型对应，因为有一些特殊方法公共类没定义但是要特定使用 
+        Dog dog = (Dog) animal; 
+        dog.bark(); // 输出：狗在汪汪叫（转型成功，可以调用了）
+    }
+}
+--> 多态通常与"转型"关联 
+成员变量: 编译看左, 执行看左
+成员方法: 编译看左, 执行看右
 
 try {
 } catch (Exception err) {
