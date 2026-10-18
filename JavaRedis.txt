@@ -1,0 +1,115 @@
+Redis是一个基于内存的key-value结构数据库, 也是互联网技术领域使用最广泛的存储中间件 
+主要特点:
+基于内存存储, 读写性能高 
+适合存储热点数据(热点商品、资讯、新闻)
+企业应用广泛 
+
+-- 服务程序 Redis
+-- 客户端图形工具 Redis-Manager 
+
+redis-server // 启动服务
+redis-server & // 后台启动服务
+redis-cli -h 127.0.0.1 -p 6379 -a [password]
+redis-cli shutdown // 优雅关闭redis 会持久化  
+
+https://www.redis.net.cn/ --> redis中文网 
+Redis存储的是key-value结构数据, 其中key是字符串类型, value有五种常用数据类型:
+string hash list set zset 
+
+redis实际保存的字节数据 
+--> 推荐放入缓存中数据形式
+高频访问且变更较少的数据 
+需要快速访问的小数据集 
+数据库查询结果 
+热门内容 
+临时数据
+
+// spring-boot-starter-data-redis 依赖 
+--> application.yml 配置
+spring:
+  redis:
+    host: localhost 
+    port: 6379 
+    database: 0 
+    password: password 
+    timeout: 3s 
+
+--> 基本使用 
+@Autowired 
+private RedisTemplate<String, String> redisTemplate; 
+
+// 操作字符串 
+public void testString() {
+  redisTemplate.opsForValue().set("name", "张三");
+  System.out.println(redisTemplate.opsForValue().get("name"));
+
+  redisTemplate.opsForValue().set("token", "123qweasd", 20, TimeUnit.SECONDS); // 设置过期时间 TimeUnit.MINUTES / TimeUnit.HOURS / TimeUnit.DAYS 
+  System.out.println(redisTemplate.opsForValue().get("token"));
+
+  System.out.println(redisTemplate.opsForValue().setIfAbsent("onlyKey", "value", 20, TimeUnit.MINUTES)); // 如果存在键则什么都不做, 不存在就保存
+}
+
+// 操作哈希
+public void testHash() {
+  // 大key 小key value 
+  redisTemplate.opsForHash().put("user", "name", "张三");
+  redisTemplate.opsForHash().put("user", "age", 30); 
+  System.out.println(redisTemplate.opsForHash().get("user", "name")); 
+  
+  Set<Object> keys = redisTemplate.opsForHash().keys("user"); 
+  System.out.println(keys); 
+
+  List<Object> values = redisTemplate.opsForHash().values("user");
+  System.out.println(values);
+
+  redisTemplate.opsForHash().delete("user", "age");
+}
+
+// 操作列表 
+public void testList() {
+  redisTemplate.opsForList().leftPushAll("mylist", "a", "b", "c"); 
+  redisTemplate.opsForList().leftPush("mylist", "d");
+
+  System.out.println(redisTemplate.opsForList().range("mylist", 0, -1));
+
+  System.out.println(redisTemplate.opsForList().leftPop("mylist"));
+
+  System.out.println(redisTemplate.opsForList().size("mylist"));
+}
+
+// 操作集合 
+public void testSet() {
+
+  // 无序集合 
+  redisTemplate.opsForSet().add("myset", "a", "b", "c", "d");
+  redisTemplate.opsForSet().add("other_myset", "a", "b", "x", "y");
+
+  Set<String> members = redisTemplate.opsForSet().members("myset");
+
+  long size = redisTemplate.opsForSet().size("myset");
+
+  Set<String> intersection = redisTemplate.opsForSet().intersect("myset", "other_myset");
+  Set<String> union = redisTemplate.opsForSet().union("myset", "other_myset");
+
+  // 有序集合 
+  redisTemplate.opsForZSet().add("myzset", "a", 1); 
+  redisTemplate.opsForZSet().add("myzset", "b", 2);
+  redisTemplate.opsForZSet().add("myzset", "c", 3);
+
+  Set<String> members = redisTemplate.opsForZSet().range("myzset", 0, -1);
+  redisTemplate.opsForZSet().incrementScore("myzset", "a", 10);
+  redisTemplate.opsForZSet().remove("myzset", "a", "b");
+}
+
+public void testCommon() {
+  Set<String> keys = redisTemplate.keys("*"); // 获取所有key 
+  Boolean isName = redisTemplate.hasKey("name");
+
+  DataType type = redisTemplate.type("myzset");
+  System.out.println(type.name());
+
+  redisTemplate.delete("myzset");
+}
+
+
+
