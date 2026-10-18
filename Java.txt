@@ -367,6 +367,23 @@ thread.setName("threadName");
 static Thread currentThread(); 
 static void sleep(long time); // 单位 ms 
 
+/* 线程局部变量 */
+ThreadLocal<String> threadLocal = new ThreadLocal<>(); 
+threadLocal.set("value"); 
+String value = threadLocal.get();
+threadLocal.remove();
+
+// 线程局部变量是独立的
+Thread thread = new Thread(() -> {
+  threadLocal.set("value");
+  getData("thread")
+}, "thread");
+
+private static void getData(String threadName) {
+  Object data = threadLocal.get();
+  System.out.println(threadName + "-" + data);
+}
+
 /* 线程优先级 */
 // 线程调度方式有两种: 抢占式调度和非抢占式调度, 抢占式调度具有随机性, 非抢占式调度则是有顺序的执行, Java中使用的是抢占式调度风格, 即允许随机性执行 
 // 线程优先级越高, 抢到CPU的概率越大 优先级: 1-10 (默认5, 10最大) 

@@ -21,8 +21,9 @@ SYSTEM """
 """
 
 ollama create model_name -f model_config 
-ollama list 
 ollama run model_name
+ollama show // 查看模型的详细信息 
+ollama ps // 查看当前正在运行中的模型进程 
 
 # pip install ollama 
 # curl 域名 测试可访问性

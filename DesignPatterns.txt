@@ -1,0 +1,81 @@
+// 构建者模式 
+--> 无参构造
+Member member = new Member();
+member.setPhone("15779544219");
+member.setName("聂坚兵");
+member.setGender(1); 
+
+--> 有参构造 
+Member member = new Member.builder()
+.phone("15779544219")
+.name("聂坚兵")
+.gender(1)
+.build();
+
+public class Member extends BaseEntity {
+
+  private String phone; 
+  private String name; 
+  private String avatar; 
+  private String openId; 
+  private int gender; 
+
+  public static MemberBuilder builder() {
+
+    return new MemberBuilder(); 
+  }
+
+  public Member(final String phone, final String name, final String avatar, final String openId, final int gender) {
+    this.phone = phone;
+    this.name = name; 
+    this.avatar = avatar;
+    this.openId = openId; 
+    this.gender = gender; 
+  }
+
+  public Member() {} 
+
+  public static class MemberBuilder {
+    private String phone; 
+    private String name;
+    private String avatar;
+    private String openId;
+    private int gender; 
+
+    MemberBuilder() {}
+
+    public MemberBuilder phone(final String phone) {
+      this.phone = phone; 
+      return this; 
+    }
+
+    public MemberBuilder name(final String name) {
+      this.name = name; 
+      return this; 
+    }
+
+    public MemberBuilder avatar(final String avatar) {
+      this.avatar = avatar; 
+      return this; 
+    }
+
+    public MemberBuilder openId(final String openId) {
+      this.openId = openId; 
+      return this; 
+    }
+
+    public MemberBuilder gender(final int gender) {
+      this.gender = gender; 
+      return this; 
+    }
+
+    public Member build() {
+      return new Member(this.phone, this.name, this.avatar, this.openId, this.gender); 
+    }
+
+    public String toString() {
+      return "Member.MemberBuilder(phone=" + this.phone + ", name=" + this.name + ", avatar=" + this.avatar + ", openId=" + this.openId + ", gender=" + this.gender + ")"; 
+    }
+  }
+}
+

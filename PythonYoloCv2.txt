@@ -1,0 +1,201 @@
+"""
+对于计算机看到的图片/逻辑语言/颜色/音频/视频等均为数字 
+训练: 计算机不懂某个物体的概念,你给他一大堆图片然后告诉他像这种就是某个物体,计算机依据这些数据进行训练逐渐掌握规律因而学会相关概念
+标注: 训练时候指明某个物体是这样,这就是标注 --> 在图片上做记号,告诉计算机答案在哪里 
+    --> 如果要让计算机识别物体,你就要在物体周围画矩形框,并写上标签"物体"
+    --> 画框: 中心点 + 宽高 + 单位 (像素 ... 百分比)
+标注工具进行标注数据获取: 例如 -> Labellmg 工具
+
+"""
+# pip install opencv-python
+import cv2 
+
+image_path = "img.png"
+label_path = "labels.txt" # 标注数据文件 
+
+# 将百分比坐标还原为像素坐标 读取图片宽高
+img = cv2.imread(image_path)
+height, width = img.shape  
+
+# 读取标注文件数据
+with open(label_path, "r") as file:
+    line = file.readline().strip()
+    parts = line.split()
+
+    class_id = int(parts[0])
+    center_x = float(parts[1]) * width
+    center_y = float(parts[2]) * height
+    box_width = float(parts[3]) * width
+    box_height = float(parts[4]) * height
+
+    x1 = int(center_x - box_width / 2)
+    y1 = int(center_y - box_height / 2)
+
+    x2 = int(center_x + box_width / 2)
+    y2 = int(center_y + box_height / 2)
+
+    # 在图片上将框框画出来 
+    cv2.rectangle(img, (x1, y1), (x2, y2), ("r", "g", "b"), "line_thickness")
+    cv2.putText(img, "class_names[class_id]", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, ('r', 'g', 'b'), "line_thickness")
+
+# 显示图片 验证标注框正确与否
+cv2.imshow("Check Label", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()    
+
+
+# pip install ultralytics 
+from ultralytics import YOLO 
+
+# 预训练模型规格: nano(n) < small(s) < medium(m) < large(l) < extra large(x)
+model = YOLO("yolo11n.pt") # 最轻量, 适合入门
+
+"""
+模型训练:
+model.train(
+    data="data.yaml", 
+    epochs=num, # 迭代次数 
+    imgsz=num, # 将图片调整为 num x num 再训练 
+    batch=num, # 一次同时处理n张图
+    device="cpu" # or "0" 表示显卡
+)
+
+# data.yaml
+path: path/to/dataset 
+train: images/train # path/to/dataset/images/train
+val: images/val # path/to/dataset/images/val 
+nc: num # 类别数量 标注几种东西就填写几
+names: 
+  - name # 0代表name   
+
+训练完成到 runs/detect/train/weights/找到对应的pt文件即训练生成的模型
+"""
+
+results = model("img.png") # 单张图片推理 
+
+# 批量处理 
+results = model(["img.png", "img.jpg"])
+
+for result in results:
+    boxes = result.boxes.xyxy # 自动算好的框坐标 (像素值)
+    confs = result.boxes.conf # 置信度 (0-1之间)
+    classes = result.boxes.cls # 类别索引
+
+    for box, conf, cls in zip(boxes, confs, classes):
+        # 打印与处理 
+        # model.names[int(cls)]
+        # f"{float(conf):.2f}"
+        # box.tolist()
+        pass
+
+# 视频流推理 
+results = model("video.mp4", save=True) # 自动保存带标注的视频
+
+# 实时摄像头推理 
+results = model(0) # 0表示默认摄像头
+
+results[0].show() # 显示标注后的图片 底层调用cv2.VideoCapture(0)
+
+# 0 代表默认摄像头,可以传入视频文件路径
+cap = cv2.VideoCapture(0) 
+
+
+# 识别检测 
+import cv2 
+import torch # 机器学习
+from ultralytics import YOLO 
+from facenet_pytorch import InceptionResnetV1 # 人脸识别专用模型
+from scipy.spatial.distance import cosine  # 科学计算
+# pip install facenet-pytorch 
+
+# 初始化人脸检测模型
+face_detector = YOLO("yolov8n-face.pt")
+
+# 人脸识别模型 (加载预训练权重)
+face_recognizer = InceptionResnetV1(pretrained='vggface2').eval()
+
+# 构建已知身份的特征向量数据库 (示例) 
+# 假设我们已提前计算并保存好了已知人物的特征向量
+known_embeddings = {
+    "Alice": torch.tensor([...]), # 假设这是 Alice 的特征向量
+    "Bob": torch.tensor([...]),   # 假设这是 Bob 的特征向量
+}
+
+# 识别函数 
+def recognize_face(face_img_rgb):
+    """
+    输入一张人脸图像 (RGB格式)，返回识别出的身份名称
+    """
+    # 将人脸图像转换为模型需要的格式 
+    face_tensor = preprocess_face(face_img_rgb) 
+    
+    with torch.no_grad():
+        # 提取人脸的特征向量 (embedding)
+        embedding = face_recognizer(face_tensor) 
+
+    # 与数据库中的已知向量比对
+    min_dist = float('inf')
+    identity = "Unknown"
+    for name, known_emb in known_embeddings.items():
+        # 计算余弦距离 (值越小越相似)
+        dist = cosine(embedding.numpy().flatten(), known_emb.numpy().flatten())
+        if dist < min_dist:
+            min_dist = dist
+            identity = name
+    
+    # 设定一个阈值，如果距离太远则认为是陌生人
+    threshold = 0.5 
+    if min_dist > threshold:
+        identity = "Unknown"
+        
+    return identity, min_dist
+
+# 辅助函数：预处理人脸图像
+def preprocess_face(face_img):
+    # 调整大小为 160x160，归一化等
+    face_img = cv2.resize(face_img, (160, 160))
+    face_img = torch.tensor(face_img).permute(2, 0, 1).float() / 255.0
+    # 标准化 (ImageNet 的均值和标准差)
+    mean = torch.tensor([0.485, 0.456, 0.406]).view(3,1,1)
+    std = torch.tensor([0.229, 0.224, 0.225]).view(3,1,1)
+    face_img = (face_img - mean) / std
+    return face_img.unsqueeze(0) # 添加 batch 维度
+
+# 在视频流中应用 
+cap = cv2.VideoCapture(0)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # 第一步：YOLO 检测人脸
+    results = face_detector(frame)
+    
+    # 第二步：对每个检测到的人脸进行识别
+    for result in results:
+        boxes = result.boxes.xyxy.cpu().numpy()
+        for box in boxes:
+            x1, y1, x2, y2 = box.astype(int)
+            
+            # 从原图中裁剪出人脸区域 (RGB格式)
+            face_crop = frame[y1:y2, x1:x2]
+            if face_crop.size == 0:
+                continue
+            face_crop_rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
+            
+            # 调用识别函数
+            name, confidence = recognize_face(face_crop_rgb)
+            
+            # 在画面上绘制结果
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"{name} ({1-confidence:.2f})", (x1, y1-10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+    cv2.imshow("Face Recognition", frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+
