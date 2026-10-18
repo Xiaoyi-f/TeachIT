@@ -8,7 +8,301 @@ IoTDA  --> IoT Device Access 华为云设备接入服务 硬件与设备的中�
 - TPS 上限: 10TPS
 - ✅ 所有 IoTDA 功能全部开放: 物模型、编解码插件、设备影子、OTA、应用侧 API，付费版有的能力免费单元全都有
 
-// 
+适用场景：你负责 Spring Boot 后端和软件功能，朋友负责硬件，双方通过华为云 IoTDA 或类似 IoT 平台连接。
+
+学习目标：能查看设备数据、远程控制设备、保存历史记录。不要求先学嵌入式、MQTT 底层或复杂分布式架构。
+
+一、先看清你负责哪一块
+
+    朋友的设备
+        ↕ MQTT：上报数据、接收命令
+    云 IoT 平台
+        ↕ Java SDK / HTTPS API + 数据转发
+    你的 Spring Boot 后端
+        ↕ HTTP
+    网页 / App
+
+朋友负责：读取传感器、连接平台、上报数据、执行硬件命令。
+
+你负责：用户登录、用户绑定设备、查询设备、下发命令、接收上报、保存数据、给前端提供接口。
+
+云平台负责：设备连接、身份认证、消息传递、设备管理等基础能力。
+
+你不用让后端直接连接朋友的单片机，也不用一开始深入学习 MQTT。
+
+二、只需要先懂这几个词
+
+  名词        	小白理解                
+  产品        	一类设备的模板，例如智能温湿度计    
+  设备        	一个真实实例，例如宿舍里的温湿度计001
+  设备ID      	云平台管理的设备标识          
+  产品模型 / 物模型	约定设备有哪些属性和命令        
+  属性        	温度、湿度、灯的开关状态等数据     
+  命令        	开灯、关灯、设置采样间隔等操作     
+  设备影子      	平台记录的设备状态，通常不是实时读取硬件
+  SDK       	厂商提供的工具包，帮你调用平台 API 
+  数据转发      	平台把设备上报的数据继续发送给你的后端 
+
+注意：影子状态可能是上一次上报结果，页面应同时显示数据时间。
+
+三、SDK、HTTP、AMQP 怎么选
+
+查询和控制：优先使用官方 Java SDK
+
+    你调用 SDK 的 Java 方法
+        ↓
+    SDK 组织 HTTPS 请求、处理认证签名
+        ↓
+    云平台返回结果
+
+SDK 不是新的通信协议，它封装了 HTTPS API。也能直接发 HTTP 请求，但入门没必要自己实现签名和请求封装。
+
+接收上报：选平台支持的一种方式
+
+    设备 → 平台 → HTTP 推送 → 你的接口
+
+或者：
+
+    设备 → 平台 → AMQP 消息队列 → 你的消费者程序
+
+如果实例支持且方便配置 HTTP/HTTPS 数据转发，可以先选它；否则按官方示例接入 AMQP。先选一种跑通，不要同时学两套。
+
+AMQP 不等于 RabbitMQ。IoTDA 的 AMQP 接入应按官方支持的协议版本、客户端和认证方式实现，不能直接照搬 RabbitMQ 配置。
+
+四、先和朋友约定数据
+
+以“温湿度检测 + 开关灯”为例：
+
+    服务ID：Environment
+    
+    属性：
+    temperature：数字，单位℃
+    humidity：数字，单位%
+    lightOn：布尔值，true亮、false灭
+    
+    命令：
+    setLight
+    参数：on，布尔值
+
+这些名称和类型要在平台产品模型、设备代码、后端代码中保持一致。
+
+以下只是业务内容示意，不是 IoTDA 完整原始报文：
+
+    {
+      "temperature": 26.5,
+      "humidity": 60,
+      "lightOn": true
+    }
+
+双方应约定：设备 ID、服务 ID、属性名和单位、命令名和参数、上报间隔、执行结果格式。
+
+五、准备后端访问平台的配置
+
+你需要从平台控制台和文档确认：
+
+    地域 / Region
+    项目ID / Project ID
+    IoTDA 应用侧 API 地址 / Endpoint
+    应用侧认证信息和权限
+    测试设备ID
+
+不要混淆：
+
+    设备凭证：朋友的设备连接平台使用
+    应用凭证：你的后端调用平台 API 使用
+    网站用户账号：用户登录你自己的系统使用
+
+配置示意：
+
+    # 这是自己定义的配置项，不是 Spring Boot 自动提供的 IoTDA 配置。
+    iot:
+      endpoint: {IOT_ENDPOINT}
+      project-id: {IOT_PROJECT_ID}
+      access-key: {IOT_ACCESS_KEY}
+      secret-key: {IOT_SECRET_KEY}
+
+配置文件只提供参数，还要按官方示例创建 SDK 客户端并交给 Spring 管理；写了 yml 不代表已经连接平台。
+
+应用密钥只放后端环境变量或安全配置中，不提交 Git、不返回前端、不写进日志，并只授予需要的权限。
+
+六、接入 IoTDA Java SDK
+
+常用依赖形式如下，版本从华为云当前 Java SDK 示例中选择，同套 SDK 依赖保持版本一致：
+
+    <dependency>
+        <groupId>com.huaweicloud.sdk</groupId>
+        <artifactId>huaweicloud-sdk-iotda</artifactId>
+        <version>{huaweicloud-sdk.version}</version>
+    </dependency>
+
+在 pom.xml 的 properties 中按官方示例设置版本，不要复制后忘记定义版本。
+
+建议使用华为云 API Explorer，选择 IoTDA 的具体接口并查看 Java SDK 示例，将地域、Endpoint、项目 ID、设备 ID 改成你的信息，再整理进 Spring 配置类和 Service。
+
+第一次只做两件事：
+
+1. 查询一台已注册设备的详情。
+2. 对这台设备下发一个已定义的命令。
+
+不同实例和认证方式的初始化参数可能不同，以实际实例的官方示例为准。
+
+七、给前端提供自己的接口
+
+不要让前端持有云平台密钥。前端调用你的后端，后端再调用云平台。
+
+建议先实现三个接口：
+
+  接口                      	用途      
+  GET /devices/{id}       	查询设备基本信息
+  GET /devices/{id}/latest	查询最新上报数据
+  POST /devices/{id}/light	控制灯的开关  
+
+Controller 示例：
+
+    @RestController
+    @RequestMapping("/devices")
+    public class DeviceController {
+    
+        private final DeviceService deviceService;
+    
+        public DeviceController(DeviceService deviceService) {
+            this.deviceService = deviceService;
+        }
+    
+        @PostMapping("/{id}/light")
+        public Result<String> setLight(
+                @PathVariable String id,
+                @Valid @RequestBody LightCommandDTO dto) {
+    
+            // Service 内先检查当前用户是否有权控制此设备。
+            String commandId = deviceService.setLight(id, dto.on());
+            return Result.success(commandId);
+        }
+    }
+
+    public record LightCommandDTO(
+            @NotNull(message = "on不能为空") Boolean on
+    ) {}
+
+前端请求：
+
+    POST /devices/设备ID/light
+    Content-Type: application/json
+    
+    {"on": true}
+
+Service 逻辑：
+
+    检查当前用户是否有设备控制权限
+        ↓
+    组装 setLight 命令和 on 参数
+        ↓
+    使用 IoTDA SDK 下发命令
+        ↓
+    记录平台返回的命令标识和当前状态
+        ↓
+    返回给前端
+
+平台接收命令，不代表硬件已执行成功：
+
+    已提交 → 等待设备应答 → 成功 / 失败
+                         ↘ 超时、结果未知
+
+设备没响应时，不要直接显示“开灯成功”。不可重复执行的动作也不要在超时后盲目重发。
+
+八、接收设备上报
+
+设备给平台上报后，你的后端不会自动收到，必须配置数据转发。
+
+方案 A：HTTP/HTTPS 推送
+
+    1. 后端提供公网可访问的接收地址。
+    2. 平台创建数据转发规则。
+    3. 选择设备属性上报等事件。
+    4. 配置平台支持的 HTTP 推送目标。
+    5. 按官方要求处理地址验证、认证和真实消息格式。
+
+接收逻辑示意：
+
+    @PostMapping("/iot/events")
+    public void receive(@RequestBody JsonNode event) {
+        // 先按平台要求验证来源；地址验证可能要单独处理。
+        // 从真实报文提取设备ID、时间和属性。
+        // 检查数据类型和重复消息。
+        // 保存数据，再按平台要求返回成功响应。
+    }
+
+不能因为有人能 POST 到这个地址，就认为一定来自云平台。认证和响应格式按官方文档实现；localhost 不能直接作为云平台回调地址。
+
+方案 B：AMQP
+
+    1. 平台创建 AMQP 队列。
+    2. 创建数据转发规则，将上报事件转到队列。
+    3. 使用平台官方 Java 示例连接并消费。
+    4. 解析消息并写入数据库。
+    5. 处理成功后确认消息。
+
+先按官方示例收到一条真实消息，再放进自己的 Service，不要从零实现协议。
+
+两种方式都可能收到重复消息。有事件 ID 时可用事件 ID 做唯一约束；没有时要根据真实报文和业务设计去重。不要只用设备 ID 去重，否则后续新数据会被误判重复。
+
+九、用 MySQL 保存业务数据
+
+初学项目建三张简单表即可：
+
+    device：设备与用户的绑定关系
+        id
+        cloud_device_id
+        user_id
+        name
+    
+    device_data：上报历史
+        id
+        cloud_device_id
+        temperature
+        humidity
+        reported_at
+        received_at
+    
+    device_command：控制命令记录
+        id
+        cloud_command_id
+        cloud_device_id
+        command_name
+        status
+        created_at
+
+reported_at 是设备或平台提供的数据时间，received_at 是后端接收时间，两者可能不同。
+
+第一版不需要 Redis，也不需要微服务。最新数据可先从 MySQL 查询，前端每隔几秒请求一次；确有实时需要时再学 WebSocket。
+
+十、代码放在哪一层
+
+    controller/
+        DeviceController       接收前端请求
+        IotEventController     接收平台 HTTP 推送（选此方案时）
+    
+    service/
+        DeviceService          权限检查、查询、控制业务
+        DeviceDataService      上报处理和数据保存
+    
+    iot/
+        IotdaGateway           封装云平台 SDK 调用
+    
+    config/
+        IotdaConfig            读取配置、创建 SDK 客户端
+    
+    entity/                    数据库实体
+    dto/                       前端提交参数
+    vo/                        返回前端的数据
+    mapper/                    数据库访问
+
+IotdaGateway 是自己起的类名，不是额外框架。这样其他业务代码不用到处依赖厂商 SDK，将来换平台也更容易定位修改范围。
+
+
+
+
+
 
 
 

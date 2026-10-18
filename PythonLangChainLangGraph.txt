@@ -111,7 +111,7 @@ def build_agent(checkpointer):
             "工具给的是模拟数据，回答时必须说明，不要假装实时查询"
             "写 Python 代码时，变量使用 snake_case 命名"
         ),
-        checkpointer=checkpointer
+        checkpointer=checkpointer // 快照, 方便中止记录中止前状态, 之后可以继续 
     )
 
 
@@ -131,7 +131,7 @@ async def conversation_example():
         {"messages": [HumanMessage(content="我叫什么名字？")]},
         config=config
     )
-    print(result["messages"][-1].content)
+    print(result["messages"][-1].content) // 返回结果中有所有本次消息记录, 最后一条是最新AI的回复 
     # 同一个 thread_id，继续同一段会话，checkpointer 自动保存状态
     # 不必每次把全部历史重发，也不要捏造一条无关 AIMessage 当历史
     # 换 thread_id 就是另一段会话;后端必须检查会话属于当前用户
@@ -166,17 +166,17 @@ async def stream_example():
         async for chunk, metadata in agent.astream(
             {"messages": [HumanMessage(content="用两句话介绍 Python")]},
             config=config,
-            stream_mode="messages",
+            stream_mode="messages" // 使用该模式可以直接调取content 
         ):
             # messages 模式产出：(消息片段, 元数据)
-            # 筛选模型节点的文本;工具参数片段不作为普通回答打印
+            # 筛选模型节点的文本; 工具参数片段不作为普通回答打印
             if metadata.get("langgraph_node") == "model":
                 if isinstance(chunk.content, str):
                     print(chunk.content, end="", flush=True)
                 # 某些模型使用内容块列表，需要按其内容块格式提取文本
         print()
     except asyncio.CancelledError:
-        # 客户端断开等情况可能取消任务;清理后继续向外传播取消
+        # 客户端断开等情况可能取消任务; 清理后继续向外传播取消
         raise
 
 
@@ -186,7 +186,7 @@ async def stream_example():
 # 若接 Socket.IO / WebSocket，将提取到的文本片段发送给对应客户端
 
 
-# ==================== 06. 结构化输出：结果按字段返回 ====================
+# 06. 结构化输出：结果按字段返回 
 class Demo(BaseModel):
     name: str = Field(description="人物姓名")
     location: str = Field(description="所在城市")
@@ -207,34 +207,87 @@ async def structured_example():
     print(data.name)
     print(data.model_dump())
     # response_format=Demo：要求结构化结果，并按 Pydantic 模型校验
-    # 不是要求模型输出 Python 代码;不要同时写“只输出代码”的冲突指令
-    # create_agent 会根据能力选择结构化策略;模型须支持对应机制
+    # 不是要求模型输出 Python 代码; 不要同时写“只输出代码”的冲突指令
+    # create_agent 会根据能力选择结构化策略; 模型须支持对应机制
     # 调用仍可能因服务商不支持、网络或格式问题失败，需要业务层处理
 
 
-# ==================== 07. PostgreSQL 保存会话 ====================
-async def postgres_example():
+# 07. PostgreSQL 保存会话
+async def postgres_example(initialize_schema=True):
+    from psycopg.rows import dict_row 
+    from psycopg_pool import AsyncConnectionPool 
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-
     # 先安装并启动 PostgreSQL，提前创建 URI 中指定的数据库
-    async with AsyncPostgresSaver.from_conn_string(
-        os.environ["POSTGRES_URI"]
-    ) as saver:
-        await saver.setup()
-        # 初始化所需表;实际服务放在初始化/迁移阶段，不要每次请求运行
-        agent = build_agent(saver)
+
+    pool = AsyncConnectionPool(
+        conninfo=os.environ["POSTGRES_URI"], // 用户名:密码@服务器地址:端口/数据库名称 
+        min_siz=2,
+        max_size=10,
+        timeout=4,
+        max_waiting=64, // 最多允许64个请求在池内排队等待连接 
+        open=False,
+        check=AsyncConnectionPool.check_connection,
+        kwargs={
+            "autocommit" True,
+            "row_factory": dict_row, // saver 使用字典形式读取查询结果 
+            "connect_timeout": 6,
+            "prepare_threshold": None // 禁用服务器端预编译, 便于数据库连接代理 若不是用代理, 则建议不写此项 --> 默认请求几次自动预编译, 有利于提速
+        }
+    )
+
+    try:
+        await pool.open()
+        await pool.wait(timeout=10) // 等待连接池准备好 
+        saver = AsyncPostgresSaver(pool) 
+
+        if initialize_schema:
+            await saver.setup() // 首次使用数据库或升级迁移时运行, 不用每次请求执行 
+
+        agent = build_agent(saver) # 使用上配置好postgre数据库后的saver之后, 以后调用模型自动记录快照到postgre数据库, 使用同一个thread_id就可以继续读取这段会话的状态 
+
         result = await agent.ainvoke(
-            {"messages": [HumanMessage(content="记住我叫小翊跟我打个招呼 ")]},
-            config={"configurable": {"thread_id": "persistent_chat_1"}},
+            {
+                "message": [
+                    HumanMessage(content="记住我叫小翊，跟我打个招呼")
+                ]
+            },
+            config={
+                "configurable": {
+                    "thread_id": "persistent_chat_1"
+                }
+            }
         )
-        print(result["messages"][-1].content)
-    # 离开 async with 自动释放连接;检查点数据仍保留在数据库
-    # Web 服务应在应用 lifespan 中创建并持有 saver/agent，关闭时释放
+
+        print(result["message"][-1].content) 
+
+        result = await agent.ainvoke(
+            {
+                "message": [
+                    HumanMessage(content="我叫什么名字？")
+                ]
+            },
+            config={
+                "configurable": {
+                    "thread_id": "persistent_chat_1" // 自动从库中取数据 
+                }
+            }
+        )
+
+        print(result["message"][-1].content)
+
+        # 采集统计，用于观察连接池是否拥堵 
+        print(pool.get_stats())
+
+    finally:
+        await pool.close()
+
+    # 离开 async with 自动释放连接; 检查点数据仍保留在数据库
+    # Web 服务应在应用 lifespan 中创建并持有 saver/agent，关闭时释放 --> lifespan 表示生命周期 
     # 不要返回已经退出 async with 的 saver 给后面的请求使用
-    # 这个组件基于 psycopg，不要把 asyncpg 的连接池直接塞进去
+    # 这个组件基于 psycopg驱动，不要把 asyncpg驱动 的连接池直接塞进去
 
 
-# ==================== 08. 图片输入与 Base64 ====================
+# 08. 图片输入与 Base64 
 def image_example():
     model = build_model()
     image_path = Path("test.png")
@@ -245,16 +298,16 @@ def image_example():
     ])
     print(model.invoke([message]).content)
     # 这是 LangChain 标准内容块写法，需模型及集成支持图片输入
-    # test.png 必须存在;JPEG 图片应使用 image/jpeg 等正确 MIME 类型
+    # test.png 必须存在; JPEG 图片应使用 image/jpeg 等正确 MIME 类型
     # Base64 将二进制编码成文本，方便传输;不是加密，也不是压缩
     # 一般还会使数据体积变大，需注意服务商的图片大小限制
     # URL 图片内容块示例：
     # {"type": "image", "url": "https://实际可访问的地址/image.png"}
     # URL 必须能被相应服务访问;本地路径不能当公网 URL 使用
+    # 可以直接使用model调用, 使用agent调用, 两种形式返回格式可能有略微区别 
 
-
-# ==================== 09. chain 与管道符 | ====================
-# LCEL：用 | 串联可运行组件，上一步的输出交给下一步
+# 09. chain 与管道符 | 
+# LCEL：用 | 串联可运行组件，上一步的输出交给下一步 --> LangChainExpressionLanguage 
 # 关键是前后类型要接得上，不是任何对象都能随便拼
 
 def chain_example():
