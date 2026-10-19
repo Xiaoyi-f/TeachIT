@@ -433,18 +433,33 @@ for m in result.to_messages():
 --> 解决模型幻觉和知识时效性不足问题常用方案之一 
 
 def load_and_split(file_path: str):
-    from langchain_community.document_loaders import TextLoader
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    # PyPDFLoader 处理 PDF 需要 pip install -U pypdf 
+    from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredMarkdownLoader  
+    from langchain_text_splitters import RecursiveCharacterTextSplitter, MarkdownTextSplitter 
 
     docs = TextLoader(file_path, encoding="utf-8").load()
+    # docs = PyPDFLoader(file_path).load()
+    # docs = UnstructuredMarkdownLoader(file_path, mode="elements", strategy="fast").load() # mode="elements" 语义分档 
     # docs 是 Document 列表; Document 主要包含：
     # page_content：正文; metadata：来源、页码等附加信息
+
+    # PDF、网页、普通文档
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
         separators=["\n\n", "\n", "", "！", "？", ";", "，", " ", ""],
         length_function=len,
     )
+
+    # Markdown 
+    # markdownSplitter = MarkdownTextSplitter(chunk_size=500, chunk_overlap=50, length_function=len)
+    # chunks = markdownSplitter.split_documents(docs)
+
+    # for idx, chunk in enumerate(chunks):
+    #     print(f"第 {idx+1} 块，长度：{len(chunk)}")
+    #     print(chunk)
+    #     print("-" * 20)
+
     # 优先按段落等边界切分;重叠部分帮助保留块之间的上下文
     # 这里用 len 衡量长度，所以是字符数，不是 Token 数
     return splitter.split_documents(docs)
@@ -456,11 +471,11 @@ def open_vector_store():
 
     embeddings = HuggingFaceEmbeddings(
         model_name="BAAI/bge-small-zh-v1.5",
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True},
+        model_kwargs={"device": "cpu"}, # "device": "cuda" 表示使用GPU 一般更快 前提有NVIDIA显卡 
+        encode_kwargs={"normalize_embeddings": True} # 向量归一化，用于余弦相似度检索，提升 RAG 向量比对稳定性
     )
     # BGE 是可用于文本向量化的开源模型系列，此处选中文小模型
-    # 首次运行需要下载模型，之后可使用本地缓存;下载可能需要联网
+    # 首次运行需要下载模型，之后可使用本地缓存; 下载可能需要联网
     # 查问题和存文档必须使用一致的向量模型及配置
     # 更换向量模型时通常需要重建索引，不能只改一行名称继续混用
     return Chroma(
@@ -477,7 +492,7 @@ def index_document(file_path: str):
     # 建库时运行，资料不变就不用每次提问都重新切分和入库
     split_docs = load_and_split(file_path)
     vector_store = open_vector_store()
-    source = str(Path(file_path).resolve())
+    source = str(Path(file_path).resolve()) // 将相对路径解析到绝对路径 
     import hashlib
 
     source_id = hashlib.sha256(source.encode("utf-8")).hexdigest()[:16]
@@ -485,7 +500,7 @@ def index_document(file_path: str):
     vector_store.add_documents(documents=split_docs, ids=ids)
     return ids
     # 存的是切分后的 split_docs，不是未经切分的原始大文档
-    # 显式 ID 便于管理;随机新 ID 重复入库会造成重复资料
+    # 显式 ID 便于管理; 随机新 ID 重复入库会造成重复资料
     # 本例按路径和块序号生成 ID，不是完整的文件同步方案
     # 文件变短/删除时，应先清理旧块，避免遗留旧资料
     # 删除指定块：vector_store.delete(ids=["实际块ID1", "实际块ID2"])
@@ -493,17 +508,18 @@ def index_document(file_path: str):
     # vector_store.add_texts(texts=["学习笔记内容"], ids=["manual_note_1"])
 
 
-# ==================== 11. 检索与完整的简单 RAG ====================
+# 11. 检索与完整的简单 RAG 
 def format_docs(docs):
     return "\n\n".join(
         f"来源：{doc.metadata.get('source', '未知')}\n{doc.page_content}"
         for doc in docs
-    )
+    ) # 生成器表达式 / 最终放回一个大字符串 
 
 
 def rag_example():
     vector_store = open_vector_store()
-    results = vector_store.similarity_search("什么是事务？", k=3)
+    results = vector_store.similarity_search("什么是事务？", k=3) # 只返回文档 
+    # similarity_search_with_relevance_scores：返回文档 + 相似度分值（分值越靠近 1 语义越相关）
     for doc in results:
         print(doc.page_content)
         print(doc.metadata)
@@ -532,22 +548,22 @@ def rag_example():
     # 提示词只能降低乱答风险，仍需用真实问题检查回答和来源是否可靠
 
 
-# ==================== 12. CSV 文档 ====================
+# 12. CSV 文档
 def csv_example():
     from langchain_community.document_loaders import CSVLoader
 
-    loader = CSVLoader(file_path="data.csv", encoding="utf-8")
+    loader = CSVLoader(file_path="data.csv", encoding="utf-8", source_column="url")
     documents = loader.load()
     for doc in documents[:2]:
         print(doc.page_content)
-        print(doc.metadata)
+        print(doc.metadata) // doc.metadata["source"] 默认为文件名, 配置源列之后则为该行源列字段值 
     # 通常一行 CSV 变成一个 Document，正文包含列名与对应值
     # 若文件确实有名为 url 的表头，可设置 source_column="url"
     # source_column 指来源字段，不是随便填写一个“字段名”占位符
     # CSV 的 Document 也可以按需切分，再存入同一个向量库流程
 
 
-# ==================== 13. Chroma / Milvus Lite 怎么选 ====================
+# 13. Chroma / Milvus Lite 怎么选 
 # 初学、小型本地 RAG：先学一个 Chroma 就够了，没必要同时学两个
 # Chroma：支持本地持久化，也有服务端使用方式
 # Milvus Lite：Milvus 的轻量本地方案，平台支持情况需看对应版本
@@ -556,33 +572,7 @@ def csv_example():
 # 实际容量和速度取决于维度、索引、硬件、过滤条件及并发，要实测
 # 大规模生产部署再评估服务端向量库、备份和运维方案
 
+# 14. 进阶 Milvus 向量库 
+--> 数据量大、高并发需求、混合检索、高可用、数据备份、故障恢复、多模态检索、大规模批量频繁操作
 
-# ==================== 14. 学习顺序与运行方法 ====================
-# 第一步：basic_example()，先确认密钥、模型名称和接口地址正确
-# 第二步：chain_example()，理解提示模板、模型、输出解析器
-# 第三步：conversation_example()，理解工具、Agent 和 thread_id
-# 第四步：stream_example()、structured_example()，按项目需求学习
-# 第五步：准备 UTF-8 的 knowledge.txt，建库后再运行 rag_example()
-# 第六步：项目需要重启保留会话时，再学 PostgreSQL 检查点
 
-# 将此文件复制为 notes.py 后，在终端执行：python notes.py
-# 取消对应行的注释，每次先运行一个例子，避免一次下载和调用全部服务
-if __name__ == "__main__":
-    # basic_example()
-    # chain_example()
-    # json_example()
-    # asyncio.run(conversation_example())
-    # asyncio.run(stream_example())
-    # asyncio.run(structured_example())
-    # asyncio.run(postgres_example())
-    # image_example()
-    # index_document("knowledge.txt")  # 首次建库或更新资料时运行
-    # rag_example()                     # 建库后再提问
-    # csv_example()
-    pass
-
-# asyncio.run() 用于普通 Python 脚本的异步入口
-# 在已经运行事件循环的 Web 异步函数或 Notebook 中，用 await 调用，
-# 不要嵌套 asyncio.run()
-# 密钥报错先查环境变量;404 先查模型名称与 base_url;
-# 工具/图片/结构化报错还需检查模型能力，不是换个提示词就能解决
