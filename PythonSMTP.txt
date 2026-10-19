@@ -1,0 +1,23 @@
+# smtplib 
+import smtplib 
+from email.mime.text import MIMEText 
+import string 
+
+AuthorName = "python" 
+sender_email = "15779544219@163.com"
+target_email = input("请输入目标邮箱:")
+code = string.digits + string.ascii_letters 
+html_content = f"""
+"""
+
+message = MIMEText(html_content, "html", "utf-8")
+message["Subject"] = "标题"
+message["From"] = f"{AuthorName} <{sender_email}>"
+message["To"] = target_email
+
+with smtplib.SMTP_SSL("smtp.163.com", 465) as server:
+  server.login("account", "password")
+  server.send_message(message) 
+
+
+  

@@ -1,0 +1,54 @@
+# INFO WARNING ERROR / Handler 日志处理器 控制日志输出位置 / Formatter 日志格式 
+# 1.导包
+import logging
+
+
+# 2.修改(根)root日志器对象的日志级别
+logging.basicConfig(
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.DEBUG,
+    filename="app.log", # 不配置则默认输出在控制台 
+    encoding="utf-8"
+)
+
+--> basicConfig 只作用于 root logger / 为它设置 Handler 和 Level 
+子 logger 默认 propagate=True 
+自身不配置 Handler 时，日志消息会沿层级向上传播到 root，由 root 的 Handler 输出
+
+# 3.创建指定名称的日志对象，用于区分不同的业务/模块日志来源
+logger = logging.getLogger("自定义日志对象")
+
+# 关闭传播
+# logger.propagate=False
+
+--> 实现控制台和文件双输出
+# 构建日志格式对象
+log_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+# 文件处理器
+file_handler = logging.FileHandler("app.log", encoding="utf-8")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(log_format)
+
+# 控制台处理器
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(log_format)
+
+# 绑定处理器
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+--> 实现控制台和文件双输出
+
+# 3.输出日志信息（默认控制台输出）
+logger.debug("调试信息：多用于开发阶段查看代码执行细节")
+logger.info("正常信息：记录程序常规运行流程")
+logger.warning("警告信息：程序无报错，但存在潜在异常隐患")
+logger.error("错误信息：功能执行失败，影响单一业务流程")
+logger.critical("严重错误：系统级故障，极易造成程序崩溃")
+
+
+
+
+
+

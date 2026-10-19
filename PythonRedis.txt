@@ -1,0 +1,108 @@
+import redis 
+
+# redis原生数据类型: none string list set zset hash stream [原生没有数字和布尔类型, 但是Redis 看到它是整数时, 会用 int 编码来省内存, 布尔类型需要自己约定]
+# redis的int是string的底层内部编码, 不为redis的原生数据类型 
+
+REDIS_CONFIG = {
+  "host": "127.0.0.1",
+  "port": 6379,
+  "db": 0, # 0业务 1缓存 2消息队列 3限流 4榜单 5验证码 默认有16个逻辑数据库
+  "password": "password",
+  "decode_responses": True,  # 底层使用二进制流,开启自动解码
+  "socket_timeout": 5,  # 设置超时报错,避免卡死
+  "max_connections": 20  # 连接池最大上限 
+}
+
+# 可以建立多个cli客户端
+pool = redis.ConnectionPool(**REDIS_CONFIG) 
+redis_cli = redis.Redis(connection_pool=pool)
+
+# ex过期时间 nx仅当key不存在才设置 
+redis_cli.set("key", "value", ex=3600, nx=True) 
+redis_cli.mset({"key": "value", "key": "value"})
+redis_cli.exists("key")
+redis_cli.type("key")
+redis_cli.persist("key")  # 移除过期时间,变成永久 
+redis_cli.rename("old_key", "new_key")
+redis_cli.delete("key")
+redis_cli.ttl("key")  # 查看key保留的剩余时间, >= 0表示key还存在以及可以再存活的秒数, -1表示永久存在, -2表示不存在 
+# 若key不存在则以0处理,最后自动存储
+redis_cli.incr("key")
+redis_cli.decr("key")
+redis_cli.incrby("key", 10) 
+redis_cli.decrby("key", 10)
+
+# 禁止执行 redis_cli.keys("*") 会找出所有key 阻塞程序 
+
+# 渐进式遍历查找 user: 开头的key 每次扫描100个 可能返回重复结果 
+for key in redis_cli.scan_iter(match="user:*", count=100):
+  print(key)
+
+redis_cli.getset("key", "new_value")  # 获取旧值并设置新值 
+
+# 哈希 
+redis_cli.hset("user:001", mapping={"name": "张三", "age": 18})
+redis_cli.hget("user:001", "name") 
+redis_cli.hmget("user:001", ["name", "age"])
+redis_cli.hincrby("user:001", "age", -1) 
+redis_cli.hexists("user:001", "name")
+redis_cli.hdel("user:001", "name")
+
+# list 在 redis 底层是双向列表 
+redis_cli.rpush("queue", "msg", "val") # 右入队,选中queue,支持一次性入队多个元素 
+redis_cli.lpush("queue", "message", "value") # 左入队,选中queue,支持一次性入队多个元素 
+res = redis_cli.lrange("queue", 0, 10) 
+res = redis_cli.ltrim("queue", 0, 99) # 区间内是保留部分
+res = redis_cli.lpop("queue")
+res = redis_cli.rpop("queue")
+msg = redis_cli.blpop("queue", timeout=5)
+msg = redis_cli.brpop("queue", timeout=5) 
+item = redis_cli.lindex("queue", 0) # 依据索引取值 
+redis_cli.lrem("queue", 1, "msg") # 1 > 0 => 则从头开始找,删除匹配的前一个值 
+
+# set 
+redis_cli.sadd("set:001", "python", "java", "go")
+redis_cli.sismember("set:001", "python")  # True 判断是否包含 
+redis_cli.scard("set:001") # 集合大小 
+redis_cli.srem("set:001", "java") # 删除 set:001 集合下 java 
+common = redis_cli.sinter("set:001", "set:002") 
+diff = redis_cli.sdiff("set:001", "set:002") 
+union = redis_cli.sunion("set:001", "set:002") 
+winner = redis_cli.srandmember("lottery_pool", 3) # 随机抽取3个不删除 
+winner = redis_cli.spop("lottery_pool", 3) # 所及抽取3个并且之后删除 
+
+# zset 底层基于跳表,兼具有序和去重的特性 
+redis_cli.zadd("zset:001", {"张三": 95, "李四": 88, "王五": 98}) 
+
+# 获取排名,从大到小
+top_10 = redis_cli.zrevrange("zset:001", 0, 9, withscores=True) 
+
+# 获取排名,从小到大 
+bottom_10 = redis_cli.zrange("zset:001", 0, 9)
+
+# 获取某人排名,从大到小,0作为第一 
+rank = redis_cli.zrevrank("zset:001", "张三")
+
+# 获取分数/值 
+score = redis_cli.zscore("zset:001", "张三") 
+
+# 分数自增/自减(负数) 
+redis_cli.zincrby("hot_search", 1, "新闻标题")
+
+# pipeline 减少RTT
+# 通过创建一个管道, 一次性批量操作好, 最后统一把结果返回 
+pipe = redis_cli.pipeline()  # 创建一个管道 
+for i in range(100):
+  pipe.set(f"key:{i}", i, ex=3600)  # 先把一百条命令塞进管道,最后依次执行一并返回
+pipe.execute() 
+
+# 异常与降级 
+try:
+  redis_cli.set("key", "value")
+except redis.exceptions.ConnectionError as err:
+  pass   
+
+# Redis注意问题: 
+# 1.缓存穿透(缓存没有记录,数据库也没有记录,多请求一直请求没有的记录,导致数据库被打爆) --> 缓存空值 / 布隆过滤器 
+# 2.缓存击穿(某个热点key突然过期,大量并发请求同时发现缓存没了,全部去查数据库导致数据库压力巨大) --> 互斥锁保护,只允许一个访问去访问数据库,其他访问等待缓存再搭建 
+# 3.缓存雪崩(大量key在同一时间过期,数据库等流量瞬间暴增,导致Redis集群宕机,数据库奔溃) --> 打散过期时间 + 高可用 + 限流降级 

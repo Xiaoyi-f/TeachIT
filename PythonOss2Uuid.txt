@@ -1,0 +1,39 @@
+import oss2
+import uuid 
+
+class OSSManager:
+  def __init__(self):
+    self.auth = oss2.Auth(
+      "access_key_id",
+      "access_key_secret"
+    )
+
+    self.bucket = oss2.Bucket(
+      self.auth,
+      "endpoint",
+      "bucket_name"
+    )
+
+    # 或自定义域名 
+    self.domain = "https://bucket_name.endpoint"
+
+  def upload_file(self, file_content, filename, folder="uploads"):
+    extension = filename.rsplit(".", 1)[-1] if "." in filename else ""  
+    new_name = f"{uuid.uuid4().hex}.{extension}" if extension else uuid.uuid4().hex 
+    oss_key = f"{folder}/{new_name}"
+
+    self.bucket.put_object(oss_key, file_content) 
+    return f"{self.domain}/{oss_key}"
+
+
+  def delete_file(self, url):
+    if not url:
+      return 
+
+    oss_key = url.replace(f"{self.domain}/", "")
+    self.bucket.delete_object(oss_key)
+    return True 
+
+
+  def file_exists(self, oss_key):
+    return self.bucket.object_exists(oss_key)

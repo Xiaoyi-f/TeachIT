@@ -1,0 +1,60 @@
+# --> weasyprint 
+from weasyprint import HTML 
+
+html_content = f"HTML代码内容"
+pdf_file = HTML(string=html_content).write_pdf() 
+
+
+# --> jieba 
+import jieba 
+
+sentence = "这是一个测试"
+fulljieba_subsentence = jieba.cut(sentence, cut_all=True) 
+list_subsentence = jieba.lcut(sentence) 
+search_subsentence = jieba.cut_for_search(sentence) 
+
+
+# --> wordcloud 
+import wordcloud 
+import numpy as np 
+from PIL import Image 
+
+picture = Image.open("picture.png")
+mk = np.array(picture)
+
+w = wordcloud.WordCloud(font_path="font.ttf", mask=mk, max_words=500, max_font_size=40, background_color="white", colormap="viridis")  # colormap相关值自行搜索 补充: color_func参数 
+
+from matplotlib import colormaps 
+import matplotlib.colors as mcolors 
+
+cmap = colormaps["Blues"]
+
+def color_func_with_highlight(word, font_size, position, orientation, random_state, **kwargs):
+  words = kwargs.get("words", {})
+  if not words:
+    return mcolors.to_hex(cmap(random_state.rand()))
+
+  max_word = max(words, key=words.get) 
+
+  if word == max_word:
+    return "red" 
+
+  max_freq = words[max_word]
+  min_freq = min(words.values())
+  if max_freq > min_freq:
+    norm_freq = (words[word] - min_freq) / (max_freq - min_freq)
+  else:
+    norm_freq = 0.5 
+
+  rgba = cmap(norm_freq) 
+  return mcolors.to_hex(rgba)
+
+w.recolor(color_func=color_func_with_highlight)
+
+file = open(r"file.txt", encoding="utf-8") 
+string = file.read() 
+file.close() 
+
+w.generate(string)
+w.to_file("file.jpg")
+
