@@ -28,8 +28,8 @@ from langchain.chat_models import init_chat_model
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.output_parsers import JsonOutputParser, StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import JsonOutputParser, StrOutputParser, PydanticOutputParser 
+from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate 
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -84,13 +84,20 @@ def basic_example():
 # 工具就是允许模型选择调用的 Python 函数
 # @tool 将函数名、参数、说明暴露给模型; 真正执行仍由程序完成
 
-@tool
+--> 函数名下文档注释会被读取为工具信息, 建议写上标准格式, 以下仅仅演示  
+
+@tool("get_weather", description="查询天气")
 def get_weather(location: str) -> str:
-    """返回指定城市的模拟天气，仅供学习，不提供实时天气"""
+    """
+    parameters: 
+        location: 需要查询的对应地点
+    return: 对应地点的天气描述字符串 
+    """
     # location 是城市名称，类型注解帮助生成工具参数说明
     # 真正查询天气时，在这里调用天气服务 HTTP API
     return f"{location}：晴，25℃（模拟数据）"
 
+Tip: 在LangChain, 作为工具的函数有两个保留的参数名, 你自定义参数不能与之重复 --> config: 用来传递运行时配置 / runtime: 用来传递运行时上下文 
 
 # 注意：在工具说明里写“只有 admin 能用”，不等于实现权限控制
 # 真正权限必须由后端根据已认证的用户身份检查，不能让模型自己判断
@@ -184,6 +191,32 @@ async def stream_example():
 # stream_mode="values"：获取每一步完整状态快照
 # stream_mode=True 不是这里正确的模式设置
 # 若接 Socket.IO / WebSocket，将提取到的文本片段发送给对应客户端
+
+--> 查看完整执行步骤 
+for chunk in agent.stream(
+    {"messages": [HumanMessage(content="323的平方是多少?")]},
+    stream_mode="updates"
+): 
+    for step, data in chunk.items():
+        print(f"step: {step}")
+        print(f"content: {data["messages"][-1].content_blocks}")
+        print("-" * 80)
+
+--> 批量调用 
+results = chain.batch([{"topic": "Python"}, {"topic": "Java"}])
+print("batch批量调用：", results)
+
+import asyncio
+# 异步批量调用
+async def batch_test():
+    results = await chain.abatch([
+        {"topic": "Python"},
+        {"topic": "Java"}
+    ])
+    print("abatch异步批量调用：", results)
+
+# 执行异步函数
+asyncio.run(batch_test())
 
 
 # 06. 结构化输出：结果按字段返回 
@@ -313,10 +346,11 @@ def image_example():
 def chain_example():
     model = build_model()
     prompt = ChatPromptTemplate.from_template("请用一句话解释：{topic}")
-    chain = prompt | model | StrOutputParser()
+    chain = prompt | model | StrOutputParser() // 输出解析器 StrOutputParser 通常为Python字符串 
     print(chain.invoke({"topic": "什么是数据库"}))
     # 字典 -> prompt 生成提示消息 -> model 返回 AIMessage -> parser 提取文本
 
+    // RunnableLambda --> 将Python函数包装成Runnable(可放进管道链 | 里面执行的组件)
     add_prefix = RunnableLambda(lambda text: "小翊的回答：" + text)
     decorated_chain = chain | add_prefix
     print(decorated_chain.invoke({"topic": "什么是缓存"}))
@@ -335,38 +369,76 @@ def chain_example():
     # 不要直接把任意 {"name": "..."} 字典当作聊天模型的输入
 
 
-def json_example():
-    parser = JsonOutputParser(pydantic_object=Demo)
-    prompt = ChatPromptTemplate.from_template(
-        "提取人物姓名、城市、心情\n{format_instructions}\n用户文字：{text}"
-    ).partial(format_instructions=parser.get_format_instructions())
-    chain = prompt | build_model() | parser
-    data = chain.invoke({"text": "小翊在杭州，心情很好"})
-    print(data["name"])
-    # JsonOutputParser 把 JSON 文本解析成 Python 数据，常见结果是字典
-    # 它不是让任意回答自动变成 JSON;仍需提示格式，并处理解析失败
-    # 若还需要严格字段校验，可再调用 Demo.model_validate(data)
-    validated = Demo.model_validate(data)
-    print(validated.name)
+// 输出解析器 JsonOutputParser --> 模型返回JSON, 自动转变为Python字典 
 
+--> 企业首选 PydanticOutputParser 
+class PersonInfo(BaseModel):
+    name: str = Field(description="人物姓名, 字符串类型")
+    age: int = Field(description="人物年龄, 整数类型, 不可为字符串")
+    city: str = Field(description="人物所在城市, 字符串类型")
+    job: str = Field(description="人物职业, 字符串类型")
+
+    def __str__(self):
+        return f"[人物信息] 姓名: {self.name}, 年龄: {self.age}, 城市: {self.city}, 职业: {self.job}"
+
+model = init_chat_model(model="model_name")
+parser = PydanticOutputParser(pydantic_object=PersonInfo) 
+messages = [
+    SystemMessage(content=f"你是信息获取助手, 需要严格按照指定格式输出信息 {parser.get_format_intstruction()} 不添加任何额外文字"),
+    HumanMessage(content="张三, 28岁, 北京, 软件工程师")
+]
+
+response = model.invoke(messages) 
+print(response) 
+
+person_data = parser.invoke(response)
+print(type(person_data)) // 返回 Pydantic 对象, 可以直接通过 对象.属性 取值 
+print(person_data)
+
+
+// 构建 Few-Shot 提示词模版
+example_list = [
+    {"planet": "月球", "city_info": "月华城, 月球静海生态都城"},
+    {"planet": "火星", "city_info": "赤焰城, 火星火山资源都市"}
+]
+
+single_example = ChatPromptTemplate.from_messages([
+    ("human", "请设计{planet}都城"),
+    ("ai", "{city_info}")
+])
+
+few_chat_template = FewShotChatMessagePromptTemplate(
+    example=example_list,
+    example_prompt=single_example 
+)
+
+total_prompt = ChatPromptTemplate.from_messages([
+    ("system", "严格遵循样例格式创作"),
+    few_chat_template, 
+    ("human", "请设计{planet}都城)
+])
+
+result = total_prompt.invoke({"planet": "天王星"}) 
+for m in result.to_messages():
+    print(m.content)
 
 # 10. RAG 是什么 
-# RAG = 检索增强生成：先找资料，再让模型根据资料回答
+# RAG = 检索增强生成: 先找资料，再让模型根据资料回答
 # 建库：文件 -> Document -> 小文本块 -> Embedding -> 向量库
-# 提问：问题 -> Embedding -> 检索相似文本块 -> 连同问题交给模型
+# 提问：问题 -> Embedding -> 检索相似文本块 -> 连同问题交给模型 (内容重排且提示词重组)
 # 它不是训练模型，也不会把你上传的文档永久写进模型参数
 # Embedding：将文本转换成数字列表，用于计算语义相似程度
 # “数学身份证”只是比喻; 相似向量不保证内容正确或事实相同
 # 维度高不代表一定更好，效果也取决于模型、资料、切分和检索方式
-
+--> 解决模型幻觉和知识时效性不足问题常用方案之一 
 
 def load_and_split(file_path: str):
     from langchain_community.document_loaders import TextLoader
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     docs = TextLoader(file_path, encoding="utf-8").load()
-    # docs 是 Document 列表;Document 主要包含：
-    # page_content：正文;metadata：来源、页码等附加信息
+    # docs 是 Document 列表; Document 主要包含：
+    # page_content：正文; metadata：来源、页码等附加信息
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap=50,
