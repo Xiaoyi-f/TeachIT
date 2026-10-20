@@ -574,6 +574,19 @@ def csv_example():
 
 # 14. 进阶 Milvus 向量库 
 --> 数据量大、高并发需求、混合检索、高可用、数据备份、故障恢复、多模态检索、大规模批量频繁操作
+
+Collection(Table) Field(Column) Vector ... 
+
+# pip install -U "pymilvus[model]"
+from pymilvus import MilvusClient 
+
+client = MilvusClient(uri="http://127.0.0.1:19530")
+client.create_database("milvus_demos")
+dbs = client.list_databases()
+print(f"现有数据库: {dbs}")
+# client.drop_database("milvus_demos") 删除数据库 
+
+
 --> milvus-compose.yml 
 version: '3.5'
 
@@ -647,4 +660,9 @@ networks:
 // 在同有milvus-compose.yml文件的目录执行 命名容器名称为 milvus-standalone 
 docker compose -p milvus-standalone up -d 
 
+docker ps // 查看运行状态 
+
+--> 下载并安装使用Attu(Milvus官方出品可视化工具)
+docker run -d --name attu --network milvus -p 30000:3000 -e MILVUS_URL=milvus-standalone:19530  zilliz/attu
+之后通过浏览器访问 http://localhost:30000/#/connect 
 

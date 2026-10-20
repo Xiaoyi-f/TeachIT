@@ -228,6 +228,20 @@ public class TestCast {
 成员变量: 编译看左, 执行看左
 成员方法: 编译看左, 执行看右
 
+// 多态性
+interface Discount {
+    double apply(double totalPrice);
+}
+
+Discount discount; 
+if () {
+  discount = () -> {}
+} else {
+  discount = () -> {}
+}
+
+--> 参数传递 多态调用 
+
 try {
 } catch (Exception err) {
 } finally {
