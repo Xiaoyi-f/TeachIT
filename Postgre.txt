@@ -18,7 +18,47 @@ Checkpointer 进程
 --> 后端进程 
 --> 连接管理、 解析器、优化器、执行器
 
+真正遵循SQL标准的关系型数据库, 事务可靠性非常强(MVCC 无锁), 扩展能力极强, JSON支持极强 
 
+docker run --name postgres \
+-e POSTGRES_PASSWORD=itheima123 \
+-p 5432:5432 \
+-v pgdata:/var/lib/postgresql/data \
+--restart=always \
+-d \
+docker.1ms.run/library/postgres:17.0
+
+docker exec -it postgres psql -U postgres 
+docker exec -it postgres psql -U postgres -d database
+
+CREATE DATABASE database; 
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY, 
+  name VARCHAR(50),
+  age INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+); 
+
+INSERT INTO users (name, age) 
+VALUES ('Alice', 18), ('Bob', 20)
+
+SELECT * FROM users;
+
+SELECT * FROM users WHERE age > 18; 
+
+UPDATE users
+SET age = 21 
+WHERE name = 'Bob'; 
+
+DELETE FROM users WHERE name = 'Alice'; 
+
+常用PostgreSQL 命令 
+\l -- 查看所有数据库 
+\c 数据库名 -- 切换当前数据库
+\dt -- 查看表 
+\d users -- 查看表结构 
+\q -- 退出 
 
 
 

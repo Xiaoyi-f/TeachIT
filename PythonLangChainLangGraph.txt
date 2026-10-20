@@ -1288,9 +1288,9 @@ from typing_extensions import TypedDict
 # 定义状态类，使用TypedDict来定义图的状态结构
 class State(TypedDict):
     # messages字段是一个列表，使用add_messages函数来处理消息的累积
-    messages: Annotated[list, add_messages]
+    messages: Annotated[list, add_messages] # messages: Annotated[list[BaseMessage], add_messages]
 
-# 定义状态类，使用MessagesState来定义图的状态结构，已经包含了messages字段
+# 定义状态类，使用MessagesState来定义图的状态结构，已经包含了messages字段 --> MessagesState 等价于 内部写好的上面的代码 下面继承
 # class State(MessagesState):
 #     pass
 
@@ -1368,7 +1368,7 @@ def single_round(state_graph: CompiledStateGraph):
             print("发生错误：" + str(e))
 
 
-# 多轮对话函数（带记忆）
+# 多轮对话函数（带记忆）--> 长期记忆可以利用向量库实现 但是要做好维护
 def multi_round(state_graph: CompiledStateGraph, runnable_config: RunnableConfig):
     while True:
         try:
