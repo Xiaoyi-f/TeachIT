@@ -1217,3 +1217,60 @@ Edge(边): 定义节点之间的连接关系和执行顺序, 包括普通边和�
 - TypedDict 用于为字典数据结构提供静态类型注解，增强代码的类型安全性和IDE支持
 - Pydantic 用于在运行时进行数据验证、序列化和设置管理，特别适合处理外部输入和数据转换
 
+from typing import TypedDict, Dict 
+from langgraph.graph import StateGraph, START, END 
+
+# 不用于构建对象 而是直接赋值字典且自动校验 底层即dict 不是真正的类
+class MyState(TypedDict):
+    x: int 
+    y: int 
+    z: int 
+
+def my_node(state):
+    """简单计算函数, 使用state进行参数传递""" 
+    state["z"] = state["x"] + state["y"]
+    return state 
+
+def buildGraph():
+    graph_builder = StateGraph(MyState) 
+    graph_builder.add_node("add_node", my_node) # 节点名字 节点函数(干活) --> 函数节点 / 工具节点 / 大模型节点 
+    graph_builder.add_edge(START, "add_node") # from_node to_node
+    graph_builder.add_edge("add_node", END) 
+    
+    return graph_builder.compile() # 编译可运行Agent对象
+
+if __name__ == "__main__":
+    graph = buildGraph() # get_graph 拿到图的元信息对象 xray = True 将底层细节展示
+    mermaid_png = graph.get_graph(xray = True).draw_mermaid_png()
+    
+    with open("graph.png", "wb") as file:
+        file.write(mermaid_png) 
+
+    my_state = {
+        "x": 1, 
+        "y": 2 
+    }
+
+    result = graph.invoke(my_state)
+    print(f"{my_state['x']} + {my_state['y']} = {result['z']}")
+
+
+# 路由判断函数：只返回标记字符串
+def processWater(state):
+    if state["tempreture"]== 100:
+        return "hotWaterReady"   # 标记1
+    else:
+        return "stillCode"       # 标记2
+
+# 条件边注册
+graph_builder.add_conditional_edges(
+    source="heatUp",        # 起点节点：heatUp（必须是add_node注册过的节点）
+    path=processWater,      # 路由函数：heatUp跑完，立刻执行这个判断函数
+    path_map={              # 【映射表】路由返回的字符串 → 真实节点名称
+        "hotWaterReady": "getBolidWater",
+        "stillCode": "heatUp"
+    }
+)
+
+
+
