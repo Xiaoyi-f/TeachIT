@@ -666,3 +666,195 @@ docker ps // 查看运行状态
 docker run -d --name attu --network milvus -p 30000:3000 -e MILVUS_URL=milvus-standalone:19530  zilliz/attu
 之后通过浏览器访问 http://localhost:30000/#/connect 
 
+{
+    "id": 1, # 主键 
+    "vector": [0.1, 0.2, 0.3, 0.4, 0.5], # 向量 
+    "scalar": "标量" # 标量 
+}
+
+from pymilvus import MilvusClient, DataType 
+
+client = MilvusClient(uri="http://localhost:19530")
+client.use_database("milvus_demos")
+
+def create_collection():
+    schema = MilvusClient.create_schema(
+        auto_id = False, # 开启True则自动插入主键值, 不用手动传递
+        enable_dynamic_field = True # 允许带上key-value任意标量
+    )
+
+    schema.add_field(
+        field_name = "id",
+        datatype = DataType.INT64,
+        is_primary = True,
+        description = "主键ID"
+    )
+
+    schema.add_field(
+        field_name = "vector", 
+        datatype = DataType.FLOAT_VECTOR,
+        dim=5, # 实际选择维度与嵌入模型有关
+        description = "向量存储字段"
+    )
+
+    schema.add_field(
+        field_name = "scalar",
+        datatype = DataType.VARCHAR,
+        max_length = 512, 
+        description = "文本标量字段"
+    )
+
+    # DataType --> BOOLEAN INT64 FLOAT DOUBLE VARCHAR JSON ARRAY 标量类型
+    # DataType --> BINARY_VECTOR(dim维度 必须为8的倍数) FLOAT_VECTOR(常用) FLOAT16_VECTOR BFLOAT16_VECTOR  
+
+    client.create_collection(
+        collection_name = "demo",
+        schema = schema 
+    )
+
+def drop_collection():
+    client.drop_collection("demo")
+
+if __name__ == "__main__":
+    create_collection()
+    # drop_collection()
+
+
+def operation_index():
+    """
+    Milvus 索引管理核心函数
+    流程：创建向量索引 → 创建标量索引
+    """
+
+    # 创建向量索引（用于加速向量相似度检索）
+    # 构建向量索引参数
+    index_params_vector = client.prepare_index_params()
+    index_params_vector.add_index(
+        field_name="my_vector",  # 待加索引的向量字段
+        index_type="IVF_FLAT",  # 索引类型（空则使用自动推荐类型，如 IVF_FLAT）
+        metric_type="IP",  # 相似度计算方式：内积
+        params={"nlist": 128}, # 128簇
+        index_name="vector_index"  # 自定义索引名称
+    )
+
+    # 为集合创建向量索引
+    client.create_index(
+        collection_name="demo1",
+        index_params=index_params_vector
+    )
+
+    # 查询并打印索引信息
+    print("集合索引列表：", client.list_indexes(collection_name="demo1"))
+    print("向量索引详情：", client.describe_index(collection_name="demo1", index_name="vector_index"))
+
+    # 创建标量索引（用于加速标量字段过滤）
+    # 构建标量字段索引参数
+    index_params_scalar = client.prepare_index_params()
+    index_params_scalar.add_index(
+        field_name="my_color",  # 待加索引的标量字段
+        index_type="INVERTED",  # 标量索引类型（INVERTED：使用倒排索引）
+        index_name="color_index"  # 自定义索引名称
+    )
+
+    # 为集合创建标量索引
+    client.create_index(
+        collection_name="demo",
+        index_params=index_params_scalar
+    )
+    # 把集合索引从磁盘载入内存，开启检索能力
+    client.load_collection(collection_name="demo1")
+
+
+# 索引/集合释放删除
+def drop_index():
+    # 执行删除
+    client.release_collection(collection_name='demo')  # 释放内存中的集合
+    client.drop_index(collection_name='demo', index_name='vector_index')  # 删除向量索引
+    client.drop_index(collection_name='demo', index_name='color_index')  # 删除标量索引
+
+if __name__ == '__main__':
+    # 执行索引管理测试
+    operation_index()
+    # 删除索引
+    # drop_index()
+
+
+# 增删改查 
+
+# 测试数据集1
+data1 = [
+    {"my_id": 0, "my_vector": [0.3580376395471989, -0.6023495712049978, 0.18414012509913835, -0.26286205330961354,
+                         0.9029438446296592], "my_color": "pink_8682"},
+    {"my_id": 1, "my_vector": [0.19886812562848388, 0.06023560599112088, 0.6976963061752597, 0.2614474506242501,
+                         0.838729485096104], "my_color": "red_7025"},
+    {"my_id": 2, "my_vector": [0.43742130801983836, -0.5597502546264526, 0.6457887650909682, 0.7894058910881185,
+                         0.20785793220625592], "my_color": "orange_6781"},
+    {"my_id": 3, "my_vector": [0.3172005263489739, 0.9719044792798428, -0.36981146090600725, -0.4860894583077995,
+                         0.95791889146345], "my_color": "pink_9298"},
+    {"my_id": 4, "my_vector": [0.4452349528804562, -0.8757026943054742, 0.8220779437047674, 0.46406290649483184,
+                         0.30337481143159106], "my_color": "red_4794"},
+    {"my_id": 5, "my_vector": [0.985825131989184, -0.8144651566660419, 0.6299267002202009, 0.1206906911183383,
+                         -0.1446277761879955], "my_color": "yellow_4222"},
+    {"my_id": 6, "my_vector": [0.8371977790571115, -0.015764369584852833, -0.31062937026679327, -0.562666951622192,
+                         -0.8984947637863987], "my_color": "red_9392"},
+    {"my_id": 7, "my_vector": [-0.33445148015177995, -0.2567135004164067, 0.8987539745369246, 0.9402995886420709,
+                         0.5378064918413052], "my_color": "grey_8510"},
+    {"my_id": 8, "my_vector": [0.39524717779832685, 0.4000257286739164, -0.5890507376891594, -0.8650502298996872,
+                         -0.6140360785406336], "my_color": "white_9381"},
+    {"my_id": 9, "my_vector": [0.5718280481994695, 0.24070317428066512, -0.3737913482606834, -0.06726932177492717,
+                         -0.6980531615588608], "my_color": "purple_4976"}
+]
+
+# 测试数据集2
+data2 = [
+    {"my_id": 10, "my_vector": [-0.5570353903748935, -0.8997887893201304, -0.7123782431855732, -0.6298990746450119,
+                          0.6699215060604258], "my_color": "red_1202"},
+    {"my_id": 11, "my_vector": [0.6319019033373907, 0.6821488267878275, 0.8552303045704168, 0.36929791364943054,
+                          -0.14152860714878068], "my_color": "blue_4150"},
+    {"my_id": 12, "my_vector": [0.9483947484855766, -0.32294203351925344, 0.9759290319978025, 0.8262982148666174,
+                          -0.8351194181285713], "my_color": "orange_4590"},
+    {"my_id": 13, "my_vector": [-0.5449109892498731, 0.043511240563786524, -0.25105249484790804, -0.012030655265886425,
+                          -0.0010987671273892108], "my_color": "pink_9619"},
+    {"my_id": 14, "my_vector": [0.6603339372951424, -0.10866551787442225, -0.9435597754324891, 0.8230244263466688,
+                          -0.7986720938400362], "my_color": "orange_4863"},
+    {"my_id": 15, "my_vector": [-0.8825129181091456, -0.9204557711667729, -0.935350065513425, 0.5484069690287079,
+                          0.24448151140671204], "my_color": "orange_7984"},
+    {"my_id": 16, "my_vector": [0.6285586391568163, 0.5389064528263487, -0.3163366239905099, 0.22036279378888013,
+                          0.15077052220816167], "my_color": "blue_9010"},
+    {"my_id": 17, "my_vector": [-0.20151825016059233, -0.905239387635804, 0.6749305353372479, -0.7324272081377843,
+                          -0.33007998971889263], "my_color": "blue_4521"},
+    {"my_id": 18, "my_vector": [0.2432286610792349, 0.01785636564206139, -0.651356982731391, -0.35848148851027895,
+                          -0.7387383128324057], "my_color": "orange_2529"},
+    {"my_id": 19, "my_vector": [0.055512329053363674, 0.7100266349039421, 0.4956956543575197, 0.24541352586717702,
+                          0.4209030729923515], "my_color": "red_9437"}
+]
+
+def operate_entity():
+    res = client.insert(collection_name="demo", data=data1) 
+    print("数据插入结果:", res)
+
+    res = client.upsert(collection_name="demo", data=data2)
+    print("数据更新结果:", res)
+
+def drop_entity():
+    res = client.delete(collection_name="demo", filter="my_id in [12, 5, 6]")
+    print("数据删除结果:", res)
+
+def query_entity():
+    # 待匹配的查询向量 --> 实际 调用模型 输出 
+    query_vector = [
+        [0.19886812562848388, 0.06023560599112088, 0.6976963061752597, 0.2614474506242501, 0.838729485096104],
+        [0.3172005263489739, 0.9719044792798428, -0.36981146090600725, -0.4860894583077995, 0.95791889146345]
+    ]
+
+    results = client.search(
+        collection_name = "demo",
+        data = query_vector, 
+        limit = 2, 
+        output_fields=["my_id", "my_vector", "my_color"],
+        filter="my_color like 'red%'" # 标量过滤, 只匹配颜色以red开头的数据
+    )
+
+    for result in results:
+        print(result)
+
