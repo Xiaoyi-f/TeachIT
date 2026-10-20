@@ -1272,5 +1272,136 @@ graph_builder.add_conditional_edges(
     }
 )
 
+# --> 记忆 
+import os
+from typing import Annotated
 
+from langchain.chat_models import init_chat_model
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph, START, END, MessagesState
+from langgraph.graph.message import add_messages
+from langgraph.graph.state import CompiledStateGraph
+from typing_extensions import TypedDict
+
+
+# 定义状态类，使用TypedDict来定义图的状态结构
+class State(TypedDict):
+    # messages字段是一个列表，使用add_messages函数来处理消息的累积
+    messages: Annotated[list, add_messages]
+
+# 定义状态类，使用MessagesState来定义图的状态结构，已经包含了messages字段
+# class State(MessagesState):
+#     pass
+
+# 基于OpenAI 调用 Qwen3-max模型
+llm = init_chat_model(
+    model="qwen3-max",
+    model_provider="openai",  # 使用 openai 协议风格的统一接口
+    api_key=os.getenv("ALIYUN_API_KEY"),
+    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+)
+
+
+# 定义聊天机器人节点函数
+def chatbot(state: State):
+    # 调用LLM处理当前消息列表，并将响应添加到消息中
+    messages = state["messages"]
+    result = llm.invoke(messages)
+    return {"messages": [result]}
+
+
+# 构建基础图（无记忆功能）
+def build_graph():
+    # 创建状态图实例，指定状态类型为State
+    graph_builder = StateGraph(State)
+
+    # 添加聊天机器人节点，命名为"chatbot"，使用chatbot函数处理
+    graph_builder.add_node("chatbot", chatbot)
+
+    # 添加边：从开始节点到聊天机器人节点
+    graph_builder.add_edge(START, "chatbot")
+    # 添加边：从聊天机器人节点到结束节点
+    graph_builder.add_edge("chatbot", END)
+
+    # 编译图并返回
+    return graph_builder.compile()
+
+
+# 构建带记忆功能的图
+def build_graph_with_memory():
+    # 创建状态图实例
+    graph_builder = StateGraph(State)
+    # 实例化内存保存器，用于保存对话历史
+    memory = MemorySaver()
+
+    # 添加聊天机器人节点
+    graph_builder.add_node("chatbot", chatbot)
+
+    # 添加边：从开始节点到聊天机器人节点
+    graph_builder.add_edge(START, "chatbot")
+    # 添加边：从聊天机器人节点到结束节点
+    graph_builder.add_edge("chatbot", END)
+
+    # 编译图时指定内存检查点，使图能够保存和恢复状态
+    return graph_builder.compile(checkpointer=memory)
+
+
+# 单轮对话函数（无记忆）
+def single_round(state_graph: CompiledStateGraph):
+    while True:
+        try:
+            # 获取用户输入
+            user_input = input("User: ")
+            # 检查退出条件
+            if user_input.lower() in ["quit", "exit", "q"]:
+                print("Goodbye!")
+                break
+            # 构建初始状态，包含用户消息
+            state = {"messages": [{"role": "user", "content": user_input}]}
+            # 调用图处理当前状态
+            result = state_graph.invoke(state)
+            # 打印助手的回复（最后一条消息）
+            print("Assistant:", result["messages"][-1].content)
+        except Exception as e:
+            # 异常处理
+            print("发生错误：" + str(e))
+
+
+# 多轮对话函数（带记忆）
+def multi_round(state_graph: CompiledStateGraph, runnable_config: RunnableConfig):
+    while True:
+        try:
+            # 获取用户输入
+            user_input = input("User: ")
+            # 检查退出条件
+            if user_input.lower() in ["quit", "exit", "q"]:
+                print("Goodbye!")
+                break
+            # 构建初始状态，包含用户消息
+            state = {"messages": [{"role": "user", "content": user_input}]}
+
+            # 调用图处理当前状态，使用配置来保持对话上下文
+            result = state_graph.invoke(state, config=runnable_config)
+            # 打印助手的回复
+            print("Assistant:", result["messages"][-1].content)
+        except Exception as e:
+            # 异常处理
+            print("发生错误：" + str(e))
+
+
+# 主程序入口
+if __name__ == "__main__":
+    # 构建无记忆的图并运行单轮对话
+    # graph = build_graph()
+    # single_round(graph)
+
+    # 以下是带记忆的多轮对话代码（当前被注释）
+    graph_with_memory = build_graph_with_memory()
+
+    # 创建运行配置，用于保存对话上下文
+    config = RunnableConfig(configurable={
+        "thread_id": "1"  # 配置线程ID，用于区分不同对话会话
+    })
+    multi_round(graph_with_memory, config)
 
