@@ -858,3 +858,359 @@ def query_entity():
     for result in results:
         print(result)
 
+
+# 混合查询 
+--> 稠密向量检索: 基于语义相似性擅长理解意思, 即使关键词不完全匹配, 也能找到含义相近的文档
+--> 稀疏向量检索: 基于关键词匹配擅长精准命中关键词, 优先返回包含指定词汇的文档 
+
+-- BM25稀疏方案 
+# 核心依赖导入
+from pymilvus import (
+    MilvusClient,
+    DataType,
+    Function,
+    FunctionType,
+    AnnSearchRequest,
+    RRFRanker,
+    WeightedRanker
+)
+
+# 1. 初始化客户端与基本配置
+client = MilvusClient(uri="http://127.0.0.1:19530")
+COLLECTION_NAME = "multi_vector_demo"
+
+
+def create_collection_and_data():
+    """创建集合、配置Schema与索引、并插入初始化测试数据"""
+    client.use_database("milvus_demos")
+
+    # 如果集合已存在则清理
+    if client.has_collection(COLLECTION_NAME):
+        client.drop_collection(COLLECTION_NAME)
+        print(f"旧集合 {COLLECTION_NAME} 已清理")
+
+    # 2. 定义 Schema（支持多向量：稠密语义向量 + 内置BM25稀疏向量）
+    schema = client.create_schema(auto_id=False)
+
+    # 主键
+    schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
+    # 原始文本字段（开启中文分词器）
+    schema.add_field(
+        field_name="text",
+        datatype=DataType.VARCHAR,
+        max_length=1000,
+        enable_analyzer=True,
+        analyzer_params={"type": "chinese"} // standard english 
+    )
+    # 文本的稠密向量【微调向量，拉大区分度】
+    schema.add_field(field_name="text_dense", datatype=DataType.FLOAT_VECTOR, dim=5)
+    # 文本的稀疏向量（由内置 BM25 函数自动生成和填充）
+    schema.add_field(field_name="text_sparse", datatype=DataType.SPARSE_FLOAT_VECTOR)
+
+    # 3. 注册 Milvus 内置 BM25 函数
+    bm25_function = Function(
+        name="text_bm25_emb",
+        input_field_names=["text"],
+        output_field_names=["text_sparse"],
+        function_type=FunctionType.BM25
+    )
+    schema.add_function(bm25_function)
+
+    # 4. 配置多向量索引参数
+    index_params = client.prepare_index_params()
+
+    # 稠密向量索引
+    index_params.add_index(
+        field_name="text_dense",
+        index_type="IVF_FLAT",
+        metric_type="IP",
+        params={"nlist": 128}
+    )
+
+    # 稀疏向量索引（BM25相关性算法）
+    index_params.add_index(
+        field_name="text_sparse",
+        index_type="SPARSE_INVERTED_INDEX",
+        metric_type="BM25",
+        params={"inverted_index_algo": "DAAT_MAXSCORE"}
+    )
+
+    # 5. 创建集合并加载
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        schema=schema,
+        index_params=index_params
+    )
+    client.load_collection(COLLECTION_NAME)
+    print(f"集合 {COLLECTION_NAME} 创建完成并加载到内存")
+
+    # 6. 插入测试数据【优化稠密向量，相似度差距更大】
+    data_to_insert = [
+        {
+            "id": 1,
+            "text": "车辆保养与维护技巧",
+            "text_dense": [0.72, 0.45, 0.21, 0.75, 0.38]
+        },
+        {
+            "id": 2,
+            "text": "车辆日常保养指南",
+            "text_dense": [0.74, 0.47, 0.23, 0.77, 0.40]
+        },
+        {
+            "id": 3,
+            "text": "汽车保养周期表",
+            "text_dense": [0.68, 0.42, 0.18, 0.71, 0.34]
+        },
+        {
+            "id": 4,
+            "text": "汽车购买指南",
+            "text_dense": [0.22, 0.15, 0.78, 0.20, 0.12]
+        },
+        {
+            "id": 5,
+            "text": "汽车试驾说明",
+            "text_dense": [0.18, 0.79, 0.22, 0.16, 0.74]
+        }
+    ]
+
+    client.insert(collection_name=COLLECTION_NAME, data=data_to_insert)
+    client.flush(COLLECTION_NAME)
+    print("测试数据插入并 Flush 成功\n")
+
+
+def mock_embedding(query: str):
+    """教学模拟Embedding，生产替换真实Embedding模型"""
+    if "保养" in query:
+        return [0.70, 0.46, 0.20, 0.74, 0.37]
+    elif "试驾" in query:
+        return [0.17, 0.78, 0.21, 0.15, 0.73]
+    elif "购买" in query:
+        return [0.21, 0.14, 0.77, 0.19, 0.11]
+    else:
+        return [0.7, 0.5, 0.2, 0.8, 0.4]
+
+
+def search(query_text: str):
+    """执行多向量混合检索 (Hybrid Search)"""
+    client.use_database("milvus_demos")
+
+    query_dense_vector = mock_embedding(query_text)
+
+    # 支路一：稠密向量语义检索请求
+    req_dense = AnnSearchRequest(
+        data=[query_dense_vector],
+        anns_field="text_dense",
+        param={"metric_type": "IP", "params": {"nprobe": 10}},
+        limit=3
+    )
+
+    # 支路二：稀疏向量 BM25 全文检索请求
+    req_sparse = AnnSearchRequest(
+        data=[query_text],
+        anns_field="text_sparse",
+        param={"metric_type": "BM25"},
+        limit=3
+    )
+
+    # 混合检索融合策略 
+    # 加权融合：(稠密权重, 稀疏权重)
+    # ranker = WeightedRanker(0.6, 0.4)
+
+    # RRF倒数排序融合，只使用排名，不受分值值域影响
+    ranker = RRFRanker()
+
+    # 混合检索调用
+    res = client.hybrid_search(
+        collection_name=COLLECTION_NAME,
+        reqs=[req_dense, req_sparse],
+        ranker=ranker,
+        limit=4,
+        output_fields=["id", "text"]
+    )
+
+    print(f"==== 多向量混合检索结果 (Query: {query_text}) ====")
+    for hits in res:
+        for hit in hits:
+            entity = hit.get('entity', hit)
+            print(f"综合得分: {hit['distance']:.4f} | ID: {entity.get('id')} | 文本内容: {entity.get('text')}")
+
+
+if __name__ == '__main__':
+    # 首次运行打开创建集合，后续注释
+    create_collection_and_data()
+
+    search("车辆保养")
+    print("-" * 60)
+    search("试驾汽车")
+    print("-" * 60)
+    search("汽车购买")
+
+
+-- IP稀疏方案(IP: Inner Product)
+# Milvus Python SDK 核心依赖导入
+from pymilvus import (
+    MilvusClient,
+    DataType,
+    AnnSearchRequest,
+    WeightedRanker,
+    RRFRanker
+)
+
+# 1. 初始化客户端与全局常量
+client = MilvusClient(uri="http://127.0.0.1:19530")
+COLLECTION_NAME = "multi_vector_demo2"
+
+
+def create_car_manual_collection():
+    """构建汽车手册知识库集合，存储稠密语义向量+手动构造稀疏权重向量，用于混合检索演示"""
+    # 指定操作数据库
+    client.use_database("milvus_demos")
+
+    # 存在旧集合则先清理，避免重复创建报错
+    if client.has_collection(COLLECTION_NAME):
+        client.drop_collection(COLLECTION_NAME)
+        print(f"旧集合 {COLLECTION_NAME} 已清理")
+
+    # 2. 创建结构化Schema，关闭动态字段，严格约束字段结构
+    schema = client.create_schema(enable_dynamic_field=False)
+    # 主键：文档唯一标识
+    schema.add_field(field_name="doc_id", datatype=DataType.INT64, is_primary=True)
+    # 文档标题文本字段
+    schema.add_field(field_name="doc_title", datatype=DataType.VARCHAR, max_length=100)
+    # 稠密浮点向量：存储文本语义Embedding，维度5简化教学
+    schema.add_field(field_name="denseVector", datatype=DataType.FLOAT_VECTOR, dim=5)
+    # 稀疏向量：手动构造关键词权重向量（IP模式，非内置BM25函数）
+    schema.add_field(field_name="sparseVector", datatype=DataType.SPARSE_FLOAT_VECTOR)
+
+    # 3. 索引构建参数
+    index_params = client.prepare_index_params()
+    # 稠密向量IVF倒排索引，内积相似度计算
+    index_params.add_index(
+        field_name="denseVector",
+        index_type="IVF_FLAT",
+        metric_type="IP",
+        params={"nlist": 128}  # 聚类分桶数量
+    )
+    # 稀疏向量专属倒排索引，使用IP内积度量
+    index_params.add_index(
+        field_name="sparseVector",
+        index_type="SPARSE_INVERTED_INDEX",
+        metric_type="IP"
+    )
+
+    # 4. 创建向量集合并同步构建索引
+    client.create_collection(
+        collection_name=COLLECTION_NAME,
+        schema=schema,
+        index_params=index_params
+    )
+    # 预加载集合至内存，提升检索性能
+    client.load_collection(COLLECTION_NAME)
+    print(f"集合 {COLLECTION_NAME} 创建完成并加载到内存")
+
+    # 5. 测试数据集：稠密、稀疏匹配度交错分布，便于对比融合排序效果
+    doc_list = [
+        {
+            "doc_id": 1,
+            "doc_title": "《汽车维护技巧》",
+            "denseVector": [0.65, 0.43, 0.20, 0.70, 0.36],  # 语义中等匹配
+            "sparseVector": {2: 0.4, 5: 0.3}               # 关键词低匹配
+        },
+        {
+            "doc_id": 2,
+            "doc_title": "《车辆日常养护指南》",
+            "denseVector": [0.71, 0.49, 0.24, 0.79, 0.41],  # 语义最优匹配
+            "sparseVector": {2: 0.6, 5: 0.5}               # 关键词中等匹配
+        },
+        {
+            "doc_id": 3,
+            "doc_title": "《车辆保养周期表》",
+            "denseVector": [0.20, 0.10, 0.05, 0.15, 0.08],  # 语义极低匹配
+            "sparseVector": {2: 0.98, 5: 0.95}             # 关键词最优匹配
+        },
+        {
+            "doc_id": 4,
+            "doc_title": "《车辆保养注意事项》",
+            "denseVector": [0.40, 0.28, 0.18, 0.32, 0.22],  # 语义偏低匹配
+            "sparseVector": {2: 0.80, 5: 0.78}             # 关键词次优匹配
+        },
+    ]
+
+    # 组装批量写入实体
+    entities = []
+    for doc in doc_list:
+        entity = {
+            "doc_id": doc["doc_id"],
+            "doc_title": doc["doc_title"],
+            "denseVector": doc["denseVector"],
+            "sparseVector": doc["sparseVector"]
+        }
+        entities.append(entity)
+
+    # 批量写入/更新知识库数据
+    client.upsert(collection_name=COLLECTION_NAME, data=entities)
+    client.flush(COLLECTION_NAME)
+    print("测试数据插入并 Flush 成功\n")
+
+
+def search_car_question():
+    """混合检索入口，查询问题：如何保养车辆，对比RRF、加权两种多路结果融合策略"""
+    client.use_database("milvus_demos")
+
+    # 支路一：稠密向量语义检索请求，单路召回Top2
+    req_dense = AnnSearchRequest(
+        data=[[0.7, 0.5, 0.2, 0.8, 0.4]],
+        anns_field="denseVector",
+        param={"metric_type": "IP", "params": {"nprobe": 10}},
+        limit=2
+    )
+
+    # 支路二：手动构造稀疏权重向量检索请求，单路召回Top2
+    req_sparse = AnnSearchRequest(
+        data=[{2: 1.0, 5: 0.9}],
+        anns_field="sparseVector",
+        param={"metric_type": "IP"},
+        limit=2
+    )
+
+    # 混合检索融合策略 
+    # 加权融合：(稠密权重, 稀疏权重)
+    # ranker = WeightedRanker(0.6, 0.4)
+
+    # RRF倒数排序融合，只使用排名，不受分值值域影响
+    ranker = RRFRanker()
+
+    # 执行多路混合检索，输出融合后Top4结果
+    res = client.hybrid_search(
+        collection_name=COLLECTION_NAME,
+        reqs=[req_dense, req_sparse],
+        ranker=ranker,
+        limit=4,
+        output_fields=["doc_id", "doc_title"]
+    )
+
+    # 打印检索结果
+    print("用户问题：如何保养车辆？")
+    print("===== 稠密向量(语义)+手动稀疏IP向量(关键词)混合检索结果 =====")
+    for hits in res:
+        for hit in hits:
+            # 兼容不同SDK返回结构，安全取值
+            entity = hit.get("entity", hit)
+            # 保留5位小数，区分细微匹配分值
+            print(f"匹配分数：{hit['distance']:.5f} | 文档ID：{entity['doc_id']} | 文档标题：{entity['doc_title']}")
+
+
+if __name__ == '__main__':
+    # 执行集合创建与数据初始化
+    create_car_manual_collection()
+    # 执行混合检索演示
+    search_car_question()
+
+
+# 传统的LangChain工作流通常被编排为有向无环图(DAG)
+# LangGraph 基于 LangChain 构建, 以 "图" 为计算模型的编排框架, 支持 循环工作流 + 动态状态管理 
+# pip install langgraph 
+
+
+
+
