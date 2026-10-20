@@ -1235,8 +1235,22 @@ def buildGraph():
     graph_builder = StateGraph(MyState) 
     graph_builder.add_node("add_node", my_node) # 节点名字 节点函数(干活) --> 函数节点 / 工具节点 / 大模型节点 
     graph_builder.add_edge(START, "add_node") # from_node to_node
-    graph_builder.add_edge("add_node", END) 
+    graph_builder.add_edge("add_node", END) # ["node_name", "other_node_name"], 汇聚节点 --> 两个节点以并行方式存在 -- 尽量避免并行写入同属性冲突
     
+    """
+    --> 避免写入冲突属性问题 -- 归纳函数 -- 比较优先级返回优先级大的 
+    def reduce_same_attr(current: str, update: str) -> str:
+        priority = {
+            "node_name": 1,
+            "other_node_name": 2
+        }
+
+        return update if priority.get(update, 0) > priority.get(current, 0) else current 
+
+    class State(TypedDict):
+        same_attr: Annotated[str, reduce_product]
+    """
+
     return graph_builder.compile() # 编译可运行Agent对象
 
 if __name__ == "__main__":
@@ -1262,7 +1276,7 @@ def processWater(state):
     else:
         return "stillCode"       # 标记2
 
-# 条件边注册
+# 条件边注册 -- 分支/循环 
 graph_builder.add_conditional_edges(
     source="heatUp",        # 起点节点：heatUp（必须是add_node注册过的节点）
     path=processWater,      # 路由函数：heatUp跑完，立刻执行这个判断函数
@@ -1405,3 +1419,283 @@ if __name__ == "__main__":
     })
     multi_round(graph_with_memory, config)
 
+
+# 人工介入 
+from typing import Literal # 用于限定值只能是指定的字面常量值 
+from typing_extensions import TypedDict
+from langgraph.graph import START, END, StateGraph
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command, interrupt
+
+
+# 状态定义
+class State(TypedDict):
+    """
+    图中流转的状态数据结构
+    """
+    product: str  # 当前产物
+    add_sugar: str  # 是否加糖的决策
+
+
+# 节点函数定义
+def brew_coffee(state: State):
+    """
+    冲咖啡节点
+    """
+    print(f">>> [冲泡] 冲制咖啡...")
+    return {"product": "coffee"}
+
+
+def ask_for_sugar(state: State):
+    """
+    中断节点：
+    通过 interrupt 暂停流程，等待人工输入
+    """
+    print("\n>>> 正在确认客户口味...")
+    # interrupt 会挂起当前线程，等待下次 invoke 时通过 Command(resume=...) 传入值
+    human_response = interrupt("先生/女士您好，请问您的咖啡需要加糖吗？")
+
+    return {"add_sugar": human_response}
+
+def add_sugar_logic(state: State):
+    """加糖节点"""
+    print(">>> [加糖] 正在为您加入方糖... \n")
+    return {"product": "sugar_coffee"}
+
+def sugar_free_logic(state: State):
+    """加糖节点"""
+    print(">>> [无糖] 无需加糖，制作无糖咖啡... \n")
+    return {"product": "sugar_free_coffee"}
+
+# 分支逻辑定义
+def sugar_decision_branch(state: State) -> Literal["yes", "no"]:
+    """
+    条件分支判断：
+    根据 state["add_sugar"] 的值决定走向
+    """
+    if state["add_sugar"] == "是":
+        return "yes"
+    return "no"
+
+
+# 构建流程图
+def build_graph():
+    """
+    构建并编译带记忆能力的流程图
+    """
+    # 初始化状态图
+    graph_builder = StateGraph(State)
+
+    # 1. 添加节点
+    graph_builder.add_node("brew_coffee_node", brew_coffee)
+    graph_builder.add_node("ask_for_sugar_node", ask_for_sugar)
+    graph_builder.add_node("add_sugar_node", add_sugar_logic)
+    graph_builder.add_node("sugar_free_logic_node", sugar_free_logic)
+
+    # 2. 设置边
+    graph_builder.add_edge(START, "brew_coffee_node")
+    graph_builder.add_edge("brew_coffee_node", "ask_for_sugar_node")
+
+    # 3. 设置条件分支
+    graph_builder.add_conditional_edges(
+        "ask_for_sugar_node",
+        sugar_decision_branch,
+        {
+            "yes": "add_sugar_node",
+            "no": "sugar_free_logic_node"
+        }
+    )
+
+    # 4. 加糖后结束
+    graph_builder.add_edge("add_sugar_node", END)
+    graph_builder.add_edge("sugar_free_logic_node", END)
+
+    # 5. 编译图：必须配置 checkpointer 才能支持中断恢复
+    memory = InMemorySaver()
+    return graph_builder.compile(checkpointer=memory)
+
+
+# 主程序入口
+if __name__ == "__main__":
+    # 构建流程图
+    graph = build_graph()
+
+    try:
+        # 使用 Mermaid 生成图表并保存为文件
+        mermaid_code = graph.get_graph().draw_mermaid_png()
+        file_name = "coffee_graph_command.png"
+        with open(file_name, "wb") as f:
+            f.write(mermaid_code)
+
+        print(f"工作流结构图已保存至 {file_name}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    # 配置线程 ID（记忆追踪的标识）
+    config = {"configurable": {"thread_id": "coffee_order_001"}}
+
+    # 初始化输入
+    initial_input: State = {
+        "product": "boiled water",
+        "add_sugar": ""
+    }
+
+    print("--- 启动咖啡制作工作流 ---")
+
+    # 第一次执行：会停在 ask_for_sugar 节点的 interrupt 处
+    try:
+        current_state = graph.invoke(initial_input, config=config)
+    except Exception as e:
+        # 在某些旧版本中可能会抛出异常，但在新版 LangGraph 中通常直接返回或挂起
+        print(f"Flow paused: {e}")
+
+    # 模拟人工输入逻辑
+    user_choice = ""
+    while user_choice not in ["是", "否"]:
+        user_choice = input("\n[人工介入] 咖啡需要加糖吗？(是/否): ").strip()
+
+    # 第二次执行：使用 Command(resume=...) 恢复工作流
+    print("\n--- 恢复工作流 ---")
+    final_result = graph.invoke(Command(resume=user_choice), config=config)
+
+    print("\n" + "=" * 60)
+    print("最终工作流结果:", final_result)
+
+# 流式输出
+print(">>> 启动 Values 模式预览")
+for chunk in graph.stream({"topic": "人工智能"}, stream_mode="values"):
+    print(f"当前全量状态预览: {chunk}")
+
+
+print(">>> 启动 Updates 模式预览")
+for chunk in graph.stream({"topic": "人工智能"}, stream_mode="updates"):
+    # chunk 是一个字典，Key 是节点名，Value 是该节点返回的内容
+    for node_name, output in chunk.items():
+        print(f"🔔 节点 [{node_name}] 任务完成！")
+        print(f"👉 本步增量产出: {output}")
+
+
+print(">>> 启动 Messages 模式（打字机效果）")
+inputs = {"messages": [HumanMessage(content="讲个笑话")]}
+
+# stream_mode="messages" 会返回 (消息碎片, 元数据)
+for msg, metadata in graph.stream(inputs, stream_mode="messages"):
+    if isinstance(msg, AIMessageChunk):
+        print(msg.content)
+
+
+print(">>> 启动 Debug 模式预览")
+for chunk in graph.stream({"topic": "AI"}, stream_mode="debug"):
+    # chunk 包含了 type, timestamp, payload 等丰富信息
+    event_type = chunk.get("type")
+    step = chunk.get("step")
+    payload = chunk.get("payload")
+
+    print(f"🔍 [调试信息] 类型: {event_type} | 步骤: {step}")
+    if event_type == "task":
+        print(f"   准备执行任务: {payload.get('name')}")
+
+
+print(">>> 启动 Custom 模式（实时进度跟踪）")
+inputs = {"topic": "深度学习"}
+
+# 设置 stream_mode="custom" 才能接收到 writer 发出的信息
+for chunk in graph.stream(inputs, stream_mode="custom"):
+    # 这里的 chunk 就是我们在节点里 writer() 括号里的内容
+    print(f"📡 [收到实时信号]: {chunk}")
+
+
+# 子图模式 -- 当一个大图包含一个小图时，默认情况下 stream 只会显示大图的节点 如果想看子图内部的流转，需要特殊配置
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+
+# --- 1. 定义状态 ---
+# 确保所有节点可能返回的 Key 都在这里定义
+class ReportState(TypedDict):
+    topic: str
+    data: str
+    report: str
+
+
+# --- 2. 定义子图的节点 (使用 def) ---
+
+def polish_grammar_node(state: ReportState):
+    print("      [子图] 正在润色语法...")
+    return {"report": state["report"] + " -> (语法已修正)"}
+
+
+def add_emojis_node(state: ReportState):
+    print("      [子图] 正在添加表情...")
+    return {"report": state["report"] + " 🚀"}
+
+
+# 构建子图 (Child Graph)
+sub_builder = StateGraph(ReportState)
+sub_builder.add_node("polish_grammar", polish_grammar_node)
+sub_builder.add_node("add_emojis", add_emojis_node)
+sub_builder.add_edge(START, "polish_grammar")
+sub_builder.add_edge("polish_grammar", "add_emojis")
+sub_builder.add_edge("add_emojis", END)
+sub_graph = sub_builder.compile()
+
+
+# --- 3. 定义父图的节点 (使用 def) ---
+
+def fetch_data_node(state: ReportState):
+    print("--- [父图] 正在搜集原始数据 ---")
+    return {"data": "关于未来科技的原始素材"}
+
+
+def generate_draft_node(state: ReportState):
+    print("--- [父图] 正在生成初步草稿 ---")
+    return {"report": f"初步草稿：{state['data']}"}
+
+
+# 构建父图 (Parent Graph)
+parent_builder = StateGraph(ReportState)
+parent_builder.add_node("fetch_data", fetch_data_node)
+parent_builder.add_node("generate_draft", generate_draft_node)
+# 将子图作为一个整体节点加入
+parent_builder.add_node("process_subgraph", sub_graph)
+
+parent_builder.add_edge(START, "fetch_data")
+parent_builder.add_edge("fetch_data", "generate_draft")
+parent_builder.add_edge("generate_draft", "process_subgraph")
+parent_builder.add_edge("process_subgraph", END)
+parent_graph = parent_builder.compile()
+
+try:
+    mermaid_code = sub_graph.get_graph().draw_mermaid_png()
+    file_name = "06_subgraph_streaming_sub.png"
+    with open(file_name, "wb") as f:
+        f.write(mermaid_code)
+    print(f"工作流结构图已保存至 {file_name}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+try:
+    mermaid_code = parent_graph.get_graph().draw_mermaid_png()
+    file_name = "06_subgraph_streaming_parent.png"
+    with open(file_name, "wb") as f:
+        f.write(mermaid_code)
+    print(f"工作流结构图已保存至 {file_name}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+# --- 4. 执行流式输出 ---
+print("\n>>> 开始子图流式输出测试 (subgraphs=True)\n")
+
+# 注意：当 subgraphs=True 时，返回的是 (层级路径, 数据块)
+for namespace, chunk in parent_graph.stream(
+        {"topic": "AI 助手"},
+        stream_mode="updates",
+        subgraphs=True
+):
+    # namespace 是一个元组，代表当前的调用路径
+    # 例如 () 代表父图，('process_subgraph:...) 代表子图内部
+    path = "".join(namespace) if namespace else "主流程"
+
+    print(f"📍 当前位置: [{path}]")
+    print(f"📦 产出数据: {chunk}")
+    print("-" * 40)
