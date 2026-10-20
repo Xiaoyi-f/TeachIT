@@ -117,6 +117,8 @@ LocalDateTime now = LocalDateTime.now();
 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
 // 泛型: Java泛型底层是类型擦除, 擦除之后全部变成 Object, 而基本类型不是 Object 子类, 不能向上转型为 Object, 所以泛型不能直接放基本类型 
+<? super T> 上界通配符
+<? extends T> 下界通配符
 
 /**
  *  集合
