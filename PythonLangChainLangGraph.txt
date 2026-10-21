@@ -1621,13 +1621,13 @@ class ReportState(TypedDict):
 # --- 2. 定义子图的节点 (使用 def) ---
 
 def polish_grammar_node(state: ReportState):
-    print("      [子图] 正在润色语法...")
+    print("[子图] 正在润色语法...")
     return {"report": state["report"] + " -> (语法已修正)"}
 
 
 def add_emojis_node(state: ReportState):
     print("      [子图] 正在添加表情...")
-    return {"report": state["report"] + " 🚀"}
+    return {"report": state["report"] + "🚀"}
 
 
 # 构建子图 (Child Graph)
@@ -1699,3 +1699,5 @@ for namespace, chunk in parent_graph.stream(
     print(f"📍 当前位置: [{path}]")
     print(f"📦 产出数据: {chunk}")
     print("-" * 40)
+
+Tip: CompiledStateGraph 同样支持 ainvoke astream 使用逻辑类似 --> 异步 
