@@ -24,7 +24,36 @@ services根模块 pom.xml -->
 
 各个微服务模块自己内部有自己的pom.xml 
 
-// 服务注册 
-Nacos 一个易于构建云原生应用的动态服务发现、配置管理和服务管理平台 https://nacos.io/
+/* Nacos -- spring-cloud-alibaba组件 */
+Nacos 一个易于构建云原生应用的动态服务发现、配置管理和服务管理平台 https://nacos.io/ 
+在项目配置文件中配置好nacos配置进行服务注册 
+
+--> 发现注册的服务 
+public class DiscoveryTest {
+
+  @Autowired 
+  DiscoveryClient discoveryClient; 
+
+  @Test 
+  void discoveryClient() {
+    for (String service : discoveryClient.getServices()) {
+      System.out.println("service =" + service);
+      List<ServiceInstance> instances = discoveryClient.getInstances(service); 
+      for (ServiceInstance instance : instances) {
+        System.out.println("ip:" + instance.getHost() + ";" + "port = " + instance.getPort());
+      }
+    }
+  }
+}
+
+/* Sentinel -- spring-cloud-alibaba组件 */
+
+/* Seata -- spring-cloud-alibaba组件 */
+
+/* RocketMQ -- spring-cloud-alibaba组件 */
+
+/* Dubbo -- spring-cloud-alibaba组件 */
+
+
 
 
