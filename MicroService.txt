@@ -42,11 +42,17 @@ public class DiscoveryTest {
       for (ServiceInstance instance : instances) {
         System.out.println("ip:" + instance.getHost() + ";" + "port = " + instance.getPort());
       }
+
+      // 负载均衡 挑选实例 
+      ServiceInstance instance = instances.get(RandomUtil.randomInt(instances.size()));
+
+      
     }
   }
 }
 
 # nacos-2.x 支持 custom.env nacos-3.x 建议手动在窗口设置 set VAR=value 
+
 
 /* Sentinel -- spring-cloud-alibaba组件 */
 
