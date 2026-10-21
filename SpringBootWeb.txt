@@ -73,6 +73,11 @@ server:
     context-path: /api # 整体路由前缀
 # spring核心配置
 spring:
+  application:
+    name: service-demo 
+  cloud: 
+    nacos:
+      server-addr: 127.0.0.1:8848
   profiles:
     active: dev # prod --> application-dev.yml application-prod.yml 
   datasource:

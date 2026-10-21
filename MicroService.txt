@@ -1,0 +1,30 @@
+// SpringCloud Java领域最全面的微服务组件的集合 依托 SpringBoot 自动装配能力 大大降低项目搭建、组件使用成本 --> 分布式系统一站式解决方案 
+--> SpringCloudAlibaba 成为 SpringCloud 组件一员 
+
+小项目 --> 大项目 
+单体架构 --> 微服务架构
+
+微服务拆分 --> 将单体项目拆分为微服务 --> 粒度小、高内聚、低耦合 
+纵向拆分 --> 按照项目功能拆分 
+横向拆分 --> 按照项目通用服务进行拆分 
+
+在企业开发的生产环境中，每一个微服务都应该有自己的独立数据库服务
+
+pom.xml 补充讲解 
+<packaging>jar(默认) / pom(聚合工程) / war</packaging>
+pom --> 聚合工程: 
+当前模块本身不打包成 jar / war 只是用来管理子模块、统一版本、统一依赖 
+services根模块 pom.xml -->
+<packaging>pom</packaging>
+<modules>
+  <module>service-sub</module>
+</modules>
+
+<dependencies>公共依赖(强制全局继承)</dependencies>
+
+各个微服务模块自己内部有自己的pom.xml 
+
+// 服务注册 
+Nacos 一个易于构建云原生应用的动态服务发现、配置管理和服务管理平台 https://nacos.io/
+
+
