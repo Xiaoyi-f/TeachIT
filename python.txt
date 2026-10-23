@@ -79,6 +79,8 @@ dict_var = {key: value for key, value in zip(range(10), range(10))} # zip(*zippe
 for key, value in dict_var.items() 
 --> update pop(key_str) setdefault(key_str, value) get(key_str, default)
 
+--> 三器一闭: 迭代器、生成器、装饰器 闭包 
+
 global nonlocal return 
 
 match var:
