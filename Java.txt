@@ -694,6 +694,26 @@ if ("func".equals(method.getName())) {
   method.invoke(clazz.newInstance(), args) 
 }
 
+/* 多进程 */
+ProcessBuilder pb = new ProcessBuilder("python3", "test.py");
+Process p = pb.start(); 
+
+long pid = p.pid();
+boolean alive = p.isAlive();
+
+int code = p.waitFor(); // 等待进程结束, 获取进程退出码
+
+boolean finished = p.waitFor(10, TimeUnit.SECONDS); // 设置超时 
+
+p.destroy();
+p.destroyForcibly();
+
+ProcessHandle.current().pid();
+
+pb.directory(new File("/home/user"));
+
+pb.inheritIO();
+
 /* 代理 */
 
 
