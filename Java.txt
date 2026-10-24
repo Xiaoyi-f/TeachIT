@@ -30,6 +30,7 @@ java -jar xxx.jar
 
 Scanner sc = new Scanner(System.in);
 sc.hasNextLine();
+sc.nextInt(); // 不读取回车, 下次nextLine()可能被吞掉, nextInt 将回车当做分隔符
 
 String line = sc.nextLine();
 char sc.next().charAt(0); 
@@ -318,7 +319,7 @@ fis.close();
 fos.flush()
 fos.close();
 
-// 封装源流,提供缓冲区,提高效率 减少系统从用户态到内核态的调用次数 缓冲区属于JVM堆内存[用户态] --> 默认1024*8字节即1KB
+// 封装源流, 提供缓冲区, 提高效率 减少系统从用户态到内核态的调用次数 缓冲区属于JVM堆内存[用户态] --> 默认1024*8字节即1KB
 BufferedInputStream bis = new BufferedInputStream(new FileInputStream("path")); 
 BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("path", true));
 
@@ -329,7 +330,7 @@ BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream
 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out.txt", true), StandardCharsets.UTF_8))
 
 // throws 方法异常签名, 抛出异常, 交给调用者处理, 调用者可以使用 try-catch 接住异常 
-// throw new Exception("异常信息") 主动抛出异常
+// throw new Exception("异常信息") 主动抛出异常 e.getMessage() 获取填入的异常信息字符串 
 
 /* 多线程 */
 // 并行: 同一时刻, 有多个指令在多个CPU上 [同时] 执行

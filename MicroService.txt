@@ -164,7 +164,18 @@ Tip: 尽量避免配置中心配置属性和项目配置文件配置属性重复
 启动类 
 
 --> 自动负载均衡 
-@FeignClient("item-service", url = "http://第三方服务地址域名") // 请求第三方服务地址传递的名字参数可以随意填写  
+--> fallback 兜底回调 --> application.yml -- feign.sentinel.enabled: true 
+@Component 
+public class FeignFallback implements ItemClient {
+
+  @Override
+  public Item queryItemByIds(Collection<Long> ids) {
+    // 行为
+    return item;
+  }
+}
+
+@FeignClient("item-service", url = "http://第三方服务地址域名", fallback = package.FeignFallback.class) // 请求第三方服务地址传递的名字参数可以随意填写  
 public interface ItemClient {
 
   @GetMapping("/items") // OpenFeign 利用动态代理帮我们实现这个方法 自动向 http://item-service/items发送GET请求, 携带ids为请求参数, 自动将返回值处理为 List<ItemDTO> 
@@ -245,15 +256,132 @@ feign:
   okhttp:
     enabled: true 
 
+@Configuration 
+public class OkHttpConfig {
+
+  @Bean
+  public OkHttpClient okHttpClient() {
+    return new OkHttpClient.Builder()
+      .connectionPool(new ConnectionPool(20, 5, TimeUnit.MINUTES)) // 空闲连接20个, 空闲5分钟 
+      .connectTimeout(3, TimeUnit.SECONDS) // 连接超时 
+      .readTimeout(3, TimeUnit.SECONDS)
+      .build();
+  }
+}
+
+/* Sentinel -- spring-cloud-alibaba组件 服务保护 */
+https://github.com/alibaba/Sentinel/releases --> 下载Jar包 放到非中文目录下, 重命名去除版本号 
+java -Dserver.port=8090 -Dcsp.sentinel.dashboard.server=localhost:8090 -Dproject.name=sentinel-dashboard -jar sentinel-dashboard.jar 
+账号密码默认: sentinel 
+定义资源:
+  主流框架自动适配; 所有web接口均为资源; 编程式; 声明式
+定义规则:
+  流程控制
+  熔断降级
+  系统保护
+  来源访问控制
+  热点参数 
+
+// application.yml
+spring:
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8090 
+      http-method-specify: true # 开启请求方式前缀
+
+访问对应的接口, sentinel 客户端 将信息提交到 sentinel-dashboard 
+簇点链路，就是单机调用链路，是一次请求进入服务后经过的每一个被Sentinel监控的资源 
+默认情况下，Sentinel会监控SpringMVC的每一个Endpoint（接口）
+QPS: 每秒请求数 
 
 
-/* Sentinel -- spring-cloud-alibaba组件 */
+/* Gateway -- 网关技术 */
+顾名思义, 网关就是网络的关口, 从一个网络传输到另一个网络时就需要经过网关来做数据的路由和转发以及数据安全的校验 
+-- 创建网关微服务 
+-- 引入SpringCloudGateway、NacosDiscovery 依赖 
+-- 编写启动类 
+-- 配置网关路由 
+
+// 启动类 
+@SpringBootApplication 
+public class GatewayApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(GatewayApplication.class, args);
+  }
+}
+
+// 配置路由 application.yml
+server:
+  port: 8080 
+spring: 
+  application:
+    name: gateway 
+  cloud: 
+    nacos: 
+      server-addr: 192.168.150.101:8848
+    gateway:
+      default-filters:
+        - AddRequestHeader=key, value 
+      routes:
+        - id: item # 路由规则id, 自定义, 唯一 
+          uri: lb://item-service # 路由目标服务, lb代表负载均衡, 会从注册中心拉取服务列表 
+          predicates: 
+            - Path=/items/**,/search/**
+          filters:
+            - AddRequestHeader=key, value 
+
+// 自定义GatewayFilter
+@Component // 该类名称一定要 GatewayFilterFactory 后缀 
+public class PrintAnyGatewayFilterFactory extends AbstractGatewayFilterFactory<Object> {
+
+  @Override
+  public GatewayFilter apply(Object config) {
+    return new GatewayFilter() {
+      @Override 
+      public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
+        System.out.println("过滤器执行");
+        rerurn chain.filter(exchange); 
+      }
+    };
+  }
+}
+
+// 自定义GlobalFilter 
+@Component 
+public class PrintAnyGlobalFilter implements GlobalFilter, Ordered {
+
+  @Override
+  public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    System.out.println("未登录, 无法访问");
+    // return chain.filter(exchange); 放行 
+
+    ServerHttpResponse response = exchange.getResponse();
+    response.setRawStatusCode(401);
+    return response.setComplete(); 
+  }
+
+  @Override 
+  public int getOrder() {
+    return 0; 
+  }
+}
 
 /* Seata -- spring-cloud-alibaba组件 */
+解决分布式事务的开源方案 
+TC - 事务协调者: 维护全局和分支事务的状态, 协调全局事务提交或回滚 
+TM - 事务管理器: 定义全局事务的范围、开始全局事务、提交或回滚全局事务 
+RM - 资源管理器: 管理分支事务、与TC交谈以注册分支事务和报告分支事务的状态 
 
-/* RocketMQ -- spring-cloud-alibaba组件 */
+参与分布式事务的每一个微服务都需要集成Seata
 
-/* Dubbo -- spring-cloud-alibaba组件 */
+Seata支持四种不同的分布式事务解决方案:
+XA
+TCC
+AT
+SAGA 
 
 
 
