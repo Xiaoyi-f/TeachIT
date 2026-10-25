@@ -21,6 +21,8 @@ DockerDesktop: 一个图形化管理界面
 }
 
 Images 页面 搜索对应的需求镜像, pull 即可下载
+
+一般, 左Host 右Container:
 Host port --> 你电脑上想使用的端口 
 Container port --> 容器内部服务监听的端口 
 
@@ -138,7 +140,6 @@ sudo docker volume inspect <volume_name> // 查看挂载卷信息
 sudo docker volume rm <volume_name> 
 sudo docker volume prune -a // 删除所有未使用的卷
 sudo docker volume list 
-
 
 # 绑定挂载(初始宿主机目录覆盖容器目录) -> 数据持久化
 sudo docker run -v <host_path>:<container_path> <image>
