@@ -1,4 +1,4 @@
-// 构建者模式 
+/* 构建者模式 -- 分步构建复杂对象 */  
 --> 无参构造
 Member member = new Member();
 member.setPhone("15779544219");
@@ -78,4 +78,89 @@ public class Member extends BaseEntity {
     }
   }
 }
+
+
+/* 单例模式 -- 全局一个实例 */ 
+public class DclSingleton {
+
+  private static volatile DclSingleton instance; 
+  private DclSingleton() {}
+
+  public static DclSingleton getInstance() {
+    if (instance == null) {
+      synchronized (DclSingleton.class) {
+        if (instance == null) {
+          instance = new DclSingleton();
+        }
+      }
+    }
+
+    return instance; 
+  }
+}
+
+
+/* 工厂模式 -- 开闭原则 */
+public interface Product {
+  void use();
+}
+
+// 产品A
+class ProductA implements Product {
+  @Override 
+  public void use() {
+    System.out.println("使用产品A")
+  }
+}
+
+// 产品B
+class ProductB implements Product {
+  @Override 
+  public void use() {
+    System.out.println("使用产品B")
+  }
+}
+
+// 简单工厂 
+public class SimpleFactory {
+  public static Prodcut createProduct(String type) {
+    if ("A".equals(type)) {
+      return new ProductA();
+    } else if ("B".equals(type)) {
+      return new ProductB(); 
+    }
+
+    throw new RuntimeException("未知类型"); 
+  }
+}
+
+
+/* 适配器模式 -- 做兼容 */
+interface Target {
+  void request();
+}
+
+class Adaptee {
+
+  public void specificRequest() {
+    System.out.println("老接口逻辑");
+  }
+}
+
+class Adapter implements Target {
+
+  private Adaptee adaptee; 
+  public Adapter(Adaptee adaptee) {
+    this.adaptee = adaptee; 
+  }
+
+  @Override  
+  public void request() {
+    adaptee.specificRequest(); 
+  }
+}
+
+
+
+
 

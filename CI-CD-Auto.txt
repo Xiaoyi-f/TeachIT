@@ -1,0 +1,111 @@
+1. CI 持续集成（Continuous Integration）
+只管：代码合并 + 自动检查
+
+开发者写完代码，提交到代码仓库（Git/GitHub/Gitee/GitLab）
+自动触发：拉取代码、编译、跑单元测试、代码规范检查、漏洞扫描
+
+作用：多人协作时，提前发现代码冲突、Bug、语法错误，不用人工挨个测
+
+
+2. CD 分两种
+① CD = 持续交付（Continuous Delivery）
+代码经过 CI 检验后，自动打包、准备好可发布包，但最后一步上线由人手动点击
+适合正式业务、需要人工审核的项目
+
+② CD = 持续部署（Continuous Deployment）
+在持续交付基础上，全程全自动：测试通过 → 自动部署到服务器 / 线上环境，无人干预
+适合迭代快、小工具、个人项目
+
+常见流水线:
+1.开发者本地写完代码 → git push 推送到远程仓库
+2.CI 阶段（自动）：
+3.拉代码 → 编译 → 跑测试 → 代码检查
+4.测试失败：直接报警，阻止进入下一步
+5.测试通过 → CD 阶段：
+6.打包镜像 / 程序 → 发布到测试 / 生产服务器
+
+常用工具:
+代码仓库：GitLab、GitHub、Gitee、Gitea
+流水线工具：Jenkins、GitHub Actions、GitLab CI、Gitee Go
+搭配容器：Docker + K8s（企业主流）
+
+举例理解:
+把开发项目比作外卖出餐：
+多人做菜 = 多人写代码
+CI：每做好一份菜，自动检查「有没有变质、口味对不对、食材漏没漏」
+CD：检查合格后，自动打包、自动配送上门
+以前全靠人工一道道查、手动打包发布；
+用 CI/CD = 全自动质检 + 发货流水线
+
+# 实战教学
+GitHub: git push -> github -> GitHub Actions -> 自动打包 -> 推送镜像 -> 容器服务拉取 -> 容器服务运行 
+Gitee: git push -> gitee -> Gitee Go -> 自动打包 -> 推送镜像 -> 容器服务拉取 -> 容器服务运行
+
+1.实现好Docker相关操作/准备
+2.在项目根目录中创建.github/workflows文件夹或.gitee-ci.yml文件,在里面创建ci.yml文件
+  name: <name>
+  on: 
+    push:
+      branches: ["master", "main"] 
+
+  env: 
+    ENVIRONMENT_VAR: "value" 
+
+  jobs: 
+    ci_build:
+      runs-on: <Gitee Go / GitHub Actions 提供的云端环境>
+      steps: 
+        - name: <name>
+          uses: <Gitee Go / GitHub Actions 官方提供的 Action>      
+
+        - name: <name>
+          uses: <Gitee Go / GitHub Actions 官方提供的 Action>  
+          with:
+            <xxx-version>: "xxx"
+
+        - name: <name>
+          run: |
+            # 编译并跑单元测试
+
+        - name: <name>
+          run: |
+            # 构建镜像
+
+        - name: <name>
+          uses: <Gitee Go / GitHub Actions 官方提供的 Action>
+          with: 
+          # 花括号中私密数据变量需要在仓库中设置仓库变量(secrets)
+            <xxx-username>: ${{ secrets.xxx-username }}
+            <xxx-password>: ${{ secrets.xxx-password }}
+            <xxx-registry>: ${{ secrets.xxx-registry }}
+        - name: <name>
+          run: |
+            # 推送镜像     
+
+3.在.github里面创建cd.yaml文件,若使用gitee则需要将以下配置与ci.yml配置写在一个文件            
+  name: <name>
+
+  on: 
+    workflow_run: 
+      workflows: ["<ci_name>"]
+      types: 
+        - completed 
+      branches: ["master", "main"]
+
+  jobs:
+    deploy: 
+      runs-on: <Gitee Go / GitHub Actions 官方提供的云端环境>
+      if : ${{ github.event.workflow_run.conclusion == 'success' }}
+      steps: 
+        - name: <name>
+          uses: <Gitee Go / GitHub Actions 官方提供的 Action>
+          with: 
+            host: ${{ secrets.xxx-host }}   
+            username: ${{ secrets.xxx-username }}
+            key: ${{ secrets.xxx-key }}
+            script: |
+              cd /xxx/xxx 
+              docker compose pull 
+              docker compose up -d
+
+# 注意yaml中<>是非法字符,这里只是占位

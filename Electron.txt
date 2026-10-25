@@ -1,0 +1,653 @@
+# Electron 从零入门：用 Vue 3 项目打包桌面应用
+
+一、Electron 是什么？
+
+Electron 是一个使用 JavaScript、HTML 和 CSS 构建跨平台桌面应用的框架。它将 Chromium 和 Node.js 嵌入到一个二进制文件中，让你仅需一个代码仓库，就能写出支持 Windows、macOS 和 Linux 的桌面应用。VS Code、Slack、Discord 等知名软件都是基于 Electron 构建的。
+
+一句话理解：Electron = 一个内置了 Chrome 浏览器和 Node.js 的“外壳”，你的 Vue 页面运行在 Chrome 里，而 Node.js 负责和操作系统打交道。
+
+二、核心概念：三个进程，各司其职
+
+这是理解 Electron 最关键的一步。Electron 继承了 Chromium 的多进程架构，应用中存在两种类型的进程：
+
+主进程
+
+每个 Electron 应用只有一个主进程，它是应用的入口点，运行在 Node.js 环境中，拥有完整的 Node.js API 能力。主进程的核心职责是：
+
+· 创建和管理窗口：通过 BrowserWindow 模块创建应用窗口，每个窗口就是一个独立的网页容器
+· 控制应用生命周期：处理应用启动、退出、激活等事件
+· 访问原生能力：调用菜单、对话框、托盘图标等操作系统功能
+
+你可以这样类比：主进程就像一家公司的“管理层”，它不直接面对客户，但决定了公司有多少个“门店”（窗口）、什么时候开门关门、以及能否调用外部资源。
+
+渲染进程
+
+每个窗口对应一个独立的渲染进程，负责渲染网页内容。渲染进程里运行的就是你的 Vue 3 代码，它本质上就是一个标准的 Web 页面，遵循 Web 标准。
+
+类比：渲染进程就像每个门店的“前台员工”，直接和客户交互，展示内容、接收操作。但前台员工不能直接进入仓库拿货——需要先向管理层申请。
+
+预加载脚本
+
+预加载脚本运行在渲染进程加载网页之前，是主进程和渲染进程之间的“安全桥梁”。它通过 contextBridge 模块，将主进程的能力以白名单的方式暴露给渲染进程。
+
+类比：预加载脚本就像“前台主管”，前台员工（渲染进程）不能直接冲进仓库（主进程），但可以通过前台主管（预加载脚本）提交申请。
+
+进程间的通信（IPC）
+
+主进程和渲染进程之间通过 IPC（进程间通信）传递消息，利用 ipcMain 和 ipcRenderer 模块，通过开发者定义的“通道”进行双向通信。你的 Vue 页面需要保存文件时，就是通过 IPC 通知主进程去执行。
+
+三、把你的 Vue 3 项目变成桌面应用
+
+3.1 理解改造思路
+
+你现在的 Vue 3 项目是一个“纯网页”。接入 Electron 后：
+
+原有代码 接入后的角色
+Vue 组件、路由、Pinia、Axios 原封不动，运行在渲染进程中
+需要新增：主进程文件 创建窗口、管理生命周期
+需要新增：预加载脚本 安全地暴露原生能力给 Vue
+需要修改：Vite 配置 适配 Electron 的构建方式
+
+3.2 安装依赖
+
+```bash
+# 核心依赖
+npm install --save-dev electron electron-vite electron-builder
+npm install electron-updater
+```
+
+electron-vite 是专为 Electron 设计的构建工具，能统一管理主进程、预加载脚本和渲染进程三条 Vite 构建管线。electron-builder 负责生成安装包。
+
+国内加速（可选，避免 Electron 二进制下载超时）：
+
+```bash
+set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+```
+
+3.3 创建主进程文件
+
+在项目根目录创建 src/main/index.js（或 .ts）：
+
+```javascript
+const { app, BrowserWindow } = require('electron')
+const path = require('path')
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,    // 安全基线：上下文隔离
+      nodeIntegration: false,    // 安全基线：渲染进程禁用 Node
+      sandbox: true              // 安全基线：沙箱模式
+    }
+  })
+
+  // 开发环境加载 Vite 开发服务器，生产环境加载构建产物
+  if (!app.isPackaged) {
+    win.loadURL('http://localhost:5173')
+  } else {
+    win.loadFile(path.join(__dirname, '../renderer/index.html'))
+  }
+}
+
+app.whenReady().then(() => {
+  createWindow()
+  // macOS 下关闭所有窗口后应用不退出
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+})
+
+// 非 macOS 平台关闭所有窗口时退出应用
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit()
+})
+```
+
+app.whenReady() 确保 Electron 初始化完成后才创建窗口。window-all-closed 事件中，非 macOS 平台退出应用，这是 Electron 的标准生命周期处理方式。
+
+3.4 创建预加载脚本
+
+创建 src/preload/index.js：
+
+```javascript
+const { contextBridge, ipcRenderer } = require('electron')
+
+// 通过 contextBridge 安全地暴露白名单 API
+contextBridge.exposeInMainWorld('appAPI', {
+  saveFile: (content) => ipcRenderer.invoke('save-file', content),
+  getVersion: () => process.versions.electron
+})
+```
+
+contextBridge 模块用于安全地从预加载脚本的独立上下文中，向网页所在的上下文暴露 API，这是 Electron 官方推荐的安全做法。关键原则：绝不要直接暴露 ipcRenderer 原始对象，而是为每个功能提供独立的方法。
+
+3.5 配置 electron.vite.config.js
+
+在项目根目录创建：
+
+```javascript
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
+
+export default defineConfig({
+  main: {
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        input: resolve(__dirname, 'src/main/index.js')
+      }
+    }
+  },
+  preload: {
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        input: resolve(__dirname, 'src/preload/index.js')
+      }
+    }
+  },
+  renderer: {
+    plugins: [vue()],
+    base: './',   // 关键：相对路径，防止打包后白屏
+    build: {
+      rollupOptions: {
+        input: resolve(__dirname, 'index.html')
+      }
+    }
+  }
+})
+```
+
+externalizeDepsPlugin() 会自动将 package.json 中的依赖排除出打包，让它们在运行时从 node_modules 解析——这对于包含原生模块的依赖至关重要。
+
+四、必须修改的三处 Vue 代码
+
+① 路由改为 Hash 模式。 Electron 生产环境通过 file:// 协议加载页面，history 模式在刷新时会报 ERR_FILE_NOT_FOUND。将 createWebHistory 替换为 createWebHashHistory。
+
+② Vite base 设为 './'。 这是打包后白屏最常见的原因，Vite 默认使用绝对路径引用资源，file:// 协议下无法解析。
+
+③ Axios 基地址区分环境。 在 .env.production 中设置桌面端专用的后端 API 地址，与 Web 版区分开。
+
+五、打包配置
+
+在 package.json 中添加 build 字段：
+
+```json
+{
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build && electron-builder",
+    "build:win": "electron-vite build && electron-builder --win",
+    "build:mac": "electron-vite build && electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.yourcompany.yourapp",
+    "productName": "YourApp",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "build/icon.png"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://your-update-server.com/releases"
+    }
+  }
+}
+```
+
+electron-builder 的配置可以定义在 package.json 的 build 键中，也可以通过独立的配置文件管理。appId 是应用的唯一标识，用于 macOS 的 CFBundleIdentifier 和 Windows 的注册表项。
+
+执行 npm run build:win 即可生成 Windows 安装包，产物在 release/ 目录下。
+
+六、新手避坑速查
+
+问题 原因 解决方案
+打包后白屏 资源使用绝对路径，file:// 下无法解析 Vite 设置 base: './'
+路由跳转报错 history 模式不兼容 file:// 改用 createWebHashHistory()
+Electron 安装超时 无法访问 GitHub Releases 设置 ELECTRON_MIRROR 镜像
+原生模块加载失败 原生模块被 Vite 打包 使用 externalizeDepsPlugin() 排除
+主进程卡死 同步 I/O 阻塞主进程 使用异步 API，禁止在主进程做 CPU 密集任务
+Vue 中无法用 require nodeIntegration: false 通过预加载脚本 + IPC 暴露能力
+
+七、安全基线（必须全部开启）
+
+Electron 应用比普通网页拥有更高的系统权限，以下三项配置是安全底线：
+
+· contextIsolation: true：渲染进程与预加载脚本上下文隔离，防止 XSS 直接获取 Node API
+· nodeIntegration: false：渲染进程没有 Node.js 能力，Vue 代码不能直接 require 模块
+· sandbox: true：渲染进程在沙箱中运行，限制系统资源访问
+
+IPC 通信的安全原则：通过 contextBridge 为每种通信消息提供白名单化的专用方法，绝不暴露 ipcRenderer 原始对象。
+
+
+# Electron 企业级实战笔记（进阶篇）
+
+承接上文「从零入门」，本篇覆盖从能打包到能发布、能维护、能监控的完整工程化链路。
+
+一、自动更新：让用户无感升级
+
+1.1 为什么需要自动更新
+
+桌面应用一旦发布到用户手中，你无法像 Web 那样随时推送新版本。如果用户不手动下载新安装包，他们就永远停留在旧版本——这意味着安全漏洞无法修复、新功能无法触达。自动更新是企业级桌面应用的刚需，不是可选项。
+
+1.2 核心原理
+
+electron-updater 是 Electron 社区最广泛采用的自动更新方案，通常与 electron-builder 配合使用。它封装了跨平台的更新逻辑，支持 macOS、Windows、Linux，并通过事件回调机制让主进程能够在不同更新阶段向用户提供反馈或自动执行安装。
+
+工作流程只有四步：
+
+1. 检查更新：应用启动或用户手动触发时，调用 checkForUpdates()
+2. 版本比对：向发布服务器请求元数据文件（如 latest.yml），与本地版本比对
+3. 下载更新：发现远程版本更高时，开始下载更新包（支持差分更新）
+4. 安装准备：下载完成后触发 update-downloaded 事件，调用 quitAndInstall() 完成安装
+
+1.3 配置步骤
+
+第一步：安装依赖
+
+```bash
+npm install --save electron-updater
+```
+
+第二步：配置发布服务器
+
+在 package.json 的 build 字段中配置 publish：
+
+```json
+{
+  "build": {
+    "publish": {
+      "provider": "generic",
+      "url": "https://your-update-server.com/releases"
+    }
+  }
+}
+```
+
+publish 配置是连接应用与更新服务器的桥梁，它指定了更新文件的存储位置，使 electron-updater 能精确获取 latest.yml 和安装包，同时替代 Electron 原生 autoUpdater 的碎片化实现，提供跨平台统一的更新接口。
+
+第三步：主进程更新逻辑
+
+```javascript
+const { autoUpdater } = require('electron-updater')
+const log = require('electron-log')
+
+autoUpdater.logger = log
+
+// 监听更新事件，向用户提供反馈
+autoUpdater.on('update-available', () => {
+  // 通知渲染进程：有新版本
+})
+
+autoUpdater.on('download-progress', (progress) => {
+  // 更新下载进度
+})
+
+autoUpdater.on('update-downloaded', () => {
+  // 下载完成，提示用户重启安装
+  autoUpdater.quitAndInstall()
+})
+
+// 应用启动后检查更新
+app.whenReady().then(() => {
+  autoUpdater.checkForUpdatesAndNotify()
+})
+```
+
+1.4 差分更新（减少下载体积）
+
+electron-updater 支持基于 blockmap 的差分更新——只下载变化的数据块，而非完整安装包。Blockmap 文件会为 NSIS 和 AppImage 目标自动生成。
+
+差分更新对用户流量和更新速度有显著提升，但需要服务器保留旧版本的 blockmap 文件。如果使用 GitHub Releases 作为发布目标，默认不支持差分更新，因为旧版本的 blockmap 可能已被覆盖。解决方案是在 CI 中缓存旧版本的 blockmap 文件，或使用自建更新服务器。
+
+避坑提醒：macOS 的自动更新强制要求应用已签名，否则无法生效。Windows 的 NSIS 安装包在未签名时，自动更新可能被 SmartScreen 拦截。
+
+二、代码签名：让操作系统信任你的应用
+
+2.1 为什么必须签名
+
+代码签名证明应用的来源身份，并确认自签名以来未被篡改。没有签名，操作系统会显示安全警告——或直接完全阻止应用运行。macOS 的 Gatekeeper 会将未签名的应用标记为“未识别的开发者”，Windows 的 SmartScreen 也会弹出警告。
+
+签名和公证是两个不同的环节：签名告诉操作系统“谁构建了这个应用”，公证告诉操作系统“Apple 已经审查过这个应用”。macOS 分发到 App Store 之外时，两者缺一不可。
+
+2.2 electron-builder 签名机制
+
+electron-builder 会自动从环境变量读取签名凭据，因此证书和密码绝不需要出现在配置文件中，也绝不能提交到源代码管理。每个值都接受 HTTPS 链接、file:// 路径、本地路径或 base64 编码的证书字符串。
+
+2.3 Windows 签名
+
+```bash
+# 设置环境变量
+set CSC_LINK=path/to/certificate.pfx
+set CSC_KEY_PASSWORD=your-password
+```
+
+CSC_LINK 是证书文件的路径或 base64 编码，CSC_KEY_PASSWORD 是解密证书的密码。如果在 macOS 上交叉编译 Windows 应用，需要使用 WIN_CSC_LINK 和 WIN_CSC_KEY_PASSWORD 来提供单独的 Windows 证书。
+
+2.4 macOS 签名与公证
+
+macOS 的配置更复杂，需要提供一组公证凭据：
+
+```bash
+set CSC_LINK=path/to/certificate.p12
+set CSC_KEY_PASSWORD=your-password
+set APPLE_ID=your-apple-id@email.com
+set APPLE_APP_SPECIFIC_PASSWORD=your-app-specific-password
+set APPLE_TEAM_ID=your-team-id
+```
+
+APPLE_ID 是 Apple ID 邮箱，APPLE_APP_SPECIFIC_PASSWORD 是 App 专用密码（不是 Apple ID 密码），APPLE_TEAM_ID 是开发者团队 ID。
+
+关键配置：在 electron-builder.yml 中必须设置：
+
+```yaml
+mac:
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  notarize: true
+```
+
+hardenedRuntime: true 启用强化运行时，这是公证的前置条件。entitlements 文件声明应用需要的额外权限，例如网络访问、文件读写等。
+
+避坑提醒：entitlements.mac.plist 必须为每个 Electron 进程（主进程、渲染进程、GPU 进程、Utility 进程）分别声明权限。如果权限配置不完整，公证会失败，且错误信息通常不够直观。
+
+三、CI/CD：自动化构建与发布
+
+3.1 为什么需要平台矩阵
+
+无法在 Linux 上交叉编译 macOS 应用，Windows 的代码签名工具链在 Linux 上也难以完整运行。CI 必须使用平台矩阵：macos-latest、windows-latest、ubuntu-latest 并行构建。即使只发布 Windows 版本，也建议保留平台矩阵配置，以便未来扩展。
+
+3.2 GitHub Actions 工作流
+
+```yaml
+name: Build and Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Import macOS certificate
+        if: runner.os == 'macOS'
+        env:
+          CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$CERTIFICATE_P12" | base64 --decode > cert.p12
+          security create-keychain -p "temp" build.keychain
+          security import cert.p12 -k build.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "temp" build.keychain
+          security default-keychain -s build.keychain
+          rm cert.p12
+
+      - name: Build and Release
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --publish always
+```
+
+工作流在推送 v* 标签时触发，使用平台矩阵并行构建。签名证书通过 GitHub Secrets 注入，macOS 证书需要在构建前导入到 Keychain 中。
+
+3.3 使用社区 Action 简化配置
+
+如果不想手动处理证书导入，可以使用 samuelmeuli/action-electron-builder 这个社区 Action。它在构建成功后自动将产物发布到 GitHub Releases，并支持通过 GitHub token 自动认证。默认行为是创建一个 Draft Release，包含所有平台的下载链接，手动确认后再发布。
+
+避坑提醒：建议始终使用 Draft Release 流程——先手动验证构建产物，再手动发布。避免未测试的版本自动推送给所有用户。
+
+四、日志与监控：让线上问题可追溯
+
+4.1 统一日志方案
+
+electron-log 是 Electron 生态中最成熟的日志方案，支持主进程、渲染进程和预加载脚本的统一日志接口。它的核心能力包括：日志文件轮转（避免磁盘占满）、日志级别控制、以及开发环境输出到控制台、生产环境写入文件。
+
+配置示例：
+
+```javascript
+// src/main/logger.js
+import log from 'electron-log/main'
+
+log.initialize()
+log.transports.file.level = 'info'
+log.transports.file.maxSize = 10 * 1024 * 1024  // 10MB 轮转
+
+// 开发环境也输出到控制台
+if (!app.isPackaged) {
+  log.transports.console.level = 'debug'
+}
+
+export default log
+```
+
+日志规范：
+
+· 级别：error、warn、info、debug
+· 格式：[时间戳] [级别] [模块] 消息 { 上下文 }
+· 轮转：按周轮转，保留 4 周
+· 绝不记录 API 密钥——对以 sk- 开头的字符串进行脱敏处理
+· 记录关键事件：应用启动/退出、热键切换、请求/响应耗时、错误
+
+渲染进程日志：渲染进程中的 electron-log 实例只负责收集数据，通过 IPC 发送到主进程进行统一写入。如果启用了 contextIsolation 和 sandbox，需要通过预加载脚本注入日志接口，而不是直接在渲染进程中导入 electron-log。
+
+4.2 崩溃监控：Sentry
+
+@sentry/electron 是官方 Sentry SDK，能力覆盖：
+
+· 捕获主进程的 Node 错误（基于 @sentry/node）
+· 捕获渲染进程的 JavaScript 错误（基于 @sentry/browser）
+· 捕获原生崩溃（Minidump 崩溃报告），覆盖渲染进程和主进程
+· 跨进程收集面包屑和上下文信息
+
+初始化方式：在主进程和所有渲染进程的入口模块中，尽早调用 init()。
+
+```javascript
+// 主进程
+import { init } from '@sentry/electron/main'
+init({ dsn: 'YOUR_DSN' })
+
+// 渲染进程
+import { init } from '@sentry/electron/renderer'
+init()
+```
+
+如果渲染进程使用 Vue，可以结合 @sentry/vue 的 init 函数，将其作为第二个参数传入，两个 SDK 的功能会自动合并。
+
+避坑提醒：Sentry 的 DSN 是公开的，可以安全地放在前端代码中。但不要在 Sentry 配置中设置 beforeSend 时泄露敏感信息——用户数据、token、文件路径等都需要过滤。
+
+五、测试策略：三层金字塔
+
+5.1 测试分层
+
+层级 工具 测试对象 运行环境
+单元测试 Vitest Vue 组件逻辑、工具函数、Pinia 状态 JSDOM / Node
+集成测试 Vitest IPC 处理器、主进程模块 Vitest 环境
+E2E 测试 Playwright 完整用户流、原生 API 集成 真实 Electron 实例
+
+5.2 Vitest 单元测试
+
+Vitest 由 Vite 驱动，配置简洁，与现有 Vite 项目无缝集成。
+
+```javascript
+// src/tests/utils.test.ts
+import { describe, it, expect } from 'vitest'
+
+describe('utility functions', () => {
+  it('should add two numbers', () => {
+    expect(1 + 2).toBe(3)
+  })
+})
+```
+
+5.3 Playwright E2E 测试
+
+Playwright 的 _electron API 可以直接启动真实的 Electron 应用实例，无需 WebDriver。它能够操作窗口、模拟用户交互、验证原生控件。
+
+```javascript
+// e2e/app.spec.ts
+import { test, expect } from '@playwright/test'
+import { _electron as electron } from 'playwright'
+
+test('应用启动并显示主界面', async () => {
+  const app = await electron.launch({
+    args: ['.'],
+    env: { NODE_ENV: 'test' }
+  })
+  const window = await app.firstWindow()
+  await expect(window.locator('h1')).toHaveText('YourApp')
+  await app.close()
+})
+```
+
+5.4 测试脚本
+
+在 package.json 中添加：
+
+```json
+{
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test && npm run test:e2e"
+  }
+}
+```
+
+CI 中的测试策略：在平台矩阵构建之前，先运行单元测试和 E2E 测试。只有测试全部通过，才进入打包阶段。这样可以避免将带有回归的版本推送给用户。
+
+六、构建优化：减小体积、加快启动
+
+6.1 隔离构建与 Tree-shaking
+
+electron-vite 5.0 引入了 build.isolatedEntries 选项，用于自动隔离多个入口，智能处理共享 chunk 和资源输出。它解决了多入口应用开发中的常见问题：输出单文件、高效 tree-shaking 以避免不必要的模块引入，以及减少过多的 chunk 生成。
+
+启用方式：
+
+```javascript
+// electron.vite.config.js
+export default defineConfig({
+  main: {
+    build: {
+      isolatedEntries: true
+    }
+  },
+  preload: {
+    build: {
+      isolatedEntries: true
+    }
+  }
+})
+```
+
+6.2 ASAR 归档
+
+asar: true 将应用代码打包为归档文件，提升加载速度并防止源码直接暴露。ASAR 是一个类 tar 归档格式，只归档不压缩，但可以减少文件系统调用次数，尤其在 Windows 上效果显著。
+
+注意：如果应用需要读取 app.asar 内部的文件（如原生模块的 .node 文件），需要通过 asarUnpack 配置将其排除在归档之外：
+
+```yaml
+asarUnpack:
+  - "**/*.node"
+```
+
+6.3 性能分析
+
+先测量，再优化。 使用 Chrome DevTools 的 Performance 面板分析渲染进程性能，使用 Chrome Tracing 分析多进程交互。不要凭猜测优化。
+
+主进程的阻塞是桌面应用最致命的性能问题——主进程卡死会导致所有窗口无响应。严禁在主进程中进行同步 I/O 或 CPU 密集型工作，使用异步 API 或将工作移至 Utility Process。
+
+6.4 依赖瘦身
+
+检查 require() 的代价。一个在加载时解析巨大 JSON 或执行重计算的模块会显著拖慢启动。使用 node --cpu-prof --heap-prof 分析依赖加载开销。优先选择轻量替代方案，不为 Chromium/Node 已提供的 API 添加 polyfill。
+
+七、完整发布流程回顾
+
+将以上所有环节串联起来，一个企业级 Electron 应用的完整发布流程如下：
+
+```
+1. 开发阶段
+   └── electron-vite dev（热更新开发）
+
+2. 测试阶段
+   ├── vitest run（单元测试）
+   └── playwright test（E2E 测试）
+
+3. 构建阶段
+   └── electron-vite build（构建 main / preload / renderer）
+
+4. 打包阶段（CI 平台矩阵）
+   ├── electron-builder --win（Windows NSIS + 签名）
+   ├── electron-builder --mac（macOS DMG + 签名 + 公证）
+   └── electron-builder --linux（Linux AppImage）
+
+5. 发布阶段
+   ├── 生成 Draft Release
+   ├── 手动验证
+   └── 发布 Release（更新 latest.yml 和安装包）
+
+6. 用户端更新
+   ├── 应用启动时 checkForUpdatesAndNotify()
+   ├── 发现新版本 → 下载
+   └── 下载完成 → quitAndInstall()
+```
+
+每个阶段的验证点：
+
+阶段 验证内容
+测试 单元测试覆盖率、E2E 关键路径通过率
+构建 构建产物大小、启动时间
+打包 安装包能否正常安装、签名是否有效
+发布 Draft Release 中的产物是否完整
+更新 旧版本能否成功更新到新版本
+
+八、新手最容易踩的坑
+
+坑 表现 解决方案
+macOS 公证失败 应用被 Gatekeeper 拦截 检查 entitlements 是否覆盖所有进程；确认 hardenedRuntime: true
+自动更新不生效 检查更新后无反应 确认 publish 配置的 URL 可访问；确认 latest.yml 已上传
+签名证书泄露 证书密码出现在代码中 使用 GitHub Secrets 注入环境变量，.gitignore 排除证书文件
+渲染进程日志丢失 electron-log 在渲染进程中不写入文件 通过预加载脚本桥接，而非直接导入
+CI 构建 macOS 失败 在 Linux runner 上构建 macOS 使用 macos-latest runner
+更新后版本号未变 用户更新后仍显示旧版本 检查 package.json 的 version 字段是否在 CI 中正确更新
+差分更新下载失败 更新包下载中断 确认旧版本 blockmap 文件在服务器上仍然存在
+生产环境 Source Map 泄露 打包产物中包含 .map 文件 在构建配置中设置 sourcemap: false（生产环境）
+
+

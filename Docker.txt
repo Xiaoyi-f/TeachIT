@@ -1,7 +1,7 @@
 镜像: 一个只读模版, 包含对应的版本的所有依赖文件
 容器: 镜像运行起来后的实例
 DockerDesktop: 一个图形化管理界面 
-前置: 电脑开启硬件虚拟化、虚拟机容器等功能, wsl --install 安装 WSL 
+前置: 电脑开启硬件虚拟化、虚拟机容器等功能 -建议开代理-> wsl --update / wsl --list --online /  wsl --install / wsl --list --verbose / wsl 
 关键配置: Settings -> Resources -> Advanced -> DiskImageLocation改为其他盘位置
 
 Images 页面 搜索对应的需求镜像, pull 即可下载

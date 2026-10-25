@@ -43,7 +43,7 @@ Answer
 Tip: 
 windows终端通常使用GBK编码 --> 编码问题 --> UTF-8
 windows --> 运行框 ctrl shift enter 进入管理员模式 
-windows --> 必会命令 systeminfo / resmon / cleanmgr / services.msc / tcping <ip/domain> <port>
+windows --> 必会命令 systeminfo / resmon / cleanmgr / services.msc / tcping <ip/domain> <port> / where <command>
 系统默认保留 "特权端口范围" 0-1023 总共 1024 个
 
 通用终端下载工具: curl 
