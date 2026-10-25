@@ -98,6 +98,23 @@ sudo systemctl enable docker
   "registry-mirrors": ["https://docker.mirrors.tuna.tsinghua.edu.cn", "https://docker.1panel.live"]
 }
 
+# Dockerfile 文件 -- 构建自定义镜像 
+FROM <image:version> 
+
+WORKDIR <image_path> # 进入容器工作目录, 相当于 cd <image_path> 
+
+COPY <host_cur_path> <work_cur_path> # 将本地文件复制到容器工作目录对应空间  
+
+RUN <command> # 构建镜像时候执行的命令 
+
+EXPOSE <port_tip> # 声明这个容器对外暴露的端口 -- 只是声明 
+
+CMD ["command", "command_param"] # 容器启动时候默认执行的命令 一个Dockerfile里只能有一个CMD
+
+--> 
+# 进入Dockerfile所在目录之后使用Dockerfile构建镜像
+sudo docker build -t <docker_image_name><:version> <path> # <path> 一般是 . --> 将当前目录下资源传递到Docker引擎, 构建的镜像在 Docker 专门管理存储镜像的空间  
+
 sudo systemctl restart docker 
 // 实际下载还是从dockerhub下载,只是配置了加速
 
@@ -137,22 +154,6 @@ sudo docker run -d --restart unless-stopped <image>
 
 # 查看容器信息
 sudo docker inspect <container_id>
-
-# Dockerfile 文件 
-FROM <image> 
-
-WORKDIR <image_path>
-
-COPY <host_cur_path> <work_cur_path> 
-
-RUN <command>
-
-EXPOSE <port_tip> 
-
-CMD ["command", "command_param"]
-
-# 使用Dockerfile构建镜像
-sudo docker build -t <docker_image_name><:version> <path>
 
 # dockerhub上注册登录账号(默认使用用户名为命名空间)
 # 推送镜像到dockerhub
