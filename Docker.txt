@@ -3,6 +3,22 @@
 DockerDesktop: 一个图形化管理界面 
 前置: 电脑开启硬件虚拟化、虚拟机容器等功能 -建议开代理-> wsl --update / wsl --list --online /  wsl --install / wsl --list --verbose / wsl 
 关键配置: Settings -> Resources -> Advanced -> DiskImageLocation改为其他盘位置
+配置源: Settings -> DockerEngine:
+{
+  "registry-mirrors": [
+    "https://docker.xuanyuan.me",
+    "https://docker.1ms.run",
+    "https://docker.m.daocloud.io",
+    "https://docker.1panel.live"
+  ],
+  "builder": {
+    "gc": {
+      "defaultKeepStorage": "20GB",
+      "enabled": true
+    }
+  },
+  "experimental": false
+}
 
 Images 页面 搜索对应的需求镜像, pull 即可下载
 Host port --> 你电脑上想使用的端口 
@@ -46,7 +62,7 @@ docker compose up -d --build
 docker compose down 
 
 Docker简单来说就是使用容器化技术给应用程序封装独立的运行环境，每个运行环境都是一个容器，运行容器的计算机被称为宿主机
-Docker容器与虚拟机之间的最大区别: Docker容器之间共用同一个系统内核,而每个虚拟机则各自包含一个计算机完整系统内核
+Docker容器与虚拟机之间的最大区别: Docker容器之间共用同一个系统内核,而每个虚拟机则各自包含一个计算机完整系统内核 --> 用的是电脑共同的 
 
 Docker镜像就像是模具而容器则像镜像做出来的实体物品
 Docker镜像仓库(dockerhub)是用来存储镜像的地方
