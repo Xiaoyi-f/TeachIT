@@ -26,8 +26,8 @@ Images 页面 搜索对应的需求镜像, pull 即可下载
 Host port --> 你电脑上想使用的端口 
 Container port --> 容器内部服务监听的端口 
 
-compose.yml示例 --> compose 为管理者 内建网络将服务服务联系起来  
-services:  # 一个服务通常就是一个容器 
+compose.yml示例 --> compose 为管理者 内建服务网络将服务联系起来管理
+services:  # 一个服务通常就是一个容器 下面写了多个服务/容器 
   background:  # 服务名 随意改  
     build: .  # 使用当前目录下的 Dockerfile 现场构建镜像 
     ports: 
@@ -39,12 +39,13 @@ services:  # 一个服务通常就是一个容器
   db:
     image: mysql:8.0 
     environment:
+      # 环境变量需要对应的服务/容器支持才可以有效
       MYSQL_ROOT_PASSWORD: root 
       MYSQL_DATABASE: db_name 
     volumes:
       - mysql_data:/var/lib/mysql  # 将数据持久化保存 宿主机路径:容器内路径  
     ports:
-      - "6379:6379" 
+      - "3306:3306" 
 
   redis: 
     image: redis:7-alpine
@@ -56,11 +57,13 @@ services:  # 一个服务通常就是一个容器
 
 volumes: 
   mysql_data: 
-    driver: local         
+    driver: local   
+  redis_data:
+    driver: local      
 
 # 有些服务不支持通过environment"常量"配置, 需要使用命令实现相关配置 
 
-docker compose up -d --build 
+docker compose up -d --build # 运行构建再编排启动 
 docker compose down 
 
 Docker简单来说就是使用容器化技术给应用程序封装独立的运行环境，每个运行环境都是一个容器，运行容器的计算机被称为宿主机
