@@ -178,6 +178,8 @@ map.containsValue(Value);
 map.isEmpty(); 
 map.size(); 
 
+Tip: key --> 唯一, 不可变, 数字/布尔/字符串/枚举/数字包装类/自定义不可变类型 
+
 Iterator<Type> iter = collection.iterator(); 
 while (iter.hasNext()) {
   Type item = iter.next(); 

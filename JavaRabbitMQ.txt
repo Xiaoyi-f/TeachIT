@@ -19,5 +19,5 @@
 追求吞吐能力：RocketMQ、Kafka
 追求消息低延迟：RabbitMQ、Kafka
 
-RabbitMQ基于Erlang语言开发 --> 先下载Erlang环境再下载RabbitMQ 
+RabbitMQ基于Erlang语言开发 
 

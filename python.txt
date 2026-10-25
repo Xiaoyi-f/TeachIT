@@ -75,6 +75,7 @@ frozen_set = frozenset(set_var)
 --> add discard remove update 
 union intersection difference 
 
+# key --> 唯一, 不可变, 数字/布尔/字符串/元组/冻集/枚举/自定义不可变类型 
 dict_var = {key: value for key, value in zip(range(10), range(10))} # zip(*zipped)
 for key, value in dict_var.items() 
 --> update pop(key_str) setdefault(key_str, value) get(key_str, default)
@@ -223,4 +224,5 @@ conda activate conda_env_name
 conda deactivate 
 --> jupyter notebook 
 
-
+Tip: 学会查看源码, dir() 查看对象所有属性/方法 
+Pycharm F12 快速查看当前文件所有方法/属性/变量 
