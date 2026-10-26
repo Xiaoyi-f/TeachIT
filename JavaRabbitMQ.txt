@@ -19,5 +19,22 @@
 追求吞吐能力：RocketMQ、Kafka
 追求消息低延迟：RabbitMQ、Kafka
 
-RabbitMQ基于Erlang语言开发 
+RabbitMQ基于Erlang语言开发 -- 削峰填谷 
 
+基本概念:
+publisher: 生产者, 发送消息的一方 
+consumer: 消费者, 消费消息的一方 
+queue: 队列, 存储消息, 生产者发送的消息由交换机决定投递到哪个队列
+exchange: 交换机, 负责消息路由, 生产者发送的消息由交换机决定投递到哪个队列
+virtual host: 虚拟主机, 起到数据隔离的作用, 每个虚拟主机相互独立, 有各自的exchange、queue 
+
+访问 http://localhost:15672 --> 访问RabbitMQ管理页面 (默认用户密码: guest)
+
+高并发、高可用 --> 集群模式 
+镜像队列集群模式
+Quorum队列集群模式 -- 推荐 
+
+由于RabbitMQ采用了AMQP协议，因此它具备跨语言的特性
+任何语言只要遵循AMQP协议收发消息，都可以与RabbitMQ交互
+
+list = {("key",): "value"}
