@@ -16,6 +16,8 @@ mysql 擅长事务类型操作, 确保数据安全和一致性
 elasticsearch 擅长海量数据的搜索、分析、计算 
 通常将elasticsearch与mysql结合使用 
 
+Elasticsearch自带标准分词器依据Unicode文本分割法(将特殊字符/标点分号对文本进行分割)
+
 Elasticsearch的关键就是倒排索引，而倒排索引依赖于对文档内容的分词，而分词则需要高效、精准的分词算法，IK分词器就是这样一个中文分词算法
 --> IK分词器、Kibana 均需同 elasticsearch 版本统一 
 --> 安装命令可以直接问Ai 
@@ -131,7 +133,91 @@ POST _bulk
 
 Tip: index 对于已存在id则自动覆盖旧数据, create 对于已存在id则报错失败  
 
+// ES支持高亮显示功能 
+GET /索引库名/_search 
+{
+  "query": {
+    "match": {
+      "key": "value" 
+    }
+  },
+  "highlight": {
+    "fields": {
+      "key": {}
+    }
+  }
+}
+-->
+返回结果里, 命中的关键词自动被<em></em>标签包裹起来 
+
+DSL(Domain Specific Language) --> 本质上就是一套JSON查询语言 
+常见基础语法:
+// 全文检索, 对搜索词分词再匹配 
+{
+  "query": {
+    "match": {
+      "title": "搜索词"
+    }
+  }
+}
+
+// 精确匹配, 不分词, 适合查id、状态 
+{
+  "query": {
+    "term": {
+      "id": "0" 
+    }
+  }
+}
+
+// 布尔查询 -- must: 必须满足 / should: 最好满足 / must_not: 必须不符 
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "搜索词"
+          }
+        }
+      ],
+      "should": [
+        {
+          "match": {
+            "title": "搜索词"
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "match": {
+            "title": "搜索词"
+          }
+        }
+      ]
+    }
+  }
+}
+
+// 范围查询, 比如查询某个时间段内数据 
+{
+  "query": {
+    "range": {
+      "create_time": {
+        "gte": "2020-01-01",
+        "lte": "2020-01-31"
+      }
+    }
+  }
+}
+
+Elasticsearch数据与Mysql数据同步方法: 
+1.定时任务 
+2.Logstash -- 数据收集工具, 定时自动拉取 
+3.双写 -- 注意写入失败问题 
+4.Cannal监听数据库 -- 实现自动关联ES从数据库
 
 
+/* Spring Data Elasticsearch */
 
 
