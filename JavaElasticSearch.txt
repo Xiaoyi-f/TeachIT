@@ -1,0 +1,137 @@
+// 安装 elasticsearch / kibana 
+--> 注意版本兼容 
+
+// 重置密码 
+docker exec -it elasticsearch bin/elasticsearch-reset-password -u elastic
+--> 访问 https://localhost:9200 --> 账号密码: elastic 密码在重置密码命令执行后会有显示 
+
+// 创建令牌访问控制台 
+docker exec -it elasticsearch bin/elasticsearch-create-enrollment-token -s kibana
+--> 进入之后登录elasticsearch服务账号密码即可 
+
+正向索引: 利用索引关联对应的数据 
+倒排索引: 标记对应的数据的词条所在的索引 -- 根据词条搜索(速度快) -- elasticsearch 关键 
+
+mysql 擅长事务类型操作, 确保数据安全和一致性 
+elasticsearch 擅长海量数据的搜索、分析、计算 
+通常将elasticsearch与mysql结合使用 
+
+Elasticsearch的关键就是倒排索引，而倒排索引依赖于对文档内容的分词，而分词则需要高效、精准的分词算法，IK分词器就是这样一个中文分词算法
+--> IK分词器、Kibana 均需同 elasticsearch 版本统一 
+--> 安装命令可以直接问Ai 
+--> IK分词器支持 ik_smart 模式, ik_max_word 模式
+
+Index就类似数据库表，Mapping映射就类似表的结构。我们要向es中存储数据，必须先创建Index和Mapping
+Mapping --> 对索引库文档的约束, 常见Mapping属性:
+type: 
+  text keyword --> 仅text参与分词 
+  byte short integer long float double 
+  boolean 
+  date 
+  object 
+index: 是否创建索引, 默认值为true 
+analyzer: 分词器 
+properties: 该字段的子字段 
+
+Tip: 索引等价于mysql表, 映射等价于mysql表结构(字段声明)
+
+创建索引库和映射:
+PUT /索引库名称 
+{
+  "mappings": {
+    "properties": {
+      "key": {
+        "type": "text",
+        "analyzer": "ik_smart",
+        "index": true, 
+        "properties": {
+          "sub_attr": {
+            "type": "text",
+            "analyzer": "ik_smart"
+          }
+        }
+      }
+    }
+  }
+}
+
+查询索引库:
+GET /索引库名称 
+
+修改索引库:
+// 倒排索引结构虽然不复杂，但是一旦数据结构改变（比如改变了分词器），就需要重新创建倒排索引，这简直是灾难。因此索引库一旦创建，无法修改mapping
+// 允许添加新的字段到mapping中，因为不会对倒排索引产生影响，所以修改索引库能做的就是向索引库添加新字段, 或者更新索引库的基础属性 
+PUT /索引库名称/_mapping
+{
+  "properties": {
+    "new_key": {
+      "type": "text",
+      "analyzer": "ik_smart",
+      "index": true,
+      "properties": {
+        "sub_attr": {
+          "type": "text",
+          "analyzer": "ik_smart"
+        }
+      }
+    }
+  }
+}
+
+删除索引库
+DELETE /索引库名称 
+
+--> 有索引库之后, 接下来就可以向索引库添加数据 
+Elasticsearch数据其实就是JSON风格文档, 操作文档自然包括 增、删、改、查等几种操作 
+
+// 新增文档 
+POST /索引库名/_doc/文档ID
+{
+  "key": "value",
+  "key": {
+    "sub_key": "sub_value"
+  }
+}
+
+// 查询文档 
+GET /索引库名/_doc/文档ID 
+
+// 删除文档 
+DELETE /索引库名/_doc/文档ID 
+
+// 修改文档 - 全量修改(删除再新增 - 如果根据id删除时，id不存在，第二步的新增也会执行，也就从修改变成了新增操作)
+PUT /索引库名/_doc/文档ID 
+{
+  "key": "value", 
+  "key": {
+    "sub_key": "value" 
+  }
+} 
+
+// 修改文档 - 局部修改(只修改指定id匹配的文档中部分字段)
+POST /索引库名/_update/文档ID 
+{
+  "doc": {
+    "key": "value" 
+  }
+}
+
+/* 批处理 */
+POST _bulk 
+{"index": {"_index": "索引库名", "_id": "文档ID"}}
+{"key": "value"}
+
+{"delete": {"_index": "索引库名", "_id": "文档ID"}}
+
+{"update": {"_index": "索引库名", "_id": "文档ID"}}
+{"new_key": "new_value"}
+
+{"create": {"_index": "索引库名", "_id": "文档ID"}}
+{"key": "value"}
+
+Tip: index 对于已存在id则自动覆盖旧数据, create 对于已存在id则报错失败  
+
+
+
+
+

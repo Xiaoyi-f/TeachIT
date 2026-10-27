@@ -37,4 +37,333 @@ Quorum队列集群模式 -- 推荐
 由于RabbitMQ采用了AMQP协议，因此它具备跨语言的特性
 任何语言只要遵循AMQP协议收发消息，都可以与RabbitMQ交互
 
-list = {("key",): "value"}
+// 发送消息服务 
+// application.yml 
+spring:
+  rabbitmq:
+    host: localhost 
+    port: 5672 
+    virtual-host: / 
+    username: guest 
+    password: guest 
+
+@SpringBootTest 
+public class SpringAmqpTest {
+
+  @Autowired 
+  private RabbitTemplate rabbitTemplate; 
+
+  @Test 
+  public void testSendMessage() {
+    // 队列名称
+    String queueName = "simple.queue"; 
+
+    // 消息 
+    String message = "Hello Spring AMQP"; 
+
+    rabbitTemplate.convertAndSend(queueName, message); 
+  }
+}
+
+
+// 接收消息服务
+// application.yml
+spring:
+  rabbitmq:
+    host: localhost 
+    port: 5672 
+    virtual-host: / 
+    username: guest 
+    password: guest 
+
+@Component 
+public class SpringRabbitListener {
+
+  @RabbitListener(queues = "simple.queue")
+  public void listenSimpleQueue(String msg) throws InterruptedException {
+    System.out.println("spring 消费者接收到消息: [" + msg + "]");
+  }
+}
+
+
+/* WorkQueues 模式 */
+@Test 
+public void testWorkQueues() throws InterruptedException {
+  String queueName = "work.queue"; 
+  String message = "Hello message"; 
+
+  for (int i = 0; i < 50; i++) {
+    rabbitTemplate.convertAndSend(queueName, message + i); 
+    Thread.sleep(20); // 单位: ms 
+  }
+}
+ 
+@RabbitListener(queues = "work.queue")
+public void listenWorkQueueOne(String msg) throws InterruptedException {
+  System.out.println("消费者一号接收到消息: [" + msg + "]" + LocalTime.now());
+  Thread.sleep(20); 
+}
+
+@RabbitListener(queues = "work.queue") 
+public void listenWorkQueueTwo(String msg) throws InterruptedException {
+  System.out.println("消费者二号接收到消息: [" + msg + "]" + LocalTime.now());
+  Thread.sleep(200);
+}
+
+// 能者多劳模式
+// application.yml 
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        prefetch: 1 # 默认 250 
+
+Exchange 交换机类型:
+1.Fanout: 广播, 将消息交给所有绑定到交换机的队列
+2.Direct: 订阅, 基于RoutingKey(路由Key)发送给订阅了消息的队列 
+3.Topic: 通配符订阅, 与Direct类似, 只不过RoutingKey可以使用通配符 --> 这里是说创建时候使用通配符 -- 【# 表示匹配一个或多个词】【* 表示匹配恰好一个词】
+4.Headers: 头匹配, 基于MQ的消息头匹配 
+
+队列命名规范: type.meaning 
+
+-> Fanout 模式 RoutingKey = "" 
+@Test 
+public void testFanoutExchange() {
+  String exchangeName = "amq.fanout"; 
+  String message = "Hello fanout exchange"; 
+  rabbitTemplate.convertAndSend(exchangeName, "", message); // "" 表示 RoutingKey
+}
+
+@RabbitListener(queues = "fanout.queue")
+public void listenFanoutQueue(String msg) {
+  System.out.println("消费者接收到Fanout消息: [" + msg + "]");
+}
+
+-> Direct 模式 关联RoutingKey实现订阅  
+
+@Configuration 
+public class FanoutConfig {
+
+  @Bean 
+  public FanoutExchange fanoutExchange() {
+    return new FanoutExchange("amq.fanout");
+  }
+
+  @Bean 
+  public Queue fanoutQueue() {
+    return new Queue("fanout.queue");
+  }
+
+  @Bean
+  public Binding fanoutBinding(Queue fanoutQueue, FanoutExchange fanoutExchange) {
+    return BindingBuilder.bind(fanoutQueue()).to(fanoutExchange());
+  }
+
+  @Bean 
+  public DirectExchange directExchange() {
+    return ExchangeBuilder.directExchange("amp.direct").build();
+  }
+
+  @Bean 
+  public Queue directQueue() {
+    return new Queue("direct.queue");
+  }
+
+  @Bean 
+  public Binding bindingQueueWithRoutingKey(Queue directQueue, DirectExchange directExchange) {
+    return BindingBuilder.bind(directQueue()).to(directExchange()).with("direct.routing.key");
+  }
+}
+
+--> 发送数据时候将数据序列化为字节传输, 接收时候将字节数据反序列化为对象 
+--> 自定义消息转化器 
+@Bean 
+public MessageConverter messageConverter() {
+  Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+  jackson2JsonMessageConverter.setCreateMessageIds(true); // 配置自动创建消息ID 
+  return jackson2JsonMessageConverter; 
+}
+
+/* 可靠性建立 */
+// application.yml
+spring:
+  rabbitmq:
+    connection-timeout: 1s 
+    template:
+      retry: 
+        enabled: true 
+        initial-interval: 1000ms 
+        multiplier: 1 // 失败后下次等待时长倍数 
+        max-attempts: 3 // 最大重试次数 
+        --> 阻塞式重试
+
+- 当消息投递到MQ，但是路由失败时，通过Publisher Return返回异常信息，同时返回ack的确认信息，代表投递成功
+- 临时消息投递到了MQ，并且入队成功，返回ACK，告知投递成功
+- 持久消息投递到了MQ，并且入队完成持久化，返回ACK，告知投递成功
+- 其它情况都会返回NACK，告知投递失败
+其中ack和nack属于Publisher Confirm机制，ack是投递成功；nack是投递失败；而return则属于Publisher Return机制
+默认两种机制都是关闭状态，需要通过配置文件来开启
+-->
+spring:
+  rabbitmq:
+    publisher-confirm-type: correlated # 开启publisher confirm机制, 并设置confirm类型(MQ异步回调返回回执) none(关闭) simple(同步阻塞等待MQ的回执) 
+    publisher-returns: true # 开启publisher return机制 
+
+// 每个RabbitTemplate只能配置一个ReturnCallback，因此我们可以在配置类中统一设置 -- 消息到交换机但是没有送到收件人手中 
+@Slf4j
+@AllArgsConstructor
+@Configuration
+public class MqConfig {
+    private final RabbitTemplate rabbitTemplate;
+
+    @PostConstruct
+    /* 在 Spring 创建好这个 MqConfig 对象，并且把 rabbitTemplate 成功传进来之后，马上自动执行这个方法 */
+    public void init(){
+        rabbitTemplate.setReturnsCallback(new RabbitTemplate.ReturnsCallback() {
+            @Override
+            public void returnedMessage(ReturnedMessage returned) {
+                log.error("触发return callback,");
+                log.debug("exchange: {}", returned.getExchange());
+                log.debug("routingKey: {}", returned.getRoutingKey());
+                log.debug("message: {}", returned.getMessage());
+                log.debug("replyCode: {}", returned.getReplyCode());
+                log.debug("replyText: {}", returned.getReplyText());
+            }
+        });
+    }
+}
+
+// 定义ConfirmCallback -- 消息没有传到交换机 
+@Test 
+void testPublisherConfirm() {
+  CorrelationData cd = new CorrelationData(); 
+  cd.getFuture().addCallback(new ListenableFutureCallback<CorrelationData.Confirm>() {
+    @Override // 没连上服务
+    public void onFailure(Throwable ex) {
+      log.error("send message fail", ex); 
+    }
+
+    @Override // 连上服务
+    public void onSuccess(CorrelationData.confirm result) {
+      if (result.isAck()) {
+        log.debug("发送消息成功, 收到 ack!"); 
+      } else {
+        log.error("发送消息失败, 收到 nack, reason: {}", result.getReason());
+      }
+    }
+  });
+  rabbitTemplate.convertAndSend("amp.direct", "queue", "hello", cd); // 最后cd参数是消息属性 
+}
+
+MQ数据持久化:
+1.交换机持久化
+2.队列持久化 
+3.消息持久化 
+
+/* Lazy Queue */
+添加队列时候配置参数 x-queue-mode = lazy 
+
+@Bean
+public Queue lazyQueue() {
+  return QueueBuilder
+          .durable("lazy.queue")
+          .lazy()
+          .build();
+}
+
+// rabbitmqctl set_policy Lazy "^lazy-queue$" '{"queue-mode":"lazy"}' --apply-to queues  
+--> 更新已有队列为lazy模式 正则表达式匹配队列名称 
+--> 当然，也可以在控制台配置policy，进入在控制台的Admin页面，点击Policies，即可添加配置
+
+// 消费者确认机制 
+为了确认消费者是否成功处理消息，RabbitMQ提供了消费者确认机制（Consumer Acknowledgement）。即：当消费者处理消息结束后，应该向RabbitMQ发送一个回执，告知RabbitMQ自己消息处理状态。回执有三种可选值:
+- ack：成功处理消息，RabbitMQ从队列中删除该消息
+- nack：消息处理失败，RabbitMQ需要再次投递消息
+- reject：消息处理失败并拒绝该消息，RabbitMQ从队列中删除该消息
+
+由于消息回执的处理代码比较统一，因此SpringAMQP帮我们实现了消息确认。并允许我们通过配置文件设置ACK处理方式，有三种模式：
+- none：不处理。即消息投递给消费者后立刻ack，消息会立刻从MQ删除。非常不安全，不建议使用
+- manual：手动模式。需要自己在业务代码中调用api，发送ack或reject，存在业务入侵，但更灵活
+- auto：自动模式。SpringAMQP利用AOP对我们的消息处理逻辑做了环绕增强，当业务正常执行时则自动返回ack.  当业务出现异常时，根据异常判断返回不同结果：
+  - 如果是业务异常，会自动返回nack;
+  - 如果是消息处理或校验异常，自动返回reject;
+
+// application.yml 
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        acknowledge-mode: none 
+--> 默认是none模式，即消息投递给消费者后立刻ack，消息会立刻从MQ删除，就算有异常同样 
+@RabbitListener(queues = "simple.queue")
+public void listenSimpleQueueMessage(String msg) throws InterruptedException {
+  log.info("simple 消费者接收到消息: [" + msg + "]");
+  if (true) {
+    throw new MessageConversionException("异常");
+  }
+  log.info("消息处理完成");
+}
+
+// application.yml -- 消费者接收失败重试
+spring:
+  rabbitmq:
+    listener:
+      simple:
+        retry:
+          enabled: true # 开启消费者失败重试
+          initial-interval: 1000ms # 初识的失败等待时长为1秒
+          multiplier: 1 # 失败的等待时长倍数，下次等待时长 = multiplier * last-interval
+          max-attempts: 3 # 最大重试次数
+          stateless: true # true无状态；false有状态。如果业务中包含事务，这里改为false
+
+/* 延迟消息 -- 通过延迟消息插件实现 */
+因为我们是基于Docker安装，所以需要先查看RabbitMQ的插件目录对应的数据卷
+docker volume inspect mq-plugins 
+
+docker exec -it mq rabbitmq-plugins enable rabbitmq_delayed_message_exchange
+
+// 声明延迟交换机 
+@Configuration
+public class DelayExchangeConfig {
+
+    @Bean
+    public DirectExchange delayExchange(){
+        return ExchangeBuilder
+                .directExchange("delay.direct") // 指定交换机类型和名称
+                .delayed() // 设置delay的属性为true
+                .durable(true) // 持久化
+                .build();
+    }
+
+    @Bean
+    public Queue delayedQueue(){
+        return new Queue("delay.queue");
+    }
+    
+    @Bean
+    public Binding delayQueueBinding(){
+        return BindingBuilder.bind(delayedQueue()).to(delayExchange()).with("delay");
+    }
+}
+
+// 发送延迟消息 
+@Test
+void testPublisherDelayMessage() {
+    // 1.创建消息
+    String message = "hello, delayed message";
+    // 2.发送消息，利用消息后置处理器添加消息头
+    rabbitTemplate.convertAndSend("delay.direct", "delay", message, new MessagePostProcessor() {
+        @Override
+        public Message postProcessMessage(Message message) throws AmqpException {
+            // 添加延迟消息属性
+            message.getMessageProperties().setDelay(5000);
+            return message;
+        }
+    });
+}
+
+Tip: 延迟消息插件内部会维护一个本地数据库表，同时使用Elang Timers功能实现计时
+如果消息的延迟时间设置较长，可能会导致堆积的延迟消息非常多，会带来较大的CPU开销，同时延迟消息的时间会存在误差。
+因此，不建议设置延迟时间过长的延迟消息
+
+

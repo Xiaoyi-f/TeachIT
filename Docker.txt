@@ -72,6 +72,8 @@ Docker容器与虚拟机之间的最大区别: Docker容器之间共用同一个
 Docker镜像就像是模具而容器则像镜像做出来的实体物品
 Docker镜像仓库(dockerhub)是用来存储镜像的地方
 
+# 每个容器都有一套完全独立的、看起来像完整 Linux 操作系统的文件系统 通过 volume(数据卷) 关联实际电脑空间 
+
 # 提示: linux系统自带 sh 终端解释器, bash 为 sh 增强版
 
 sudo apt update // 更新依赖 
@@ -132,7 +134,8 @@ sudo docker ps // 列出所有正在运行的容器 -a 查看所有容器
 sudo docker start <container_id> // 启动容器 
 sudo docker stop <container_id> // 停止容器
 sudo docker rm -f <container_id> // 删除容器 运行中容器使用-f强制删除
-sudo docker rmi <image> // 删除镜像  
+sudo docker rmi <image> // 删除镜像 
+sudo docker logs <container> // 查看容器日志
 
 # 容器网络与宿主机网络默认隔离,-p配置让容器与宿主机端口绑定
 sudo docker run -p <host_port>:<container_port> <image>
