@@ -618,6 +618,7 @@ enum Season {
   SPRING, SUMMER, AUTUMN, WINTER 
 }
 
+
 /* 类加载器 */
 --> 负责将类的字节码加载到方法区 
 加载时机: 用到的时候加载 
@@ -645,6 +646,11 @@ public Classloader getClassLoader() // 获取该类的类加载器对象
 请求最终将到达顶层的启动类加载器
 如果父类加载器可以完成类加载任务，就成功返回
 倘若父类加载器无法完成此加载任务，子加载器才会尝试自己去加载，这就是双亲委派模式
+BootstrapClassLoader（启动类加载器，C写，拿不到引用 → null）
+        ↓ parent
+PlatformClassLoader（平台加载器，以前叫扩展加载器）
+        ↓ parent
+SystemClassLoader（就是 getSystemClassLoader() 返回的这个）
 
 --> java支持内部类, 其中有个特别形式内部类 --> 匿名内部类(临时重写类内部逻辑创建实例)
 Runnable runnable = new Runnable() {
@@ -653,6 +659,7 @@ Runnable runnable = new Runnable() {
     System.out.println("执行任务");
   }
 }
+
 
 /* 反射: 框架技术的灵魂 */
 // 在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法，对于任意一个对象，都能够调用它的任意属性和方法，这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制
@@ -696,6 +703,7 @@ if ("func".equals(method.getName())) {
   method.invoke(clazz.newInstance(), args) 
 }
 
+
 /* 多进程 */
 ProcessBuilder pb = new ProcessBuilder("python3", "test.py");
 Process p = pb.start(); 
@@ -716,7 +724,120 @@ pb.directory(new File("/home/user"));
 
 pb.inheritIO();
 
-/* 代理 */
+
+/* 普通/静态代理 */
+public interface Sale {
+
+  void sale(double money);
+
+  void hire(double money);
+}
+
+public class Owner implements Sale {
+
+  public void sale(double money) {
+    System.out.println("出售商品, 获得" + money);
+  }
+
+  public void hire(double money) {
+    System.out.println("雇佣员工, 获得" + money);
+  }
+}
+
+public class SaleImpl implements Sale {
+
+  private Owner owner; 
+
+  public SaleImpl(Owner owner) {
+    this.owner = owner; 
+  }
+
+  @Override 
+  public void sale(double money) {
+    money += 20000;
+    owner.sale(money);
+  }
+
+  @Override
+  public void hire(double money) {
+    money -= 10000;
+    owner.hire(money);
+  }
+}
+
+/* 动态代理 */
+// 业务接口：规定功能
+public interface UserService {
+    // 添加用户
+    void addUser(String name);
+    // 删除用户
+    void deleteUser(int id);
+}
 
 
+// 原始目标类，实现上面的接口，这就是被代理对象
+public class UserServiceImpl implements UserService{
+    @Override
+    public void addUser(String name) {
+        // 原生原有逻辑，没有任何增强
+        System.out.println("【原生逻辑】添加用户：" + name);
+    }
 
+    @Override
+    public void deleteUser(int id) {
+        System.out.println("【原生逻辑】删除用户，id=" + id);
+    }
+}
+
+
+public class ProxyDemo2 {
+    public static void main(String[] args) {
+        // 1. 创建【原始目标对象】，真正干活的对象
+        UserService target = new UserServiceImpl();
+
+        // 2. 生成代理对象
+        UserService proxyUserService = (UserService) Proxy.newProxyInstance(
+                // 参数1：类加载器，用来加载自动生成的代理类
+                ClassLoader.getSystemClassLoader(),
+                // 参数2：接口数组，代理类要实现哪些接口（就是我们自己写的UserService）
+                new Class[]{UserService.class},
+                // 参数3：InvocationHandler，所有方法调用都会进到invoke里面
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        // proxy：代理对象本身，一般不用
+                        // method：当前被调用的方法（反射对象）
+                        // args：调用方法传进来的参数
+
+                        // 获取当前调用的方法名字
+                        String methodName = method.getName();
+
+                        // 判断：如果是addUser方法，我们给它加增强（统计耗时）
+                        if ("addUser".equals(methodName)) {
+                            // ========== 前置增强代码（原方法执行之前跑） ==========
+                            long start = System.currentTimeMillis();
+                            System.out.println("===== 开始执行addUser =====");
+
+                            // ========== 核心：调用原始目标对象的原生方法，执行原有逻辑 ==========
+                            Object result = method.invoke(target, args);
+
+                            // ========== 后置增强代码（原方法跑完之后跑） ==========
+                            long end = System.currentTimeMillis();
+                            System.out.println("===== addUser执行结束，耗时：" + (end - start) + "ms =====");
+
+                            // 把原生方法返回值返回
+                            return result;
+                        }
+
+                        // 不是addUser的方法（deleteUser），不增强，直接执行原生逻辑
+                        return method.invoke(target, args);
+                    }
+                }
+        );
+
+        // ========== 使用代理对象调用方法！！重点：用代理对象调用，才会触发增强 ==========
+        proxyUserService.addUser("张三");
+        System.out.println("------------------------");
+        proxyUserService.deleteUser(1001);
+    }
+}
