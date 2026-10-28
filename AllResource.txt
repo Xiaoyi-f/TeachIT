@@ -34,6 +34,9 @@ https://ardot.tencent.com/
 https://www.doubao.com/
 https://mastergo.com/
 
+电子工程世界:
+https://bbs.eeworld.com.cn/
+
 讯飞数字人网站:
 https://virtual-man.xfyun.cn/console/applications --> 注意免费接口单通道的单页访问问题
 
