@@ -436,4 +436,40 @@ public class ArticleController {
 }
 
 
+// 高频进阶 
+import org.springframework.data.elasticsearch.core.query.highlight.*;
+var hl = new Highlight(HighlightParameters.builder()
+        .withPreTags("<em>").withPostTags("</em>").build(),
+        List.of(new HighlightField("title")));
+var q = NativeQuery.builder()
+        .withQuery(w -> w.match(m -> m.field("title").query("ES")))
+        .withHighlightQuery(new HighlightQuery(hl, Article.class))
+        .build();
+// 遍历：hit.getHighlightField("title") 拿高亮片段，hit.getContent() 拿原文
 
+nested(对象数组要保留同一元素内关系时):
+// 普通 object 数组会被展平，"红色 且 L码"会错误命中"红M+蓝L"。需要就用 nested 类型
+@Field(type = FieldType.Nested) public List<Variant> variants;
+// 两个条件必须塞进【同一个】nested query，拆开写会又跨元素命中
+
+bulk批量写(同步Mysql -> Es 时候)
+// HTTP 200 不代表每条都成功, 必须逐项看 errors 
+var b = new co.elastic.clients.elasticsearch.core.BulkRequest.Builder();
+for (Article a : list)
+    b.operations(op -> op.index(i -> i.index("articles").id(a.id).document(a)));
+var resp = client.bulk(b.build());
+if (resp.errors())
+    for (int i = 0; i < resp.items().size(); i++)
+        if (resp.items().get(i).error() != null) ; // 记失败项，用固定 id 幂等重试
+
+# 排查速查:
+save 后 findById 有、search 没有 --> refresh 近实时，等一下或手动 _refresh
+term 查标题查不到 --> 标题是 text 被分词了，该用 match；term 查 keyword
+对 title 聚合报 fielddata --> 该用 title.raw(keyword)
+should 没起到"或"作用 --> 已有 must/filter 时要 minimumShouldMatch，或直接 terms
+超过 10000 页报错 --> from/size 浅分页到顶，换 search_after
+改了 @Field 不生效 --> 旧索引 mapping 没重建，要新索引+reindex+切别名
+局部更新后别的字段没了 --> 又拿裁剪过的对象去 save 了
+bulk 成功却缺文档 --> 看 resp.errors 逐项，不是看整体 200
+
+Tip: 简单 CRUD 用 Repository（Spring 自动实现、直接注入）；复杂搜索用 ElasticsearchOperations + NativeQuery；text/match 负责"搜得多相关"，keyword/term/filter 负责"精确筛掉谁"
