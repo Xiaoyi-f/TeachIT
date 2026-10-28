@@ -92,12 +92,6 @@ https://admin.spicyboy.cn/#/home/index
 https://gitee.com/kailong110120130/vue-element-plus-admin
 https://element-plus-admin.cn/#/dashboard/analysis
 
-森林狐中转站
-https://market.frostfoxfrostfox.ai/
---> 
-账号: xiaoyi 
-密码: xiaoyi666 
-
 1. CEO: Chief Executive Officer — 首席执行官（最高负责人，总管全局战略）
 2. CTO: Chief Technology Officer — 首席技术官（技术、研发、架构负责人）
 3. CMO: Chief Marketing Officer — 首席营销官（市场、品牌、推广、获客）
