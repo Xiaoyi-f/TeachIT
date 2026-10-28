@@ -256,6 +256,7 @@ spring:
     connection-timeout: 3s 
     socket-timeout: 10s 
 
+
 // 启动类 
 @SpringBootApplication 
 public class EsNotesApplication {
@@ -264,6 +265,7 @@ public class EsNotesApplication {
     SpringApplication.run(EsNotesApplication.class, args);
   }
 }
+
 
 // 定义文档实体类 
 @Document(indexName = "articles", createIndex = false) // 不让应用启动时自动建索引，生产用迁移脚本管
@@ -296,6 +298,7 @@ public class Article {
     public Instant createdAt;
 }
 
+
 // 定义数据访问接口 
 // 两个泛型：Article 是实体类型，String 是主键类型
 public interface ArticleRepository extends ElasticsearchRepository<Article, String> {
@@ -306,6 +309,7 @@ public interface ArticleRepository extends ElasticsearchRepository<Article, Stri
     // 查询 id 在这一批里的文档
     List<Article> findByIdIn(List<String> ids);
 }
+
 
 // 写业务类 
 @Service 
@@ -405,6 +409,7 @@ public class ArticleService {
         }
     }
 }
+
 
 // 暴漏成HTTP接口 
 @RestController
