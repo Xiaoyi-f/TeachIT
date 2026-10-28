@@ -38,7 +38,8 @@ C/S架构与B/S架构
 架构核心三层: 控制层 业务逻辑层 数据访问层 
 Controller层 接收请求, 响应数据 --> Service层 业务逻辑处理 --> Mapper层 / Dao层 / Repository层 数据访问操作
 
-
+基本开发启动命令 
+mvn spring-boot:run // 开发启动项目, 在pom.xml文件所在目录位置 
 
 SpringMVC --> Controller层
 SSM = Spring + SpringMVC + MyBatis 
