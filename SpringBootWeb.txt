@@ -23,7 +23,7 @@
  * default链: validate -> compile -> test -> package -> verify -> install -> deploy 
  * pom.xml配置文件一旦变动，记得重新加载，然后把整个项目clean一下，然后再执行
  * -->
- * 对应的SpringBoot项目版本需要对应的Maven版本进行管理 
+ * 对应的SpringBoot项目版本需要对应的Maven版本进行管理 创建项目之前先看下maven版本 
  * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
  * --> springboot 依赖不建议使用快照版本 -- 否则需要强制拉取更新 mvn clean compile -U --> -U 代表更新 
  */
