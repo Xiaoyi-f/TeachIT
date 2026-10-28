@@ -24,7 +24,7 @@
  * pom.xml配置文件一旦变动，记得重新加载，然后把整个项目clean一下，然后再执行
  * -->
  * IDEA创建SpringBoot项目时候依据设置按钮设置的 Server URL 脚手架链接 构建SpringBoot项目, 若官方脚手架由于网络问题操作失败, 可以设置使用 https://start.aliyun.com等国内服务脚手架链接
- * --> springboot 依赖不要使用快照版本 
+ * --> springboot 依赖不建议使用快照版本 -- 否则需要强制拉取更新 
  */
 
 基本术语:
