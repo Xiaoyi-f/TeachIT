@@ -219,6 +219,20 @@ Elasticsearch数据与Mysql数据同步方法:
 
 
 /* Spring Data Elasticsearch */
+
+
+浏览器/前端
+   ↓  HTTP
+ArticleController  →  ArticleService（你写业务逻辑的地方）
+                          ↓ 注入两个东西
+              ┌───────────┴────────────┐
+              ↓                        ↓
+     ArticleRepository      ElasticsearchOperations
+     （简单CRUD用它）         （复杂搜索/聚合用它）
+              ↓                        ↓
+        Spring Data 自动生成代理  →  ES Java Client  →  HTTP 9200  →  ES
+
+
 // docker-compose.yml  
 services:
   elasticsearch:
@@ -251,64 +265,170 @@ public class EsNotesApplication {
   }
 }
 
-// Product实体 
-@Document(indexName = "products_v1", createIndex = false) // createIndex 表示当SpringBoot项目启动时候, ES没有对应的索引库, 不要自动创建
-@Setting(shards = 1, replicas = 0) // shards 分片数量(数据切块存储) replicas 副本数量(备份数据)
-public class Product {
+// 定义文档实体类 
+@Document(indexName = "articles", createIndex = false) // 不让应用启动时自动建索引，生产用迁移脚本管
+public class Article {
+
     @Id
-    public String id;
+    public String id;                 // 文档主键，对应 ES 的 _id
 
-    @NotBlank
-    @Field(type = FieldType.Keyword)
-    public String sku;
-
-    @NotBlank
-    @Size(max = 300)
     @MultiField(
         mainField = @Field(type = FieldType.Text, analyzer = "standard"),
-        otherFields = @InnerField(suffix = "raw", type = FieldType.Keyword) // title.raw 
-    )
-    public String title;
+        otherFields = @InnerField(suffix = "raw", type = FieldType.Keyword))
+    public String title;              // 标题：title 用来全文搜索，title.raw 用来排序/聚合
 
-    @Size(max = 10000)
-    @Field(type = FieldType.Text, analyzer = "standard")
-    public String description;
+    @Field(type = FieldType.Text)
+    public String content;            // 正文，补充召回
 
-    @NotBlank
     @Field(type = FieldType.Keyword)
-    public String brand;
+    public String category;            // 分类：精确过滤/分组
 
-    @NotBlank
     @Field(type = FieldType.Keyword)
-    public String category;
+    public String status;              // 状态：published / draft，精确过滤
 
-    @NotNull
-    @Min(0)
     @Field(type = FieldType.Long)
-    public Long priceCent;
-
-    @NotNull
-    @Min(0)
-    @Field(type = FieldType.Integer)
-    public Integer stock;
-
-    @NotNull
-    @Field(type = FieldType.Boolean)
-    public Boolean onSale;
+    public Long score;                 // 分数，long 存整数，别用 double
 
     @Field(type = FieldType.Keyword)
-    public List<String> tags;
+    public List<String> tags;          // 标签数组，逐元素按 keyword 处理
 
     @Field(type = FieldType.Date, format = DateFormat.date_time)
     public Instant createdAt;
-
-    public Product() {} // 无参构造 因为底层的 JSON 反序列化框架（Jackson）需要靠无参构造函数来动态生成 Product 对象，把 ES 里查出来的数据塞进去
 }
 
-// CRUD 
-public interface ProductRepository extends ElasticsearchRepository<Product, String> {
-  // Product 实体类型 / String ID类型 -- Spring自动代理 
-  Page<Product> findByBrand(String brand, Pageable pageable);
-  List<Product> findBySkuIn(List<String> skus); 
+// 定义数据访问接口 
+// 两个泛型：Article 是实体类型，String 是主键类型
+public interface ArticleRepository extends ElasticsearchRepository<Article, String> {
+
+    // 方法名 Spring 自动翻译：category = ? AND status = ?，分页交给 Pageable
+    Page<Article> findByCategoryAndStatus(String category, String status, Pageable pageable);
+
+    // 查询 id 在这一批里的文档
+    List<Article> findByIdIn(List<String> ids);
 }
+
+// 写业务类 
+@Service 
+public class ArticleService {
+
+  // 两个依赖：Spring 通过构造方法自动注入
+    private final ArticleRepository repository;
+    private final ElasticsearchOperations ops;
+    public ArticleService(ArticleRepository repository, ElasticsearchOperations ops) {
+        this.repository = repository;
+        this.ops = ops;
+    }
+
+    // 新增 / 全量保存：简单 CRUD，直接用 repository 
+
+    public Article save(Article a) {
+        return repository.save(a); // 按 id 存在就覆盖整篇，不存在就新增
+        // 注意：这是【整篇覆盖】，只 new 一个带 id 的对象来 save，其它字段会被冲成 null
+    }
+
+    public Article getById(String id) {
+        return repository.findById(id).orElse(null); // 返回 Optional，业务里自己判空
+    }
+
+    public void delete(String id) {
+        repository.deleteById(id);
+    }
+
+    // 组合搜索：复杂查询用 NativeQuery，逐行看注释
+    // 入参：关键词、分类、状态、页码(从0开始)、每页条数
+    public List<Article> search(String keyword, String category, String status,
+                                int page, int size) {
+
+        var bool = new BoolQuery.Builder();
+
+        // filter：必须满足，但【不算分】，还能被缓存。业务边界条件一律放这
+        bool.filter(f -> f.term(t -> t.field("status").value("published"))); // 只搜已发布
+        if (category != null && !category.isBlank())
+            bool.filter(f -> f.term(t -> t.field("category").value(category))); // keyword 用 term 精确匹配
+
+        // must：参与算分。关键词同时搜标题和正文，title 权重×3
+        if (keyword != null && !keyword.isBlank())
+            bool.must(m -> m.multiMatch(mm -> mm.fields("title^3", "content").query(keyword)));
+
+        // 把 bool 包成 Spring 的查询对象，带上分页和排序
+        var q = NativeQuery.builder()
+                .withQuery(bool.build()._toQuery())
+                .withPageable(PageRequest.of(page, size))                 // 页码从 0 开始
+                .withSort(s -> s.score(sc -> sc.order(SortOrder.Desc)))  // 先按相关度分
+                .withSort(s -> s.field(f -> f.field("_doc").order(SortOrder.Asc))) // 同分兜底
+                .build();
+
+        // 执行查询，把 SearchHit 里的文档取出来
+        return ops.search(q, Article.class).getSearchHits().stream()
+                  .map(h -> h.getContent()).toList();
+    }
+
+    // 局部更新：只改 score，别用 save（会把别的字段冲没）
+
+    public void updateScore(String id, long newScore) {
+        Document patch = Document.create();
+        patch.put("score", newScore);
+        ops.update(UpdateQuery.builder(id).withDocument(patch).build(),
+                   IndexCoordinates.of("articles"));
+    }
+
+    // 深分页 search_after：别用大 from/size，窗口默认只 1 万 
+    // 第一页 after 传 null，之后传上一页最后一条的 sortValues
+    public List<Article> searchAfter(List<Object> after, int size) {
+        var q = NativeQuery.builder()
+                .withQuery(w -> w.term(t -> t.field("status").value("published")))
+                .withPageable(PageRequest.of(0, size))
+                .withSort(s -> s.field(f -> f.field("score").order(SortOrder.Desc)))
+                .build();
+        if (after != null) q.setSearchAfter(after);
+        var hits = ops.search(q, Article.class);
+        return hits.getSearchHits().stream().map(h -> h.getContent()).toList();
+        // 想拿"下一页游标"就：hits.getSearchHits().getLast().getSortValues()，传回前端做游标
+    }
+
+    // 聚合：按分类统计数量和平均分数 
+
+    public void aggregateByCategory() {
+        var q = NativeQuery.builder()
+                .withQuery(w -> w.term(t -> t.field("status").value("published")))
+                .withMaxResults(0) // size=0：只要统计结果，不返回文档列表
+                .withAggregation("cats", Aggregation.of(a -> a
+                        .terms(t -> t.field("category").size(20)))) // 按 category(keyword) 分桶
+                .build();
+
+        var hits = ops.search(q, Article.class);
+        var aggs = (ElasticsearchAggregations) hits.getAggregations();
+        var buckets = aggs.get("cats").aggregation().getAggregate().sterms().buckets().array();
+        for (var b : buckets) {
+            String cat = b.key().stringValue();
+            long count = b.docCount();
+        }
+    }
+}
+
+// 暴漏成HTTP接口 
+@RestController
+@RequestMapping("/articles")
+public class ArticleController {
+
+    private final ArticleService service;
+    public ArticleController(ArticleService service) { this.service = service; }
+
+    @GetMapping("/{id}")
+    public Article get(@PathVariable String id) { return service.getById(id); }
+
+    @PostMapping
+    public Article create(@RequestBody Article a) { return service.save(a); }
+
+    // GET /articles/search?keyword=ES&category=tech&page=0&size=10
+    @GetMapping("/search")
+    public List<Article> search(@RequestParam(required = false) String keyword,
+                                @RequestParam(required = false) String category,
+                                @RequestParam(defaultValue = "0") int page,
+                                @RequestParam(defaultValue = "10") int size) {
+        return service.search(keyword, category, "published", page, size);
+    }
+}
+
+
 
