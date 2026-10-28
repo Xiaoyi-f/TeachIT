@@ -1,317 +1,207 @@
-/* keywords */
-byte short char --> int 
-long float double boolean 
-
-Byte Short Character Integer Long Float Double Boolean 
-
-private public protected 
-
-abstract class extends interface implements new static final 
-
-break continue return 
-
-switch case default 
-
-try catch throw throws finally 
-
-import package 
-
-true false 
-
-super this void 
-
-L F 
-
-== // 引址基值 <-- equals 原生没有重写时候底层就是 ==, 但是很多引用类型都已经重写过 
-
-javac xxx.java 
-java xxx
-java -jar xxx.jar
-
+/**
+ * boolean byte short char int long float double
+ * Boolean Byte Short Character Integer Long Float Double
+ * private public protected
+ * abstract class extends interface implements new static final
+ * break continue return
+ * switch case default
+ * try catch throw throws finally
+ * import package
+ * true false
+ * super this void
+ * L F
+ * == 引址基值 --> equals 底层 -- equals 大多逻辑比较
+ *
+ * java.math.BigDecimal
+ * // 传递字符串构造保证精度
+ * BigDecimal number = new BigDecimal("6");
+ * BigDecimal otherNumber = new BigDecimal("8");
+ *
+ * BigDecimal add = number.add(otherNumber);
+ * BigDecimal sub = number.subtract(otherNumber);
+ * BigDecimal mul = number.multiply(otherNumber):
+ *
+ * BigDecimal num = number.setScale(M, RoundingMode.HALF_UP);
+ */
 Scanner sc = new Scanner(System.in);
 sc.hasNextLine();
-sc.nextInt(); // 不读取回车, 下次nextLine()可能被吞掉, nextInt 将回车当做分隔符
 
+// return: String
 String line = sc.nextLine();
-char sc.next().charAt(0); 
+char sc.next().charAt(0);
 
-int[] arr = new int[10];
-int[] arr = {1, 2, 3, 4, 5}
+// Wrapper 代表包装类 <--> Base 代表基本数据类型
+Base var = wrap.baseValue();
+Wrapper.valueOf(Base val);
+Wrapper.parseBase(String val);
 
-for (int i = 0; i < arr.length; i++) {
-  System.out.println(arr[i]);
-}
-
-// java.math.BigDecimal 不可变对象, 运算后返回新对象 
-BigDecimal number = new BigDecimal("10"); // 传递字符串形式不丢失精度 
-BigDecimal otherNumber = new BigDecimal("10");
-
-BigDecimal add = number.add(otherNumber); 
-BigDecimal sub = number.subtract(otherNumber); 
-BigDecimal mul = number.multiply(otherNumber);
-
-BigDecimal theNum = number.setScale(M, RoundingMode.HALF_UP);
-
-String str = "Hello_Java"; 
-// new 出来的字符串也会从字符串常量池中复用值, 但是会再次在堆中创建新对象再复用, 而对应的变量指向堆中新对象 
-
-str.contains(subString); 
+String str = "Hello_Java"; // new -- 新建对象再复用
+String otherStr = "otherStr";
+str.contains(subString);
 str.isEmpty();
-
-/*
-当字符串进行 + 拼接时候, 底层会创建出来一个 StringBuilder 对象, 调用该对象 append 方法在内部完成拼接, 拼好之后再调用该对象的 toString 方法完成类型转换 
-String str = "abc"; 
-String other_str = "a" + "b" + "c";
-System.out.println(str == other_str); // true 
-*/
-
-str.equalsIgnoreCase(other_str); // 忽略大小写进行比较 
-
-boolean strBool = str.equals("Hello_Java"); // 逻辑值比较 
-// 规则: equals 结果为 true 则 两个对象的hashCode必须相同 结果为 false 则两个对象的hashCode可同(hash碰撞)可不同
+str.equalsIgnoreCase(otherStr);
+str.length();
+str.replace(old, newValue);
+str.substring(beginIndex, endIndex);
+str.matches("^.*?[^a-z1-9]{1,8}$");
+str.split("^.*?[^a-z1-9]{1,8}$");
 
 char[] charArray = str.toCharArray();
 
-// StringBuilder 拼接 内容都在同一块空间并没有大量开辟空间 
-// StringBuilder 底层实现: char[]（JDK8） / byte[]（JDK9+）
-StringBuilder sb = new StringBuilder("Hello");
-sb.append("StringBuilder")
-sb.delete(beginIndex, endIndex); // [beginIndex, endIndex)
-sb.reverse(); 
-sb.length(); 
+StringBuilder sb = new StringBuilder("");
+sb.append("StringBuilder");
+sb.delete("StringBuilder");
+sb.reverse();
+sb.length();
 
-String s = sb.toString(); 
+String s = sb.toString();
 
-str.length(); 
-str.replace(old, new); 
-str.substring(beginIndex, endIndex); // [beginIndex, endIndex)
-str.matches("^.*?[^a-z1-9]{1,8}$")
-str.split("^.*?[^a-z1-9]{1,8}$")
+import java.lang.Math;
+Math.max();
+Math.min();
+Math.abs();
+Math.sqrt();
+Math.ceil();
+Math.floor();
+Math.pow(a, b);
+Math.random(); // [0.0, 1.0)
+Math.round();
 
-Wrapper.valueOf(Base val); 
-Wrapper.parseInt(Wrapper val); 
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+LocalDataTime now = LocalDateTime.now();
+DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-/*
-1.String.valueOf(str); 直接返回传入字符串对象, 不额外new
-2.String.valueOf(val); 底层调用 new String() 在堆上创建 String 对象, 不会放入常量池 
-*/
+int[] arr = new int[10];
+int[] arr = {1, 2, 3, 4, 5};
+arr.length;
 
-object.baseValue();
-object.toString(); 
-
-import java.lang.Math; 
-
-double max(); 
-double min(); 
-double abs(); 
-double sqrt(); 
-double ceil();
-double floor(); 
-double pow(a, b); 
-double random(); // [0.0, 1.0) 
-long round(); // 四舍五入 
-
-import java.time.format.DateTimeFormatter; 
-import java.time.LocalDateTime; 
-
-LocalDateTime now = LocalDateTime.now(); 
-DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-// 泛型: Java泛型底层是类型擦除, 擦除之后全部变成 Object, 而基本类型不是 Object 子类, 不能向上转型为 Object, 所以泛型不能直接放基本类型 
-<? super T> 上界通配符
-<? extends T> 下界通配符
+//<? super T> 上界通配符
+//<? extends T> 下界通配符
 
 /**
- *  集合
- *  Collection
- *    List -> LinkedList / ArrayList 
- *    Set -> TreeSet / HashSet / LinkedHashSet 
- *  Map
- *    TreeMap / LinkedHashMap / HashMap
- * 
- * Tip: 不加泛型 集合 亦可以 存储不同类型数据, 加泛型是为了约束 
+ * 容器
+ * Collection
+ *   List -> LinkedList / ArrayList
+ *   Set -> TreeSet / HashSet / LinkedHashSet
+ * Map
+ *   TreeMap / LinkedHashMap / HashMap
  */
-
-Collection<Type> collection = new ArrayList<>(); // 查改快 
-Collection<Type> collection = new LinkedList<>(); // 增删快  
+Collection<Type> collection = new ArrayList<>(); // 查改快
+Collection<Type> collection = new LinkedList<>(); // 增删快
 collection.add(TypeData);
 collection.remove(TypeData);
-collection.clear(); 
-collection.contains(TypeData); 
-collection.isEmpty(); 
-collection.size(); 
+collection.clear();
+collection.contains(TypeData);
+collection.isEmpty();
+collection.size();
 
 List<Type> arrayList = new ArrayList<>();
 arrayList.add(int idx, TypeData);
-arrayList.get(int idx); 
-arrayList.set(int idx, TypeData); 
-arrayList.remove(int idx); 
+arrayList.get(int idx);
+arrayList.set(int idx, TypeData);
+arrayList.remove(int idx);
 
 List<Type> linkedList = new LinkedList<>();
-linkedList.addFirst(TypeData); 
-linkedList.addLast(TypeData); 
-linkedList.getFirst(); 
-linkedList.getLast(); 
-linkedList.removeFirst(); 
-linkedList.removeLast(); 
+linkedList.addFirst(TypeData);
+linkedList.addLast(TypeData);
+linkedList.getFirst();
+linkedList.getLast();
+linkedList.removeFirst();
+linkedList.removeLast();
 
-// 纯无序 
-Set<Type> set = new HashSet<>(); 
+// 纯无序
+Set<Type> set = new HashSet<>();
 
-// 维护迭代顺序 -- 双链表 
-Set<Type> set = new LinkedHashSet<>(); 
+// 维护迭代顺序 -- 双链表
+Set<Type> set = new LinkedHashSet<>();
 
-// 纯无序 
-Map<KeyType, ValueType> map = new HashMap<>(); 
-Map<KeyType, ValueType> map = new LinkedHashMap<>(); 
+// 纯无序
+Map<KeyType, ValueType> map = new HashMap<>();
+Map<KeyType, ValueType> map = new LinkedHashMap<>();
 
-// Map 常用方法 
-Set map.keySet(); 
-Collection map.values(); 
-Set<Map.Entry> map.entrySet(); 
-Value map.get(Key); 
-Value map.put(Key, Value); 
-Value map.remove(Key); 
-map.clear(); 
-map.containsKey(Key); 
-map.containsValue(Value); 
-map.isEmpty(); 
-map.size(); 
+// Map 常用方法
+Set map.keySet();
+Collection map.values();
+Set<Map.Entry> map.entrySet();
+Value map.get(Key);
+Value map.put(Key, Value);
+Value map.remove(Key);
+map.clear();
+map.containsKey(Key);
+map.containsValue(Value);
+map.isEmpty();
+map.size();
 
-Tip: key --> 唯一, 不可变, 数字/布尔/字符串/枚举/数字包装类/自定义不可变类型 
+Tip: key --> 唯一, 不可变, 数字/布尔/字符串/枚举/数字包装类/自定义不可变类型
 
-Iterator<Type> iter = collection.iterator(); 
+Iterator<Type> iter = collection.iterator();
 while (iter.hasNext()) {
-  Type item = iter.next(); 
+Type item = iter.next();
 }
 
-ListIterator<Type> listIter = list.listIterator(); 
+ListIterator<Type> listIter = list.listIterator();
 while (listIter.hasNext() && listIter.hasPrevious()) {
-  Type nextItem = listIter.next(); 
-  Type previousItem = listIter.previous(); 
+Type nextItem = listIter.next();
+Type previousItem = listIter.previous();
 }
 
-// 多态
-// 1. 定义父类
-class Animal {
-    public void eat() {
-        System.out.println("动物在吃东西");
-    }
-}
 
-// 2. 定义子类，继承父类
-class Dog extends Animal {
-    @Override
-    public void eat() {
-        System.out.println("狗在吃骨头");
-    }
+() -> {} // Lambda 表达式
+collection.forEach(ClassName::function); // 方法引用
 
-    // 子类特有的方法！
-    public void bark() {
-        System.out.println("狗在汪汪叫");
-    }
-}
 
-public class TestCast {
-    public static void main(String[] args) {
-        // 向上转型（自动完成）：父类引用指向子类对象
-        Animal animal = new Dog(); 
-        
-        // 1. 调用重写的方法（多态发挥）
-        animal.eat(); // 输出：狗在吃骨头
-        
-        // 2. 尝试调用子类特有方法（编译报错！）
-        // animal.bark(); 
-        // 报错原因：编译看左边，Animal 类里没有 bark() 方法。
+/* 文件操作 */
+File(String pathName);
+createNewFile();
+mkdirs();
+mkdir();
+exists();
+isDirectory();
+isFile();
+dir.list();
+getName();
+getParent();
+listFiles();
+getAbsolutePath();
 
-        // 3. 向下转型（强制转换）转回来，必须类型对应，因为有一些特殊方法公共类没定义但是要特定使用 
-        Dog dog = (Dog) animal; 
-        dog.bark(); // 输出：狗在汪汪叫（转型成功，可以调用了）
-    }
-}
---> 多态通常与"转型"关联 
-成员变量: 编译看左, 执行看左
-成员方法: 编译看左, 执行看右
-
-// 多态性
-interface Discount {
-    double apply(double totalPrice);
-}
-
-Discount discount; 
-if () {
-  discount = () -> {}
-} else {
-  discount = () -> {}
-}
-
---> 参数传递 多态调用 
-
-try {
-} catch (Exception err) {
-} finally {
-}
-
-// lambda 表达式 
-() -> {}
-
-// 方法引用 --> JDK8+ 对 lambda 表达式 进行简化 
-// 底层创建对象实例, 有参数则自动关联传递, 没有则可以理解为空参 lambda 转变
-collection.forEach(ClassName::function)
-
-/* File管理文件元数据 */ 
-File(String pathName); 
-
-createNewFile(); 
-mkdirs(); 
-mkdir(); 
-
-exists(); 
-isDirectory(); 
-isFile(); 
-
-dir.list(); 
-getName(); 
-getParent(); 
-listFiles(); 
-getAbsolutePath(); 
-
-// 注意: 增强for对于引用类型会改动内部 
+// 注意: 增强for对于引用类型会改动内部
 public static void getAllFilePath(File file) {
-  File[] files = file.listFiles(); 
+    File[] files = file.listFiles();
 
-  // 增强for常用于 Collection / Array 
-  for (File file : files) {
-    if (file.isFile()) {
-      System.out.println(file.getAbsolutePath());
-    } else {
-      getAllFilePath(file); 
+    // 增强 for 常用于 Collection / Array
+    for (File file : files) {
+        if (file.isFile()) {
+            System.out.println(file.getAbsolutePath());
+        } else {
+            getAllFilePath(file);
+        }
     }
-  }
 }
+
 
 /**
  * IO流
- * 输入流 --> 读取数据 从硬盘读到内存 
+ * 输入流 --> 读取数据 从硬盘读到内存
  * 输出流 --> 写入数据 从内存写到硬盘
- * 万能字节流 + 字符流 
- * Tip: 注意文件夹存在性 
+ * 万能字节流 + 字符流
+ * Tip: 注意文件夹存在性
  * 字节流抽象基类:
- *   InputStream 
- *   OutputStream 
+ *   InputStream
+ *   OutputStream
  * 字符流抽象基类:
- *   Reader 
- *   Writer   
+ *   Reader
+ *   Writer
  */
-
 import java.nio.charset.StandardCharsets;
 
-FileInputStream fis = new FileInputStream("path"); 
-FileOutputStream fos = new FileOutputStream("path", true); // true 表示追加模式  
+// 文件流归属字节流
+FileInputStream fis = new FileInputStream("path");
+FileOutputStream fos = new FileOutputStream("path", true); // true 表示追加模式
 
-fis.read(); // 一次读取一个字节, 没有内容可读返回 -1 
+fis.read(); // 一次读取一个字节, 没有内容可读返回 -1
 byte[] buf = new byte[1024];
-fis.read(buf); // 返回实际读取到的字节数, 不保证填满数组 
+fis.read(buf); // 返回实际读取到的字节数, 不保证填满数组
 
 byte[] data = "HelloJava".getBytes(StandardCharsets.UTF_8);
 fos.write(data);
@@ -321,162 +211,159 @@ fis.close();
 fos.flush()
 fos.close();
 
-// 封装源流, 提供缓冲区, 提高效率 减少系统从用户态到内核态的调用次数 缓冲区属于JVM堆内存[用户态] --> 默认1024*8字节即1KB
-BufferedInputStream bis = new BufferedInputStream(new FileInputStream("path")); 
+BufferedInputStream bis = new BufferedInputStream(new FileInputStream("path"));
 BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("path", true));
 
-InputStreamReader isr = new InputStreamReader(new FileInputStream("path"));
-OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream("path")); 
+--> Buffered 封装源流, 提供缓冲区, 提高效率 减少系统从用户态到内核态的调用次数 缓冲区属于JVM堆内存[用户态] --> 默认1024*8字节即1KB
 
+// Reader / Writer 归属字符流
 BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("in.txt"), StandardCharsets.UTF_8));
-BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out.txt", true), StandardCharsets.UTF_8))
+BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out.txt", true), StandardCharsets.UTF_8));
 
-// throws 方法异常签名, 抛出异常, 交给调用者处理, 调用者可以使用 try-catch 接住异常 
-// throw new Exception("异常信息") 主动抛出异常 e.getMessage() 获取填入的异常信息字符串 
 
 /* 多线程 */
 // 并行: 同一时刻, 有多个指令在多个CPU上 [同时] 执行
-// 并发: 同一时刻, 有多个指令在单个或多个CPU上 [交替] 执行 
-// 进程: 计算机中的程序关于某数据集合上的一次运行活动, 是系统进行资源分配的基本单位 --> 独立性、动态性、并发性 
-// 线程: 进程可以同时执行多个任务, 每个任务就是线程, 线程是CPU调度的基本单位 
-// java默认是多线程的: 运行程序的主线程 main, 垃圾回收线程 监控程序运行产生的垃圾 并且不定时的进行清理 ... 
+// 并发: 同一时刻, 有多个指令在单个或多个CPU上 [交替] 执行
+// 进程: 计算机中的程序关于某数据集合上的一次运行活动, 是系统进行资源分配的基本单位 --> 独立性、动态性、并发性
+// 线程: 进程可以同时执行多个任务, 每个任务就是线程, 线程是CPU调度的基本单位
+// java默认是多线程的: 运行程序的主线程 main, 垃圾回收线程 监控程序运行产生的垃圾 并且不定时的进行清理 ...
 
 /* 开启线程方式一: 传统 */
-package com.learn.thread; 
+package com.learn.thread;
 
-// 并行/并发由操作系统调控 
+// 并行/并发由操作系统调控
 public class ThreadDemo {
-  public static void main(String[] args) {
-    MyThread mt = new MyThread(); 
-    mt.start(); 
-  }
+    public static void main(String[] args) {
+        MyThread mt = new MyThread();
+        mt.start();
+    }
 }
 
 class MyThread extends Thread {
-  @override 
-  public void run() {
-    for (int i = 0; i <= 99; i++) {
-      System.out.println("线程任务执行" + i);
+    @override
+    public void run() {
+        for (int i = 0; i <= 99; i++) {
+            System.out.println("线程任务执行" + i);
+        }
     }
-  }
 }
 
 /* 开启线程方式二: 无返回值 */
-package com.learn.thread; 
+package com.learn.thread;
 
 public class ThreadDemo {
-  public static void main(String[] args) {
-    MyRunnable mr = new MyRunnable();
-    Thread thread = new Thread(mr, "threadName"); 
-    Thread otherThread = new Thread(mr, "threadName"); 
+    public static void main(String[] args) {
+        MyRunnable mr = new MyRunnable();
+        Thread thread = new Thread(mr, "threadName");
+        Thread otherThread = new Thread(mr, "threadName");
 
-    thread.start();
-    otherThread.start();
-  }
+        thread.start();
+        otherThread.start();
+    }
 }
 
-// 实现接口方式, 还可以继承其他类 
+// 实现接口方式, 还可以继承其他类
 class MyRunnable implements Runnable {
-  @override 
-  public void run() {
-    for (int i = 0; i <= 99; i++) {
-      System.out.println("自己的线程任务" + i);
+    @override
+    public void run() {
+        for (int i = 0; i <= 99; i++) {
+            System.out.println("自己的线程任务" + i);
+        }
     }
-  }
 }
 
 /* 开启线程方式三: 带返回值 */
-package com.learn.thread; 
+package com.learn.thread;
 
-import java.util.concurrent.Callable; 
-import java.util.concurrent.ExecutionException; 
-import java.util.concurrent.FutureTask; 
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 public class ThreadDemo {
-  public static void main(String[] args) throws ExecutionException, InterruptedException {
-    MyCallable mc = new MyCallable(); 
-    FutureTask<Integer> task = new FutureTask<>(mc); 
-    FutureTask<Integer> otherTask = new FutureTask<>(mc); 
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        MyCallable mc = new MyCallable();
+        FutureTask<Integer> task = new FutureTask<>(mc);
+        FutureTask<Integer> otherTask = new FutureTask<>(mc);
 
-    Thread thread = new Thread(task, "threadName"); 
-    Thread otherThread = new Thread(otherTask, "threadName");
+        Thread thread = new Thread(task, "threadName");
+        Thread otherThread = new Thread(otherTask, "threadName");
 
-    thread.start();
-    otherThread.start(); 
+        thread.start();
+        otherThread.start();
 
-    Integer result = task.get(); 
-    System.out.println("task 返回的结果为:" + result);
+        Integer result = task.get();
+        System.out.println("task 返回的结果为:" + result);
 
-    Integer otherResult = otherTask.get(); 
-    System.out.println("otherTask 返回的结果为:" + otherResult);
-  }
+        Integer otherResult = otherTask.get();
+        System.out.println("otherTask 返回的结果为:" + otherResult);
+    }
 }
 
 class MyCallable implements Callable<Integer> {
-  @override 
-  public Integer call() throws Exception {
-    int sum = 0; 
-    for (int i = 0; i <= 99; i++) {
-      sum += i; 
-    }
+    @override
+    public Integer call() throws Exception {
+        int sum = 0;
+        for (int i = 0; i <= 99; i++) {
+            sum += i;
+        }
 
-    return sum;
-  }
+        return sum;
+    }
 }
 
-thread.getName(); 
+thread.getName();
 thread.setName("threadName");
-static Thread currentThread(); 
-static void sleep(long time); // 单位 ms 
+static Thread currentThread();
+static void sleep(long time); // 单位 ms
 
 /* 线程局部变量 */
-ThreadLocal<String> threadLocal = new ThreadLocal<>(); 
-threadLocal.set("value"); 
+ThreadLocal<String> threadLocal = new ThreadLocal<>();
+threadLocal.set("value");
 String value = threadLocal.get();
 threadLocal.remove();
 
 // 线程局部变量是独立的
 Thread thread = new Thread(() -> {
-  threadLocal.set("value");
-  getData("thread")
+    threadLocal.set("value");
+    getData("thread")
 }, "thread");
 
 private static void getData(String threadName) {
-  Object data = threadLocal.get();
-  System.out.println(threadName + "-" + data);
+    Object data = threadLocal.get();
+    System.out.println(threadName + "-" + data);
 }
 
 /* 线程优先级 */
-// 线程调度方式有两种: 抢占式调度和非抢占式调度, 抢占式调度具有随机性, 非抢占式调度则是有顺序的执行, Java中使用的是抢占式调度风格, 即允许随机性执行 
-// 线程优先级越高, 抢到CPU的概率越大 优先级: 1-10 (默认5, 10最大) 
+// 线程调度方式有两种: 抢占式调度和非抢占式调度, 抢占式调度具有随机性, 非抢占式调度则是有顺序的执行, Java中使用的是抢占式调度风格, 即允许随机性执行
+// 线程优先级越高, 抢到CPU的概率越大 优先级: 1-10 (默认5, 10最大)
 
-public setPriority(int newPriority); 
-public final int getPriority(); 
+public setPriority(int newPriority);
+public final int getPriority();
 
-// 设置守护线程 
+// 设置守护线程
 thread.setDaemon(true);
 
 /* 线程安全问题 */
---> 资源默认共用 --> 由于并行/并发机制, 代码分线程分行块被执行而产生对齐问题 --> 需要锁机制 
-// 锁对象可以是任何对象, 但是需要保证多条线程的锁对象是同一把锁 
-// 注意: 利用锁实现同步可以解决对齐问题/数据安全问题, 但是也会降低程序运行的效率 
+--> 资源默认共用 --> 由于并行/并发机制, 代码分线程分行块被执行而产生对齐问题 --> 需要锁机制
+// 锁对象可以是任何对象, 但是需要保证多条线程的锁对象是同一把锁
+// 注意: 利用锁实现同步可以解决对齐问题/数据安全问题, 但是也会降低程序运行的效率
 class TicketTask implements Runnable {
-  int tickets = 1; 
+    int tickets = 1;
 
-  @override 
-  public void run() {
-    while (true) {
-      // 同步代码块 
-      synchronized (TicketTask.class) {
-        if (tickets == 0) {
-          break;
+    @override
+    public void run() {
+        while (true) {
+            // 同步代码块
+            synchronized (TicketTask.class) {
+                if (tickets == 0) {
+                    break;
+                }
+
+                System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
+                tickets--;
+            }
         }
-
-        System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
-        tickets--;
-      }
     }
-  }
 }
 
 // 同步方法 --> 静态方法(锁对象是类字节码对象) 与 非静态方法(this对象)
@@ -487,163 +374,163 @@ private synchronized void method() {}
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ThreadTest {
-  public static void main(String[] args) {
-    TicketTask task = new TicketTask(); 
+    public static void main(String[] args) {
+        TicketTask task = new TicketTask();
 
-    Thread thread = new Thread(task, "窗口A"); 
-    Thread otherThread = new Thread(task, "窗口B");
+        Thread thread = new Thread(task, "窗口A");
+        Thread otherThread = new Thread(task, "窗口B");
 
-    thread.start(); 
-    otherThread.start(); 
-  }
+        thread.start();
+        otherThread.start();
+    }
 }
 
 class TicketTask implements Runnable {
-  int tickets = 1;
-  ReentrantLock lock = new ReentrantLock(); 
+    int tickets = 1;
+    ReentrantLock lock = new ReentrantLock();
 
-  @override 
-  public void run() {
-    while (true) {
-      try {
-        lock.lock(); 
-        if (tickets == 0) {
-          break; 
+    @override
+    public void run() {
+        while (true) {
+            try {
+                lock.lock();
+                if (tickets == 0) {
+                    break;
+                }
+
+                System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
+                tickets--;
+            } finally {
+                lock.unlock();
+            }
         }
-
-        System.out.println(Thread.currentThread().getName() + "卖出第" + tickets + "张票");
-        tickets--;
-      } finally {
-        lock.unlock();
-      }
     }
-  }
 }
 
 /* 线程池 */
---> 减少线程的创建和销毁的开销 
-// JDK自带线程池, 了解 --> 开发通常无法做到精细配置, 不咋用 
-// 自定义线程池 
+--> 减少线程的创建和销毁的开销
+// JDK自带线程池, 了解 --> 开发通常无法做到精细配置, 不咋用
+// 自定义线程池
 ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler)
 7个核心参数:
-1.核心线程数量 (正式员工)
+        1.核心线程数量 (正式员工)
 2.最大线程数量 (正式员工 + 临时工)
-3.空闲时间 
-4.时间单位 
+3.空闲时间
+4.时间单位
 5.任务队列 (指定排队人数)
-6.线程对象工厂 
-7.拒绝策略 
+6.线程对象工厂
+7.拒绝策略
 
 package com.learn.pool;
 
-import java.util.concurrent.*; 
+import java.util.concurrent.*;
 
 public class ThreadPoolDemo {
-  /* 
-    自定义线程池:
-    1.有界队列 new ArrayBlockingQueue<>(N)
-    2.无界队列 new LinkedBlockingQueue<>()
-  */
-  public static void main(String[] args) {
-    ThreadPoolExecutor pool = new ThreadPoolExecutor(
-      2, 5, 60, TimeUnit.SECONDS,
-      new ArrayBlockingQueue<>(10),
-      Executors.defaultThreadFactory(),
-      new ThreadPoolExecutor.CallerRunsPolicy()
-    );
+    /*
+      自定义线程池:
+      1.有界队列 new ArrayBlockingQueue<>(N)
+      2.无界队列 new LinkedBlockingQueue<>()
+    */
+    public static void main(String[] args) {
+        ThreadPoolExecutor pool = new ThreadPoolExecutor(
+                2, 5, 60, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(10),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
 
-    for (int i = 1; i <= 16; i++) {
-      pool.submit(new Runnable() {
-        @override 
-        public void run() {
-          System.out.println(Thread.currentThread().getName() + "--- 提交了任务");
+        for (int i = 1; i <= 16; i++) {
+            pool.submit(new Runnable() {
+                @override
+                public void run() {
+                    System.out.println(Thread.currentThread().getName() + "--- 提交了任务");
+                }
+            });
         }
-      });
     }
-  }
 }
 
 拒绝策略:
 ThreadPoolExecutor.AbortPolicy 丢弃任务并抛出RejectedExecutionException异常 (默认)
-ThreadPoolExecutor.DiscardPolicy 丢弃任务, 但是不抛出异常, 这是不推荐的做法 
-ThreadPoolExecutor.DiscardOldestPolicy 抛弃队列中等待最久的任务, 然后把当前任务加入队列中 
-ThreadPoolExecutor.CallerRunsPolicy 调用任务的run()方法, 绕过线程池直接执行 
+        ThreadPoolExecutor.DiscardPolicy 丢弃任务, 但是不抛出异常, 这是不推荐的做法
+        ThreadPoolExecutor.DiscardOldestPolicy 抛弃队列中等待最久的任务, 然后把当前任务加入队列中
+ThreadPoolExecutor.CallerRunsPolicy 调用任务的run()方法, 绕过线程池直接执行
 
 临时线程什么时候创建?
-  线程任务数 > 核心线程数 + 任务队列的数量 
+线程任务数 > 核心线程数 + 任务队列的数量
 什么时候会开启拒绝策略?
-  线程任务数 > 最大线程数 + 任务队列的数量 
+线程任务数 > 最大线程数 + 任务队列的数量
 
 /**
- * 网络编程 
- * IP: 网络门牌号 
+ * 网络编程
+ * IP: 网络门牌号
  * 端口: 1024以内为知名网络服务/应用, 一般已经被占用 <= 65535 --> 与协议有关
- * 协议: 通信算法约定好的一套规则/格式, 保证两台设备能看懂互相发的数据 
- *   UDP协议: 面向无连接的通信协议 --> 广播 
- *   TCP协议: 面向连接的通信协议 --> 三次握手与四次挥手(服务器收到断开申请还会再把最后一些数据处理完再发送确认信息) --> 传输安全 
+ * 协议: 通信算法约定好的一套规则/格式, 保证两台设备能看懂互相发的数据
+ *   UDP协议: 面向无连接的通信协议 --> 广播
+ *   TCP协议: 面向连接的通信协议 --> 三次握手与四次挥手(服务器收到断开申请还会再把最后一些数据处理完再发送确认信息) --> 传输安全
  */
 
 /* 枚举 */
-package com.leanr.enum; 
+package com.leanr.enum;
 
 public class EnumTest {
-  public static void main(String[] args) {
-    useSeason(Season.WINTER);
+    public static void main(String[] args) {
+        useSeason(Season.WINTER);
 
-    System.out.println(Season.SPRING.ordinal());
-    System.out.println(Season.SUMMER.ordinal());
-    System.out.println(Season.AUTUMN.ordinal());
-    System.out.println(Season.WINTER.ordinal());
-  }
-
-  public static void useSeason(Season season) {
-    switch (season) {
-      case SPRING:
-        System.out.println("春季");
-        break; 
-      case SUMMER:
-        System.out.println("夏季"); 
-        break; 
-      case AUTUMN:
-        System.out.println("秋季");
-        break; 
-      case WINTER:
-        System.out.println("冬季");
-        break; 
+        System.out.println(Season.SPRING.ordinal());
+        System.out.println(Season.SUMMER.ordinal());
+        System.out.println(Season.AUTUMN.ordinal());
+        System.out.println(Season.WINTER.ordinal());
     }
-  }
+
+    public static void useSeason(Season season) {
+        switch (season) {
+            case SPRING:
+                System.out.println("春季");
+                break;
+            case SUMMER:
+                System.out.println("夏季");
+                break;
+            case AUTUMN:
+                System.out.println("秋季");
+                break;
+            case WINTER:
+                System.out.println("冬季");
+                break;
+        }
+    }
 }
 
 enum Season {
-  SPRING, SUMMER, AUTUMN, WINTER 
+    SPRING, SUMMER, AUTUMN, WINTER
 }
 
 
 /* 类加载器 */
---> 负责将类的字节码加载到方法区 
-加载时机: 用到的时候加载 
-加载过程: 加载 -> 链接 -> 初始化 
+--> 负责将类的字节码加载到方法区
+加载时机: 用到的时候加载
+加载过程: 加载 -> 链接 -> 初始化
 
-1.加载: 通过包名 + 类名, 获取这个类, 准备用流进行传输 --> 将类加载到内存 --> 加载完毕创建一个class对象 
+1.加载: 通过包名 + 类名, 获取这个类, 准备用流进行传输 --> 将类加载到内存 --> 加载完毕创建一个class对象
 2.链接: 验证类是否符合 JVM 规范, 安全性检查 --> 准备 (未static变量分配空间, 设置默认值 -- 静态区) --> 解析
-3.初始化: 根据程序员编码制定的主观计划去初始化类变量和其他资源 
+3.初始化: 根据程序员编码制定的主观计划去初始化类变量和其他资源
 
 类加载器的分类 -- 存在父子关系(上下级关系) -- 非代码层面 extends 而是 逻辑层面 关系:
-Bootstrap class loader: 启动类加载器, 虚拟机的内置类加载器, 通常表示为null --> 负责加载 JDK 自带类 
-Platform class loader: 平台类加载器, 负责JDK中一些特殊模块 --> 负责加载 lin/modules 内部的类 
-  -> JDK9 之前是 Extension Class Loader 扩展类加载器 --> 负责加载 jre/lib/ext 内部的类 
-Application class loader: 应用程序类加载器 
-自定义类加载器: 上级为 Application 
+Bootstrap class loader: 启动类加载器, 虚拟机的内置类加载器, 通常表示为null --> 负责加载 JDK 自带类
+Platform class loader: 平台类加载器, 负责JDK中一些特殊模块 --> 负责加载 lin/modules 内部的类
+  -> JDK9 之前是 Extension Class Loader 扩展类加载器 --> 负责加载 jre/lib/ext 内部的类
+Application class loader: 应用程序类加载器
+自定义类加载器: 上级为 Application
 
-// 获取类加载器对象 
-public Classloader getClassLoader() // 获取该类的类加载器对象 
+// 获取类加载器对象
+public Classloader getClassLoader() // 获取该类的类加载器对象
 --> xxx.class.getClassLoader()
 
 双亲委派模式
 如果一个类加载器收到了类加载请求，它并不会自己先去加载
-而是把这个请求委托给父类的加载器去执行
+        而是把这个请求委托给父类的加载器去执行
 如果父类加载器还存在其父类加载器，则进一步向上委托，依次递归
-请求最终将到达顶层的启动类加载器
+        请求最终将到达顶层的启动类加载器
 如果父类加载器可以完成类加载任务，就成功返回
 倘若父类加载器无法完成此加载任务，子加载器才会尝试自己去加载，这就是双亲委派模式
 BootstrapClassLoader（启动类加载器，C写，拿不到引用 → null）
@@ -652,68 +539,68 @@ PlatformClassLoader（平台加载器，以前叫扩展加载器）
         ↓ parent
 SystemClassLoader（就是 getSystemClassLoader() 返回的这个）
 
---> java支持内部类, 其中有个特别形式内部类 --> 匿名内部类(临时重写类内部逻辑创建实例)
+        --> java支持内部类, 其中有个特别形式内部类 --> 匿名内部类(临时重写类内部逻辑创建实例)
 Runnable runnable = new Runnable() {
-  @Override 
-  public void run() {
-    System.out.println("执行任务");
-  }
+    @Override
+    public void run() {
+        System.out.println("执行任务");
+    }
 }
 
 
 /* 反射: 框架技术的灵魂 */
 // 在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法，对于任意一个对象，都能够调用它的任意属性和方法，这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制
-// 对于开发人员自己写的代码自己知道, 但是对于框架来说框架本身是不知道的, 框架要实现自己特定的语法功能然后需要调用关联开发者写的类代码里面的属性或者功能, 则需要使用反射来操作 
+// 对于开发人员自己写的代码自己知道, 但是对于框架来说框架本身是不知道的, 框架要实现自己特定的语法功能然后需要调用关联开发者写的类代码里面的属性或者功能, 则需要使用反射来操作
 // 获取字节码对象
-1.Class.forName("全类名"); // 全类名 = 包.类名 
-2.类名.class 
-3.对象.getClass(); 
+1.Class.forName("全类名"); // 全类名 = 包.类名
+2.类名.class
+3.对象.getClass();
 
-Object obj = new Object(); 
-Class clazz = obj.getClass(); 
+Object obj = new Object();
+Class clazz = obj.getClass();
 
 // Class clazz = Class.forName("PACKAGE.CLASSNAME");
 
 Field[] fields = clazz.getDeclaredFields(); // 获取所有成员变量
-Field publicFields = clazz.getFields(); // 只获取公有成员变量 
+Field publicFields = clazz.getFields(); // 只获取公有成员变量
 for (Field field : fields) {
-  System.out.println(field.getName()); // 获取成员变量名
-  System.out.println(field.getType()); // 变量类型 (字节码对象)
-}
+        System.out.println(field.getName()); // 获取成员变量名
+        System.out.println(field.getType()); // 变量类型 (字节码对象)
+        }
 
 Method[] methods = clazz.getDeclaredMethods(); // 获取所有方法
-Method publicMethods = clazz.getMethods(); // 只获取公有方法 
+Method publicMethods = clazz.getMethods(); // 只获取公有方法
 
-Parameter[] parameters = method.getParameters(); // JDK8+ 支持 
+Parameter[] parameters = method.getParameters(); // JDK8+ 支持
 
 for (Method method : methods) {
-  System.out.println(method.getName()); // 获取方法名
-  System.out.println(method.getReturnType()); // 返回值类型 (字节码对象)
-}
+        System.out.println(method.getName()); // 获取方法名
+        System.out.println(method.getReturnType()); // 返回值类型 (字节码对象)
+        }
 
-for (Parameter parameter : parameters) {
-  String parameterName = parameter.getName();
-  Class parameterType = parameter.getType();
+        for (Parameter parameter : parameters) {
+String parameterName = parameter.getName();
+Class parameterType = parameter.getType();
   System.out.println(parameterName + ": " + parameterType);
 }
 // 调用方法
-if ("func".equals(method.getName())) {
-  // 若调用私有方法需要添加这句赋予权限
-  // method.setAccessible(true);  
-  method.invoke(clazz.newInstance(), args) 
-}
+        if ("func".equals(method.getName())) {
+        // 若调用私有方法需要添加这句赋予权限
+        // method.setAccessible(true);
+        method.invoke(clazz.newInstance(), args)
+        }
 
 
 /* 多进程 */
 ProcessBuilder pb = new ProcessBuilder("python3", "test.py");
-Process p = pb.start(); 
+Process p = pb.start();
 
 long pid = p.pid();
 boolean alive = p.isAlive();
 
 int code = p.waitFor(); // 等待进程结束, 获取进程退出码
 
-boolean finished = p.waitFor(10, TimeUnit.SECONDS); // 设置超时 
+boolean finished = p.waitFor(10, TimeUnit.SECONDS); // 设置超时
 
 p.destroy();
 p.destroyForcibly();
@@ -722,47 +609,47 @@ ProcessHandle.current().pid();
 
 pb.directory(new File("/home/user"));
 
-pb.inheritIO();
+        pb.inheritIO();
 
 
 /* 普通/静态代理 */
 public interface Sale {
 
-  void sale(double money);
+    void sale(double money);
 
-  void hire(double money);
+    void hire(double money);
 }
 
 public class Owner implements Sale {
 
-  public void sale(double money) {
-    System.out.println("出售商品, 获得" + money);
-  }
+    public void sale(double money) {
+        System.out.println("出售商品, 获得" + money);
+    }
 
-  public void hire(double money) {
-    System.out.println("雇佣员工, 获得" + money);
-  }
+    public void hire(double money) {
+        System.out.println("雇佣员工, 获得" + money);
+    }
 }
 
 public class SaleImpl implements Sale {
 
-  private Owner owner; 
+    private Owner owner;
 
-  public SaleImpl(Owner owner) {
-    this.owner = owner; 
-  }
+    public SaleImpl(Owner owner) {
+        this.owner = owner;
+    }
 
-  @Override 
-  public void sale(double money) {
-    money += 20000;
-    owner.sale(money);
-  }
+    @Override
+    public void sale(double money) {
+        money += 20000;
+        owner.sale(money);
+    }
 
-  @Override
-  public void hire(double money) {
-    money -= 10000;
-    owner.hire(money);
-  }
+    @Override
+    public void hire(double money) {
+        money -= 10000;
+        owner.hire(money);
+    }
 }
 
 /* 动态代理 */
@@ -790,7 +677,7 @@ public class UserServiceImpl implements UserService{
 }
 
 
-public class ProxyDemo2 {
+public class ProxyDemo {
     public static void main(String[] args) {
         // 1. 创建【原始目标对象】，真正干活的对象
         UserService target = new UserServiceImpl();
@@ -841,3 +728,5 @@ public class ProxyDemo2 {
         proxyUserService.deleteUser(1001);
     }
 }
+
+
