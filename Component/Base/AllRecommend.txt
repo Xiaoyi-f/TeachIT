@@ -1,0 +1,15 @@
+推荐组件库:
+PC: ElementPlus BootStrap AntDesign-Vue 
+Phone: Vant Uniapp 
+DataChart: Echarts 
+MD: md-editor-v3 
+FlowChart: mermaid 
+LogoSVG: Iconfont IconPark 
+Animation: Anime.js Lottie 
+3D: Three.js 
+ScrollAnimation: ScrollReveal 
+TypeAnimation: Typed.js 
+Transition: Barba.js 
+Dynamic: Mo.js 
+
+

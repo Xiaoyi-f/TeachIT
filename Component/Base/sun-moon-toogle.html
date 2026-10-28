@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="太阳月亮滑块">
+	<meta name="author" content="XiaoYi">
+	<meta name="copyright" content="版权所有">
+	<meta name="renderer" content="webkit">
+	<meta name="formate-detection" content="telephone=no, email=no">
+	<meta name="og:title" content="太阳月亮滑块">
+	<meta name="og:image" content="url">
+	<meta name="og:description" content="太阳月亮滑块">
+	<meta name="og:url" content="url">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="url">
+	<title>太阳月亮滑块</title>
+	<style>
+		.toggle {
+			--base-scale: 12px;
+			--toggle-width: 5.625rem;
+			--toggle-height: 2.5rem;
+			--bg-toggle-light: #3d7eae;
+			--bg-toggle-dark: #1d1f2c;
+			--radius-pill: 9999em;
+			--transition-standard: 0.3s;
+		}
+
+		.toggle {
+			font-size: var(--base-scale);
+			position: relative;
+			display: inline-block;
+			vertical-align: middle;
+		}
+
+		.toggleContainer {
+			width: var(--toggle-width);
+			height: var(--toggle-height);
+			background: var(--bg-toggle-light);
+			border-radius: var(--radius-pill);
+			cursor: pointer;
+			transition: background-color var(--transition-standard);
+			position: relative;
+			overflow: hidden;
+			box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+		}
+
+		.toggleInput:checked+.toggleContainer {
+			background: var(--bg-toggle-dark);
+		}
+
+		@keyframes cloud-float {
+
+			0%,
+			100% {
+				transform: translateY(0);
+			}
+
+			50% {
+				transform: translateY(-3px);
+			}
+		}
+
+		.toggleContainer::before {
+			content: '';
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+			transition:
+				opacity var(--transition-standard),
+				top var(--transition-standard);
+		}
+
+		.toggleContainer::before {
+			top: 20%;
+			left: 60%;
+			width: 1.2em;
+			height: 1.2em;
+			background: #fff;
+			border-radius: 50%;
+			opacity: 0.95;
+
+			animation: cloud-float 4s ease-in-out infinite;
+
+			box-shadow:
+				-0.6em 0.4em 0 -0.1em #fff,
+				-1em 0.6em 0 -0.2em #fff,
+				0.2em 0.5em 0 -0.1em #fff,
+				1.2em 1.2em 0 -0.4em rgba(255, 255, 255, 0.9),
+				1.8em 1em 0 -0.5em rgba(255, 255, 255, 0.9),
+				-2.2em 0.8em 0 -0.6em rgba(255, 255, 255, 0.8),
+				-1.8em 1.2em 0 -0.5em rgba(255, 255, 255, 0.8);
+
+			filter: blur(0.5px);
+		}
+
+		.toggleInput:checked+.toggleContainer::before {
+			opacity: 0;
+			top: 60%;
+		}
+
+		.toggleContainer::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 0;
+			opacity: 0;
+			transition: opacity var(--transition-standard);
+
+			background-image:
+				radial-gradient(1px 1px at 20% 30%, white 50%, transparent),
+				radial-gradient(1px 1px at 40% 70%, white 50%, transparent),
+				radial-gradient(1.5px 1.5px at 10% 40%, white 50%, transparent),
+				radial-gradient(2px 2px at 30% 20%, white 50%, transparent),
+				radial-gradient(1px 1px at 50% 60%, white 50%, transparent),
+				radial-gradient(1.5px 1.5px at 15% 80%, white 50%, transparent);
+			background-repeat: no-repeat;
+		}
+
+		.toggleInput:checked+.toggleContainer::after {
+			opacity: 1;
+		}
+
+		.toggleInput {
+			display: none;
+		}
+
+		.toggleSun {
+			z-index: 1;
+			--sun-diameter: 2.125em;
+			width: var(--sun-diameter);
+			height: var(--sun-diameter);
+			--clr-sun: #ecca2f;
+			--clr-moon: #c4c9d1;
+
+			background: var(--clr-sun);
+			border-radius: 50%;
+
+			--sun-offset: calc((var(--toggle-height) - var(--sun-diameter)) / 2);
+
+			position: absolute;
+			top: var(--sun-offset);
+			left: var(--sun-offset);
+
+			transition:
+				transform var(--transition-standard),
+				background-color var(--transition-standard);
+
+			box-shadow:
+				0 0 10px 2px rgba(236, 202, 47, 0.6),
+				0 0 20px 4px rgba(236, 202, 47, 0.4),
+				0 0 30px 6px rgba(236, 202, 47, 0.2);
+
+			transition:
+				transform var(--transition-standard),
+				background-color var(--transition-standard),
+				box-shadow var(--transition-standard);
+		}
+
+		.toggleSun::after {
+			content: '';
+			position: absolute;
+			top: -15%;
+			right: -15%;
+			width: 100%;
+			height: 100%;
+			border-radius: 50%;
+			background: transparent;
+			transform: translate(50%, -50%);
+			transition:
+				transform var(--transition-standard),
+				background-color var(--transition-standard);
+		}
+
+		.toggleInput:checked+.toggleContainer .toggleSun {
+			transform: translateX(calc(var(--toggle-width) - var(--sun-diameter) - 2 * var(--sun-offset)));
+			background: var(--clr-moon);
+
+			box-shadow:
+				0 0 10px 2px rgba(196, 201, 209, 0.6),
+				0 0 20px 4px rgba(196, 201, 209, 0.4),
+				0 0 30px 6px rgba(196, 201, 209, 0.2);
+		}
+
+		.toggleInput:checked+.toggleContainer .toggleSun::after {
+			background: var(--bg-toggle-dark);
+			transform: translate(30%, -30%);
+		}
+	</style>
+</head>
+<body>
+	<label class="toggle">
+		<input type="checkbox" value="" class="toggleInput">
+		<div class="toggleContainer">
+			<div class="toggleSun"></div>
+		</div>
+	</label>
+</body>
+</html>

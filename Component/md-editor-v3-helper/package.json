@@ -1,0 +1,23 @@
+{
+  "name": "md-editor-demo",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vavt/v3-extension": "^3.0.0",
+    "axios": "^1.7.9",
+    "cropperjs": "^1.6.2",
+    "md-editor-v3": "^5.4.5",
+    "mermaid": "^11.9.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}

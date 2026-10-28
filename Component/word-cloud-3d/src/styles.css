@@ -1,0 +1,27 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --bg: #eef4ff;
+  --panel: #ffffff;
+  --line: #dbe7ff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #2563eb;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; min-height: 100%; }
+body {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(147, 197, 253, 0.45), transparent 32%),
+    radial-gradient(circle at 88% 12%, rgba(196, 181, 253, 0.35), transparent 28%),
+    linear-gradient(160deg, #f8fbff, #eef4ff 48%, #f5f3ff);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+}
