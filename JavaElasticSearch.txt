@@ -35,7 +35,7 @@ index: 是否创建索引, 默认值为true
 analyzer: 分词器 
 properties: 该字段的子字段 
 
-Tip: 索引等价于mysql表, 映射等价于mysql表结构(字段声明)
+Tip: 索引等价于mysql表, 映射等价于mysql表结构(字段声明) 映射确定好之后就不要再改动 
 
 创建索引库和映射:
 PUT /索引库名称 
@@ -151,7 +151,7 @@ GET /索引库名/_search
 返回结果里, 命中的关键词自动被<em></em>标签包裹起来 
 
 DSL(Domain Specific Language) --> 本质上就是一套JSON查询语言 
-常见基础语法:
+常见基础语法 -- GET /索引库名/_search 
 // 全文检索, 对搜索词分词再匹配 
 {
   "query": {
@@ -219,5 +219,96 @@ Elasticsearch数据与Mysql数据同步方法:
 
 
 /* Spring Data Elasticsearch */
+// docker-compose.yml  
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch:<version> 
+    environment: 
+      discovery.type: single-node 
+      xpack.security.enabled: "false" 
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g" 
+    ports:
+      - "127.0.0.1:9200:9200" 
+    volumes:
+      - esdata:/usr/share/elasticsearch/data 
 
+volumes:
+  esdata: local 
+
+// application.yml 
+spring:
+  elasticsearch:
+    uris: http://localhost:9200 
+    connection-timeout: 3s 
+    socket-timeout: 10s 
+
+// 启动类 
+@SpringBootApplication 
+public class EsNotesApplication {
+
+  public static void main(String[] args) {
+    SpringApplication.run(EsNotesApplication.class, args);
+  }
+}
+
+// Product实体 
+@Document(indexName = "products_v1", createIndex = false) // createIndex 表示当SpringBoot项目启动时候, ES没有对应的索引库, 不要自动创建
+@Setting(shards = 1, replicas = 0) // shards 分片数量(数据切块存储) replicas 副本数量(备份数据)
+public class Product {
+    @Id
+    public String id;
+
+    @NotBlank
+    @Field(type = FieldType.Keyword)
+    public String sku;
+
+    @NotBlank
+    @Size(max = 300)
+    @MultiField(
+        mainField = @Field(type = FieldType.Text, analyzer = "standard"),
+        otherFields = @InnerField(suffix = "raw", type = FieldType.Keyword) // title.raw 
+    )
+    public String title;
+
+    @Size(max = 10000)
+    @Field(type = FieldType.Text, analyzer = "standard")
+    public String description;
+
+    @NotBlank
+    @Field(type = FieldType.Keyword)
+    public String brand;
+
+    @NotBlank
+    @Field(type = FieldType.Keyword)
+    public String category;
+
+    @NotNull
+    @Min(0)
+    @Field(type = FieldType.Long)
+    public Long priceCent;
+
+    @NotNull
+    @Min(0)
+    @Field(type = FieldType.Integer)
+    public Integer stock;
+
+    @NotNull
+    @Field(type = FieldType.Boolean)
+    public Boolean onSale;
+
+    @Field(type = FieldType.Keyword)
+    public List<String> tags;
+
+    @Field(type = FieldType.Date, format = DateFormat.date_time)
+    public Instant createdAt;
+
+    public Product() {} // 无参构造 因为底层的 JSON 反序列化框架（Jackson）需要靠无参构造函数来动态生成 Product 对象，把 ES 里查出来的数据塞进去
+}
+
+// CRUD 
+public interface ProductRepository extends ElasticsearchRepository<Product, String> {
+  // Product 实体类型 / String ID类型 -- Spring自动代理 
+  Page<Product> findByBrand(String brand, Pageable pageable);
+  List<Product> findBySkuIn(List<String> skus); 
+}
 
