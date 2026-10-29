@@ -161,7 +161,7 @@ lim --> select * from <table> limit
 
 实体类 <-> Mapper接口 <-> Mapper.xml 映射文件 <-> mybatis-config.xml 核心配置文件 <-> 数据库 
 
-// mybatis-config.xml 
+// mybatis-config.xml -- mybatis-plus配置均写到application.yml 不用再写mybatis-config.xml文件 
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
@@ -315,6 +315,8 @@ resultType --> Java类型 --> 通常为实体类
 
 // Tip: 除了配置文件方式以外还有注解的方式实现Batis的SQL配置 
 // 接口方法上注解: @Select @Insert @Update @Delete --> 直接在接口中写注解则不用再到XML写配置 --> 支持三引号 --> 参数即SQL
+
+--> 实体类选择 Serializable 实现序列化接口, 支持序列化和反序列化 -- Redis/RPC/传输/Session钝化/MessageQueue 
 
 /* mybatis-plus 增强版 -- 只做增强 */
 
