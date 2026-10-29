@@ -139,9 +139,11 @@ MybatisFramework
 
 为Controller及Service注入运行时所依赖的对象
 eg -->
+--> byType 
 @Autowired // 优先按照类/接口查找, 可能产生冲突 
 private UserDao userDao; 
 
+--> byName 
 @Resource(name="userServiceImpl") // 优先按照名称找, 名称确保唯一, 尽量避免冲突 --> Spring容器中Bean名称不能重复 
 private UserService userService; 
 
