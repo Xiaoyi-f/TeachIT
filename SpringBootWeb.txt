@@ -463,7 +463,8 @@ void updateBalanceByIds(@Param(Constants.WRAPPER) Wrapper<User> wrapper);
 // 为了将项目尽可能解耦合, 因而分用Service接口
 public interface UserService extends IService<User> {} // 接口
 
-@Service public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {}
+@Service 
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {}
 
 Tip: Controller 注入接口 注入的其实是接口具体实现之后的类对象, Spring容器底层将接口实现类放入容器然后找到实现对应接口的Bean创建好对象返回
 --> 当然也可以直接注入接口实现类, 但是通常直接注入接口名字更加规范和面向接口 
@@ -592,7 +593,7 @@ public class UserController {
 500: 服务器内部错误
 */
 
-// DTO 类 
+// DTO 类 -- 数据传输对象 
 @Data
 public class UserCreateDTO {
   
@@ -606,7 +607,7 @@ BeanUtils.copyProperties(dto, user); // dto 转换为 user, 字段名字必须�
 
 -使用-> @RequestBody UserCreateDTO dto --> userService.createUser(dto); 
 
-// VO 类 
+// VO 类 -- 视图对象 
 @Data 
 public class UserVO {
 
