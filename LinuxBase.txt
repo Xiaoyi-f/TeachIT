@@ -91,7 +91,6 @@ SQL注入 --> 钻数据库漏洞/特性实现数据窃取/账户登录
 ## Vscode
 翻译
 Chinese
-Auto Close Tag
 Auto Rename Tag
 Dracula Theme Official
 Error Lens
