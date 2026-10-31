@@ -221,6 +221,22 @@ BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream
 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("out.txt", true), StandardCharsets.UTF_8));
 
 
+/* Stream */
+实现java.util.Collection接口的集合均支持stream()方法 --> 进而支持map()、filter()方法 --> 支持自己写返回值 
+尾部配合toList() 以及 toSet() 收集结果为目标类型 
+
+/* cn.hutool.core.io.IoUtil */
+--> 读取
+List<String> lines = IoUtil.readLines(in, "UTF-8", new ArrayList<>()); // 读取全部行放到集合 
+String content = IoUtil.readUtf8(in); // 适合读取小文件, 一次性读取全部内容为字符串 
+byte[] bytes = IoUtil.readBytes(in); // 读取字节数组, 适合图片等二进制文件 
+
+--> 写入 
+IoUtil.write(content, false, out, StandardCharsets.UTF_8); // 内容, 是否追加, 输出流, 编码
+IoUtil.writeUtf8(content, false, out); 
+IoUtil.copy(in, out); // 拷贝流 -- 字节层面 
+IoUtil.close(in); // 关闭流
+
 /* 多线程 */
 // 并行: 同一时刻, 有多个指令在多个CPU上 [同时] 执行
 // 并发: 同一时刻, 有多个指令在单个或多个CPU上 [交替] 执行
