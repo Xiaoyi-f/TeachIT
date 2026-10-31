@@ -101,6 +101,7 @@ Path Intellisense
 Vue(official) 不要使用 vetur(vue2语法校验)
 Markdown Preview Enhanced
 Markdown All in one
+IntelliJ IDEA Keybindings
 
 ## Pycharm [Alt enter]
 BlackConnect --> Python 代码格式化连接器
