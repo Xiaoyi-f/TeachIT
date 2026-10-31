@@ -91,7 +91,7 @@ spring:
     nacos:
       server-addr: 127.0.0.1:8848
   profiles:
-    active: dev # prod --> application-dev.yml application-prod.yml 
+    active: dev # prod --> application-prod.yml => active: dev 表示激活application-dev.yml合并覆盖当前对应内容(一般不写该文件, 生产直接切prod)
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver 
     url: jdbc:mysql://localhost:3306/database 

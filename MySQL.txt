@@ -76,7 +76,7 @@ DEFAULT CHARACTER SET utf8mb4; -- MySQL8 版本之后默认的字符集就是 ut
 DEFAULT COLLATE utf8mb4_unicode_cli; 
 
 CREATE TABLE `table_name` (
-  `column_name` column_type [NOT NULL | DEFAULT value | UNIQUE] AUTO_INCREMENT PRIMARY KEY COMMENT 'column comment',
+  `column_name` column_type [DEFAULT value | NOT NULL] AUTO_INCREMENT COMMENT 'column comment' PRIMARY KEY,
   CONSTRAINT `constraint_name`
   FOREIGN KEY (`column_name`) 
   REFERENCES `referenced_table_name` (`referenced_column_name`)
