@@ -1,6 +1,6 @@
 import httpx 
 
-client = httpx.Clien(
+client = httpx.Client(
   base_url="https://xxx.com",
   timeout=10, 
   headers={
@@ -35,6 +35,7 @@ response = requests.put(url, json=payload, headers=headers, timeout=10, verify=F
 response = requests.delete(url, params=params, headers=headers, timeout=10, verify=False)
 response.encoding = "utf-8"
 response.content.decode("unicode-escape")
+request = response.request
 res_code = response.status_code 
 res_headers = response.headers 
 res_history = response.history 

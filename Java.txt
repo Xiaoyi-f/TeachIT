@@ -772,3 +772,52 @@ public class ProxyDemo {
 }
 
 
+/* 注解 -- Annotation */
+基础常见注解:
+@Override
+@Deprecated 
+@SuppressWarnings("all") 
+
+自定义注解:
+@Target(ElementType.METHOD) // TYPE FIELD METHOD PARAMETER CONSTRUCTOR LOCAL_VARIABLE 
+@Retention(RetentionPolicy.RUNTIME) // SOURCE CLASS RUNTIME 
+public @interface MyAnnotation {
+
+    public String attr() default "defaultValue"; 
+}
+
+AOP 逻辑增强:
+@Aspect
+@Component 
+public class MyAnnotationAspect {
+
+    @Pointcut("@annotation(com.example.project.annotation.MyAnnotation)")
+    public void pointcut() {}
+
+    @Around("pointcut()")
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+
+        /* 准备工作 */
+        // 获取方法签名 
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+
+        // 获取方法注解对象 
+        MyAnnotation annotation = signature.getMethod().getAnnotation(MyAnnotation.class);
+
+        // 读取注解属性
+        String attr = annotation.attr();
+
+        /* 前置逻辑增强 */
+        long start = System.currentTimeMillis();
+        System.out.println("开始执行方法：" + signature.getName() + "，属性：" + attr);
+
+        // 执行目标方法 
+        Object result = joinPoint.proceed(); 
+
+        long cost = System.currentTimeMillis() - start; 
+        System.out.println("方法执行结束：" + signature.getName() + "，耗时：" + cost + "ms");
+
+        return result; 
+    }
+}
+
