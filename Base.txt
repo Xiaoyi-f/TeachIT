@@ -46,5 +46,9 @@ windows --> 运行框 ctrl shift enter 进入管理员模式
 windows --> 必会命令 systeminfo / resmon / cleanmgr / services.msc / tcping <ip/domain> <port> / where <command>
 系统默认保留 "特权端口范围" 0-1023 总共 1024 个
 
+powershell 终端编码问题 --> 
+setx LANG "zh_CN.UTF-8"
+setx LC_ALL "zh_CN.UTF-8"
+
 通用终端下载工具: curl 
 curl -sL https://xxx.xx -o xxx
