@@ -1,5 +1,5 @@
 推荐组件库:
-PC: ElementPlus BootStrap AntDesign-Vue 
+PC: ElementPlus BootStrap AntDesign-Vue Vant
 Phone: Vant Uniapp 
 DataChart: Echarts 
 MD: md-editor-v3 
