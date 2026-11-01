@@ -12,6 +12,18 @@ redis-server & // 后台启动服务
 redis-cli -h 127.0.0.1 -p 6379 -a [password]
 redis-cli shutdown // 优雅关闭redis 会持久化  
 
+--> redis 默认 16 数据库 编号(0-15)
+0: 主力业务库 
+db1: 会话登录态 Session
+db2: 计数器/限流/访问统计 
+db3: 分布式锁 Redisson分布式锁 
+db4: 热点缓存 
+db5: 消息队列 
+db6: 黑名单/封禁数据 
+db7: 配置 
+db8: 测试 
+db9~15: 预留 
+
 https://www.redis.net.cn/ --> redis中文网 
 Redis存储的是key-value结构数据, 其中key是字符串类型, value有五种常用数据类型:
 string hash list set zset 
