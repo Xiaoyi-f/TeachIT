@@ -1,3 +1,5 @@
+"""大规模爬虫建议高并发实现 -- 多进程、多线程、协程"""
+
 import httpx 
 
 client = httpx.Client(
@@ -29,7 +31,13 @@ params = {"query": "value"}
 payload = {}
 headers = {}
 
-response = requests.get(url, params=params, headers=headers, timeout=10, verify=False)
+# 代理池 
+proxies = {
+  "http": "http://proxy.com",
+  "https": "http://proxy.cn"
+}
+
+response = requests.get(url, params=params, headers=headers, timeout=10, verify=False, proxies=proxies)
 response = requests.post(url, json=payload, headers=headers, timeout=10, verify=False, files={"API": "file"})
 response = requests.put(url, json=payload, headers=headers, timeout=10, verify=False)
 response = requests.delete(url, params=params, headers=headers, timeout=10, verify=False)
@@ -69,5 +77,12 @@ response = document.find(filter)
 
 el = document.select_one("选择器")
 elements = document.select("选择器")
+
+
+from retrying import retry 
+
+@retry(stop_max_attempt_number=3) 
+def test():
+  pass
 
 
