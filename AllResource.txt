@@ -19,8 +19,11 @@ https://github.com/anthropics/skills/tree/main/skills
 https://www.sanfengyun.com/
 https://examcrafts.com/
 https://roadmap.sh/
-https://market.frostfox.ai/
 https://waimao21.com/  --> 外贸百科 
+
+简历工具网站:
+https://www.wondercv.com/
+https://www.qmjianli.com/
 
 虚拟API网站:
 https://fakestoreapi.com/ --> 对应Url网站自带实体 
