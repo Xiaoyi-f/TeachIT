@@ -55,7 +55,7 @@ if __name__ == "__main__":
     print(merge_sort(nums))
 
 
-# 堆排序 nlogn
+# 堆排序 大根堆 nlogn 
 def heap_sort(arr):
     def heapify(arr, n, i):
         largest = i
