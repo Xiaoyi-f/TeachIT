@@ -56,3 +56,40 @@ setx LC_ALL "zh_CN.UTF-8"
 
 通用终端下载工具: curl 
 curl -sL https://xxx.xx -o xxx
+
+
+Tip:
+linux 进程管理命令:
+
+# 查进程
+top
+ps aux | grep 关键词 
+
+# 杀进程 
+kill -9 <PID> 
+pkill -9 <PNAME> 
+killall <PNAMES>
+kill -f -P <PID> # 连带对应进程子进程一起杀掉 
+
+# 管理进程 
+systemctl status <PNAME> 
+systemctl start/stop/restart <PNAME> 
+systemctl enable/disable <PNAME> # 设置开机自启
+
+
+windows 进程管理命令:
+
+# 查进程 
+tasklist 
+tasklist | findstr 关键词 
+
+# 杀进程 
+taskkill /F /PID <PID> 
+taskkill /F /IM <PNAME> 
+taskkill /F /IM <PNAME> /T # 连带对应进程子进程一起杀掉
+
+# 管理进程 
+net start/stop <PNAME> 
+sc query <PNAME>
+sc delete <PNAME>
+

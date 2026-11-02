@@ -23,6 +23,12 @@ mysql -h 127.0.0.1 -P 3306 -u root -p
 ALTER USER 'root'@'localhost' IDENTIFIED BY '你的新密码'; 
 exit; 
 
+# MySQL 忘记密码重置密码解决方案 
+net stop mysql 
+taskkill /F /IM mysqld.exe 
+--> 创建 mysql-init.txt 文件 里面写 ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password'; 
+mysqld --init-file=path/mysql-init.txt --console 
+
 // 加载sql文件并且执行 
 source <xxx.sql>  
 
