@@ -73,6 +73,7 @@ def heap_sort(arr):
             heapify(arr, n, largest)
 
     n = len(arr)
+
     # 建大顶堆
     for i in range(n // 2 - 1, -1, -1):
         heapify(arr, n, i)
@@ -92,7 +93,7 @@ if __name__ == "__main__":
 n = len(arr)
 下标从零开始, 左孩子 l = 2 * i + 1, 右孩子 r = 2 * i + 2 
 父节点: p = (i - 1) // 2 
-最后一个非叶子结点: n // 2 - 1 
+最后一个子根结点: n // 2 - 1 
 """
 
 """
