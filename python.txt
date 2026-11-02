@@ -65,7 +65,7 @@ string --> count find index upper lower strip replace
 string.join(string.split(" ", 1))
 
 list_var = [1, 2, 3]
---> pop(idx) insert(idx, item) remove append
+--> pop(idx) insert(idx, item) remove append extend 
 
 tuple_var = tuple((i for i in range(10))) 
 for index, item in enumerate(tuple_var)
