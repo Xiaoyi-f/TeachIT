@@ -15,6 +15,8 @@ FAQ --> Frequently Asked Questions
 14.什么是分布式?
 15.什么是微服务? 
 16.什么是微服务?
+17.什么是硬链接?
+18.什么是软链接? 
 
 --> 常用Dos命令有啥?
 17.Windows 常用 Dos 命令 
