@@ -44,6 +44,30 @@ mysqldump -h -uroot -p db_name [--database db_names] [--all-database] > filename
 mysql -u -p db_name < filename.sql (单)
 mysql -u -p < filename.sql (多)
 
+# Linux 定时任务脚本 
+#!/bin/bash
+USER="root"
+PASS="你的密码"
+HOST="127.0.0.1"
+BACKUP_DIR="/data/mysql_backup"
+# 保留7天备份
+RETENTION=7
+DATE=$(date +%Y%m%d_%H%M%S)
+FILE="$BACKUP_DIR/db_backup_$DATE.sql.gz"
+
+mkdir -p $BACKUP_DIR
+# --single-transaction 适合InnoDB，不加锁，在线备份
+mysqldump -h$HOST -u$USER -p$PASS --single-transaction --routines --triggers --all-databases | gzip > $FILE
+
+# 清理过期
+find $BACKUP_DIR -name "db_backup_*.sql.gz" -mtime +$RETENTION -delete
+echo "backup done: $FILE"
+
+--> chmod +x mysql_backup.sh # 设置文件可执行权限 
+crontab -e # 编辑定时任务清单
+crontab -l # 查看定时任务清单
+分 时 日 月 周 指令 参数 >> /data/backup.log 2>&1 
+
 mysql --help | grep my.cnf 
 # [mysqld]
 bind-address = 0.0.0.0 
