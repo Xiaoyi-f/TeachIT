@@ -23,6 +23,13 @@ mysql -h 127.0.0.1 -P 3306 -u root -p
 ALTER USER 'root'@'localhost' IDENTIFIED BY '你的新密码'; 
 exit; 
 
+锁问题:
+共享锁 -> 读数据时候加锁, 多个事务可以一起加共享锁读数据, 但谁都不能修改 
+排它锁 -> 写数据时候加锁, 只有拿到锁的这个事务才能读写, 其它事务既不能读也不能写
+
+死锁:
+两个以上事物在同一资源上相互占用，并且请求锁定对方占用资源，从而导致恶性循环: 死锁可能因为数据冲突产生，也会由存储引擎实现方式导致
+
 # MySQL 忘记密码重置密码解决方案 
 net stop mysql 
 taskkill /F /IM mysqld.exe 
@@ -31,6 +38,11 @@ mysqld --init-file=path/mysql-init.txt --console
 
 // 加载sql文件并且执行 
 source <xxx.sql>  
+
+# 备份与恢复 
+mysqldump -h -uroot -p db_name [--database db_names] [--all-database] > filename.sql 
+mysql -u -p db_name < filename.sql (单)
+mysql -u -p < filename.sql (多)
 
 mysql --help | grep my.cnf 
 # [mysqld]
@@ -66,6 +78,8 @@ DATE --> YYYY-MM-DD
 TIME --> HH:MM:SS 
 
 设计数据库表之前建议设计ER(实体关联)图
+
+ENUM(value, other_value) 
 
 # DDL 数据定义语言
 DROP DATABASE IF EXISTS `xxx_db`;
