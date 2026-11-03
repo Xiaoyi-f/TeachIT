@@ -1,0 +1,4 @@
+RPC: Remote Procedure Call
+--> 项目优先使用HTTP/HTTPS, 当流量过大出现延时才考虑使用gRPC -- Java-PyAgent 项目 
+
+
