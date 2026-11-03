@@ -116,3 +116,45 @@ def dance():
     dfs(root)
     return max(dp[root][0], dp[root][1])
 
+
+# --> 题5: 编辑距离 
+# dp[i][j]: word1 的前 i 个字符 变成 word2 的前 j 个字符 最少操作次数
+# 支持三种操作: 删除、插入、替换 每种操作代价+1
+def minDistance(word1: str, word2: str) -> int:
+    n = len(word1)
+    m = len(word2)
+
+    # dp数组，(n+1)行 (m+1)列
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+
+    # 初始化：word1前i个变成空串，需要全部删除，i次
+    for i in range(n + 1):
+        dp[i][0] = i
+    # 初始化：空串变成word2前j个，需要全部插入，j次
+    for j in range(m + 1):
+        dp[0][j] = j
+
+    # 遍历填充dp表
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            # 方案1：删除word1[i-1]，用 word1前i-1个 匹配 word2前j个
+            delete = dp[i - 1][j] + 1
+            # 方案2：插入word2[j-1]，用 word1前i个 匹配 word2前j-1个
+            insert = dp[i][j - 1] + 1
+            # 方案3：替换/不动，看当前字符是否相等
+            replace = dp[i - 1][j - 1]
+            if word1[i - 1] != word2[j - 1]:
+                replace += 1
+
+            # 三种方案取最小值
+            dp[i][j] = min(delete, insert, replace)
+    return dp[n][m]
+
+if __name__ == "__main__":
+    # 样例1：horse -> ros，预期输出3
+    print(minDistance("horse", "ros"))
+    # 样例2：intention -> execution，预期输出5
+    print(minDistance("intention", "execution"))
+
+    
+
