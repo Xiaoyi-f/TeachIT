@@ -4,14 +4,97 @@
 # 注意：绝对不要用浮点数去处理大整数和取模！(例如 10^18 级别的运算)，精度丢失会导致全盘皆输
 # 注意：取模运算中，减法一定要 (a - b + mod) % mod 防止出现负数；除法一定要求逆元，绝不能直接除！
 
-# --> 题1: 逆元
+# --> 题1: 逆元 - 在模 p 意义下, 如果 (a times x equiv 1 pmod p), 那么 x 就叫做 a 的乘法逆元, 记作 (inv(a))
 class Solution:
-    pass 
+    def mod_inverse(self, a: int, p: int) -> int:
+        """
+        求 a 在模 p 下的乘法逆元（扩展欧几里得算法）
+        :param a: 原数字
+        :param p: 模数
+        :return: inv(a)，不存在返回 -1
+        """
+        def exgcd(x, y):
+            # 递归：找到一组 x0,y0 满足 a*x0 + p*y0 = gcd(a,p)
+            if y == 0:
+                return x, 1, 0
+            g, x1, y1 = exgcd(y, x % y)
+            x0 = y1
+            y0 = x1 - (x // y) * y1
+            return g, x0, y0
+
+        g, x, y = exgcd(a, p)
+        if g != 1:
+            # gcd≠1，没有逆元
+            return -1
+        # 把解调整为正数
+        return x % p
+
+if __name__ == "__main__":
+    sol = Solution()
+    print(sol.mod_inverse(2, 5))   # 输出3，2*3 mod5 = 1
+    print(sol.mod_inverse(3, 7))   # 输出5，3*5 mod7 = 1
 
 
-# --> 题2: 费马小定理 
+# --> 题2: 费马小定理 - 当 p 是质数时，a 的逆元 = (a^(p-2) mod p) 
 class Solution:
-    pass 
+    def fermat_inv(self, a: int, p: int) -> int:
+        """
+        费马小定理求逆元
+        前提：p 是质数，a 与 p 互质
+        :param a: 原数
+        :param p: 模数（质数！）
+        :return: a模p的逆元
+        """
+        # pow(a, p-2, p) 内置快速幂，计算 a^(p-2) mod p
+        return pow(a, p - 2, p)
+
+
+if __name__ == "__main__":
+    sol = Solution()
+    print(sol.fermat_inv(2, 5))   # 3
+    print(sol.fermat_inv(4, 7))   # 2，4*2 mod 7 = 1
+
+
+# --> 题3: 最大公约数和最小公倍数 
+def gcd(a, b):
+    """辗转相除法求最大公约数"""
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    """求最小公倍数，先除后乘避免溢出"""
+    return a // gcd(a, b) * b
+
+
+# --> 题4: 埃氏筛 - 快速找出 2 ~ n 之间所有质数 (合数一定有一个比它小的质因子, 所以会提前被标记掉)
+def sieve(n):
+    """
+    埃氏筛，找出 2~n 所有质数
+    :param n: 上界
+    :return: list，里面是全部质数
+    """
+    if n < 2:
+        return []
+    # is_prime[i] = True 代表 i 是质数，初始全部设为True
+    is_prime = [True] * (n + 1)
+    # 0 和 1 不是质数
+    is_prime[0] = is_prime[1] = False
+
+    # 只需要循环到 sqrt(n) 就够了
+    for i in range(2, int(n ** 0.5) + 1):
+        # 如果i还没被标记，说明i是质数
+        if is_prime[i]:
+            # 从 i*i 开始标记（i*2、i*3…已经被更小质数标记过，优化点），步长i
+            is_prime[i*i : n+1 : i] = [False] * len(is_prime[i*i : n+1 : i])
+    
+    # 收集所有标记为True的下标，就是质数
+    primes = [num for num, flag in enumerate(is_prime) if flag]
+    return primes
+
+
+if __name__ == "__main__":
+    print(sieve(20))
 
 
 """线性筛"""
@@ -125,11 +208,96 @@ def fib(n: int) -> int:
 # 注意：只有当 gcd(a, p) == 1 时，逆元才存在！如果 p 不是质数，需要用到扩展欧几里得求逆元
 # 注意：不要在任何除法的场景下使用“向下取整”的常规除法，在取模世界里那等同于错误答案
 
+# --> 题1: 可逆性 - 一个操作做完之后，存在另外一个操作，可以把它抵消掉，恢复成原来的数据
+def xor_prefix(arr):
+    """
+    异或前缀和（可逆性典型例题）
+    异或性质：x ^ y ^ y = x，能够抵消、还原，这就是可逆
+    :param arr: 原始数组
+    :return: 前缀异或数组 pre
+    """
+    n = len(arr)
+    pre = [0] * (n + 1)
+    for i in range(n):
+        pre[i+1] = pre[i] ^ arr[i]
+    return pre
+
+def query_xor(pre, l, r):
+    """
+    查询 [l, r] 区间异或（下标从1开始）
+    pre[r] ^ pre[l-1] 等价于把前面0~l-1的部分抵消掉
+    抵消 = 可逆的核心体现
+    """
+    return pre[r] ^ pre[l - 1]
+
+
+if __name__ == "__main__":
+    nums = [1, 2, 3, 4]
+    pre_arr = xor_prefix(nums)
+    print("前缀异或数组：", pre_arr)
+    # 查询下标1~3：[1,2,3] 的异或 1^2^3 = 0
+    print(query_xor(pre_arr, 1, 3))
+
+
+# --> 题2: 幂等性 - 同一个操作，重复做很多次，结果和只做一次一模一样，做第二次、第三次不会变结果
+import math
+
+class SparseTable:
+    def __init__(self, arr):
+        """ST表 区间最大值查询（幂等性典型例题）
+        max满足幂等：max(a,a)=a，多次取max结果不变
+        所以两个重叠区间取max合并，不会出错
+        """
+        self.n = len(arr)
+        self.log_table = [0] * (self.n + 1)
+        # 预处理log，快速查区间长度对应的k
+        for i in range(2, self.n + 1):
+            self.log_table[i] = self.log_table[i // 2] + 1
+
+        self.k_max = self.log_table[self.n] + 1
+        # st[j][i]：从i开始，长度为2^j区间的最大值
+        self.st = [[0]*self.n for _ in range(self.k_max)]
+        self.st[0] = arr.copy()
+
+        # 倍增构建
+        for j in range(1, self.k_max):
+            for i in range(self.n - (1 << j) + 1):
+                self.st[j][i] = max(
+                    self.st[j-1][i],
+                    self.st[j-1][i + (1 << (j-1))]
+                )
+
+    def query_max(self, l, r):
+        """查询[l, r]最大值，下标从0开始
+        两段区间会重叠！重叠部分重复max，因为max幂等，结果不变
+        """
+        length = r - l + 1
+        k = self.log_table[length]
+        return max(
+            self.st[k][l],
+            self.st[k][r - (1 << k) + 1]
+        )
+
+
+if __name__ == "__main__":
+    nums = [5, 3, 7, 2, 9, 1]
+    st = SparseTable(nums)
+    # 查询 [0,4] 即 [5,3,7,2,9] 最大值9
+    print(st.query_max(0, 4))
 
 
 """lowbit"""
 # 核心本质：x & (-x)，利用补码特性，提取出数字 x 二进制中最低位的 1 及其后面的 0
 # --> 树状数组的底层灵魂，也可以用于快速枚举集合的子集
 # 注意：在 Python 中负数没有位数限制，可以直接 x & -x，无需像 C++ 那样写补码，但这底层逻辑要懂
+
+# --> lowbit(x) = (x 二进制最靠右边那个 1 单独拿出来 后位补 0 结果值)
+def lowbit(x: int) -> int:
+    """
+    lowbit：取出x二进制最靠右的1对应的十进制数值
+    x必须是正整数
+    """
+    return x & -x
+
 
 
