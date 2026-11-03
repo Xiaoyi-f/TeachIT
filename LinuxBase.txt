@@ -117,6 +117,8 @@ MybatisX
 GenerateAllSetter  
 Auto Filling Java Call Arguments
 
+## DataGrip 
+
 ## Snipaste 
 
 ## UTools  

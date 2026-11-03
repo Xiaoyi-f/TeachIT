@@ -12,4 +12,5 @@ TypeAnimation: Typed.js
 Transition: Barba.js 
 Dynamic: Mo.js 
 
-
+Tip: 
+https://www.aigei.com/ --> 静态资源网站 
