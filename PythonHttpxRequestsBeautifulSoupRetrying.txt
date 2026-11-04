@@ -13,7 +13,7 @@ client = httpx.Client(
 )
 
 try:
-  # response -> json() text content status_code cookies headers encoding content.decode("unicode-escape")
+  # response -> json() text content status_code cookies request headers encoding content.decode("unicode-escape")
   response = client.get("url", params={"key": "value"})
   response = client.post("url", json={"key": "value"}, params={"key": "value"})
   response = client.put("url", json={"key": "value"})
@@ -58,10 +58,6 @@ from bs4 import BeautifulSoup
 html = response.text 
 document = BeautifulSoup(html, "html.parser")
 
-tag = ''
-element = document.find(tag) 
-elements = document.find_all(tag) 
-
 for el in elements:
   el_name = el.name  # 对于标签节点有name属性
   href = el.get("href") # 获取属性,没有则默认返回None
@@ -73,7 +69,7 @@ def filter(el):
   return check 
 
 response = document.find(filter)
-# response = document.find_all(filter)
+responses = document.find_all(filter)
 
 el = document.select_one("选择器")
 elements = document.select("选择器")
