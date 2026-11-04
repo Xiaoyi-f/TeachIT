@@ -26,25 +26,25 @@ height = [5, 3, 7, 2, 6]
 """绘折现/曲线图 x y 传递数据列表"""
 axes.plot(x, y, label="图例名字", color="red", linestyle="- -", linewidth=2) # --表示虚线 -表示实线 'None'表示不画线只画点 线宽单位: 点 
 
-# 装饰细节
-axes.set_title("标题", fontsize=16) 
-axes.set_xlabel("X轴", fontsize=12)
-axes.set_ylabel("Y轴", fontsize=12)
-axes.legend() # 显示图例 
-
 axes.grid(True, linestyle="dotted", alpha=0.6) # alpha 透明度 --表示虚线 -表示实线 dotted表示点线 
 axes.set_xlim([0, 10]) # 固定坐标轴范围 
 
 """绘柱状图 x height 传递数据列表"""
 bars = axes.bar(x, height, width=0.5, color=["red", "blue"]) # widht表述柱宽度 color表示各个柱子颜色 
 
+"""绘散点图 x y 传递数据列表"""
+axes.scatter(x, y, s=50, c="red", alpha=0.5) # s表示散点大小 c表示颜色 alpha表示透明度
+
+# 装饰细节
+axes.set_title("标题", fontsize=16) 
+axes.set_xlabel("X轴", fontsize=12)
+axes.set_ylabel("Y轴", fontsize=12)
+axes.legend() # 显示图例 
+
 # 柱子上方显示数值 
 for bar in bars:
     height = bar.get_height()
     axes.text(bar.get_x() + bar.get_width() / 2, height + 0.5, f"{height}", ha="center", va="bottom")
-
-"""绘散点图 x y 传递数据列表"""
-axes.scatter(x, y, s=50, c="red", alpha=0.5) # s表示散点大小 c表示颜色 alpha表示透明度
 
 # 多子图 --> 从左到右 从上到下 
 axes[0, 0].plot(x, y)

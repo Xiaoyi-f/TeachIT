@@ -171,7 +171,7 @@ result_write = gds.louvain.write(G, writeProperty="community_id")
 G.drop() # 释放内存
 
 
-# pip install neo4j
+# pip install neo4j -- 线程安全 
 from neo4j import GraphDatabase 
 
 URI = "neo4j://localhost:7687"
