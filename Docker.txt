@@ -142,7 +142,7 @@ sudo docker run -p <host_port>:<container_port> <image>
 
 # 创建容器挂载卷,命名卷挂载(初始容器目录覆盖宿主机目录) -> 数据持久化 
 sudo docker volume create <volume_name> // 自动划分一块系统空间
-sudo docker run -v <volume_name>:<container_path> <image> // 把空间插入容器并且运行,硬链接到容器里的某个文件夹,把容器删了系统空间的数据依旧
+sudo docker run -v <system_local_path>:<container_path> <image> 
 sudo docker volume inspect <volume_name> // 查看挂载卷信息 
 sudo docker volume rm <volume_name> 
 sudo docker volume prune -a // 删除所有未使用的卷

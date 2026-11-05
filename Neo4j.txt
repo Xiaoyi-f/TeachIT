@@ -1,10 +1,9 @@
 neo4j是一种NoSQL无表数据库,基于图论,处理实体-关系的图形数据结构速度快
 知识图谱是一种语义网络: LPG 和 RDF 
-默认就自带一个 neo4j 库，服务一启动就存在
 LPG: 标签属性图
-RDF: 资源描述图
+RDF: 资源描述流
 
-Graph RAG: 传统向量 RAG 的升级范式,核心是把原始文档抽取为 实体-关系 知识图谱,融合「向量语义检索 + 图结构遍历推理」双能力给大模型提供上下文
+Graph RAG: 传统向量 RAG 的升级范式, 核心是把原始文档抽取为 实体-关系 知识图谱, 融合「向量语义检索 + 图结构遍历推理」双能力给大模型提供上下文
 
 Tip: cypher文件 类 sql文件 实现Schema代码 
 
@@ -20,12 +19,11 @@ Neo4j使用java和scala实现,主要依赖java环境
 5.x系列中5.26LTS是最后一个支持java17版本的
 https://dist.neo4j.org/neo4j-community-5.26.27-windows.zip
 之后版本需要java21以及以上版本
-AuraDB 云服务版Neo4j 
 
 基本使用
 neo4j 提示指令 
 neo4j console 控制台启动服务
-// HTTP enabled on localhost:7474 表示可以从对应的域名范文数据浏览器 
+// HTTP enabled on localhost:7474 表示可以从对应的域名访问数据浏览器 
 
 // 执行cypher脚本
 cypher-shell -u <user> -d <db_name> -f <xxx.cypher> 
@@ -171,7 +169,7 @@ result_write = gds.louvain.write(G, writeProperty="community_id")
 G.drop() # 释放内存
 
 
-# pip install neo4j -- 线程安全 
+# pip install neo4j -- 线程安全
 from neo4j import GraphDatabase 
 
 URI = "neo4j://localhost:7687"
