@@ -118,6 +118,8 @@ Set<Type> set = new LinkedHashSet<>();
 
 // 纯无序
 Map<KeyType, ValueType> map = new HashMap<>();
+
+// 维护迭代顺序 
 Map<KeyType, ValueType> map = new LinkedHashMap<>();
 
 // Map 常用方法
