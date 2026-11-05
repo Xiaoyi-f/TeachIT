@@ -12,8 +12,8 @@
 # 在项目目录新建 .env 文件:
 # LLM_API_KEY=密钥
 # LLM_MODEL=服务商实际支持的模型名称
-# LLM_BASE_URL=https://服务商提供的接口地址
-# POSTGRES_URI=postgresql://用户名:密码@127.0.0.1:5432/langgraph_checkpoint
+# LLM_BASE_URL=https:#服务商提供的接口地址
+# POSTGRES_URI=postgresql:#用户名:密码@127.0.0.1:5432/langgraph_checkpoint
 # .env 是配置文件; load_dotenv() 把配置加载到环境变量
 # 密钥不要写进代码, 也不要提交到 Git; 将 .env 加入 .gitignore
 
@@ -84,7 +84,7 @@ def basic_example():
 # 工具就是允许模型选择调用的 Python 函数
 # @tool 将函数名、参数、说明暴露给模型; 真正执行仍由程序完成
 
---> 函数名下文档注释会被读取为工具信息, 建议写上标准格式, 以下仅仅演示  
+# --> 函数名下文档注释会被读取为工具信息, 建议写上标准格式, 以下仅仅演示  
 
 @tool("get_weather", description="查询天气")
 def get_weather(location: str) -> str:
@@ -97,7 +97,7 @@ def get_weather(location: str) -> str:
     # 真正查询天气时，在这里调用天气服务 HTTP API
     return f"{location}：晴，25℃（模拟数据）"
 
-Tip: 在LangChain, 作为工具的函数有两个保留的参数名, 你自定义参数不能与之重复 --> config: 用来传递运行时配置 / runtime: 用来传递运行时上下文 
+# Tip: 在LangChain, 作为工具的函数有两个保留的参数名, 你自定义参数不能与之重复 --> config: 用来传递运行时配置 / runtime: 用来传递运行时上下文 
 
 # 注意：在工具说明里写“只有 admin 能用”，不等于实现权限控制
 # 真正权限必须由后端根据已认证的用户身份检查，不能让模型自己判断
@@ -118,7 +118,7 @@ def build_agent(checkpointer):
             "工具给的是模拟数据，回答时必须说明，不要假装实时查询"
             "写 Python 代码时，变量使用 snake_case 命名"
         ),
-        checkpointer=checkpointer // 快照, 方便中止记录中止前状态, 之后可以继续 
+        checkpointer=checkpointer # 快照, 方便中止记录中止前状态, 之后可以继续 
     )
 
 
@@ -138,7 +138,7 @@ async def conversation_example():
         {"messages": [HumanMessage(content="我叫什么名字？")]},
         config=config
     )
-    print(result["messages"][-1].content) // 返回结果中有所有本次消息记录, 最后一条是最新AI的回复 
+    print(result["messages"][-1].content) # 返回结果中有所有本次消息记录, 最后一条是最新AI的回复 
     # 同一个 thread_id，继续同一段会话，checkpointer 自动保存状态
     # 不必每次把全部历史重发，也不要捏造一条无关 AIMessage 当历史
     # 换 thread_id 就是另一段会话;后端必须检查会话属于当前用户
@@ -173,7 +173,7 @@ async def stream_example():
         async for chunk, metadata in agent.astream(
             {"messages": [HumanMessage(content="用两句话介绍 Python")]},
             config=config,
-            stream_mode="messages" // 使用该模式可以直接调取content 
+            stream_mode="messages" # 使用该模式可以直接调取content 
         ):
             # messages 模式产出：(消息片段, 元数据)
             # 筛选模型节点的文本; 工具参数片段不作为普通回答打印
@@ -192,7 +192,7 @@ async def stream_example():
 # stream_mode=True 不是这里正确的模式设置
 # 若接 Socket.IO / WebSocket，将提取到的文本片段发送给对应客户端
 
---> 查看完整执行步骤 
+# --> 查看完整执行步骤 
 for chunk in agent.stream(
     {"messages": [HumanMessage(content="323的平方是多少?")]},
     stream_mode="updates"
@@ -202,7 +202,7 @@ for chunk in agent.stream(
         print(f"content: {data["messages"][-1].content_blocks}")
         print("-" * 80)
 
---> 批量调用 
+# --> 批量调用 
 results = chain.batch([{"topic": "Python"}, {"topic": "Java"}])
 print("batch批量调用：", results)
 
@@ -252,29 +252,29 @@ async def postgres_example(initialize_schema=True):
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
     # 先安装并启动 PostgreSQL，提前创建 URI 中指定的数据库
 
-    pool = AsyncConnectionPool(
-        conninfo=os.environ["POSTGRES_URI"], // 用户名:密码@服务器地址:端口/数据库名称 
-        min_siz=2,
+    pool = AsyncConnectionPool( 
+        conninfo=os.environ["POSTGRES_URI"], # 用户名:密码@服务器地址:端口/数据库名称 
+        min_size=2,
         max_size=10,
         timeout=4,
-        max_waiting=64, // 最多允许64个请求在池内排队等待连接 
+        max_waiting=64, # 最多允许64个请求在池内排队等待连接 
         open=False,
         check=AsyncConnectionPool.check_connection,
         kwargs={
-            "autocommit" True,
-            "row_factory": dict_row, // saver 使用字典形式读取查询结果 
+            "autocommit": True,
+            "row_factory": dict_row, # saver 使用字典形式读取查询结果 
             "connect_timeout": 6,
-            "prepare_threshold": None // 禁用服务器端预编译, 便于数据库连接代理 若不是用代理, 则建议不写此项 --> 默认请求几次自动预编译, 有利于提速
+            "prepare_threshold": None # 禁用服务器端预编译, 便于数据库连接代理 若不是用代理, 则建议不写此项 --> 默认请求几次自动预编译, 有利于提速
         }
     )
 
     try:
         await pool.open()
-        await pool.wait(timeout=10) // 等待连接池准备好 
+        await pool.wait(timeout=10) # 等待连接池准备好 
         saver = AsyncPostgresSaver(pool) 
 
         if initialize_schema:
-            await saver.setup() // 首次使用数据库或升级迁移时运行, 不用每次请求执行 
+            await saver.setup() # 首次使用数据库或升级迁移时运行, 不用每次请求执行 
 
         agent = build_agent(saver) # 使用上配置好postgre数据库后的saver之后, 以后调用模型自动记录快照到postgre数据库, 使用同一个thread_id就可以继续读取这段会话的状态 
 
@@ -301,7 +301,7 @@ async def postgres_example(initialize_schema=True):
             },
             config={
                 "configurable": {
-                    "thread_id": "persistent_chat_1" // 自动从库中取数据 
+                    "thread_id": "persistent_chat_1" # 自动从库中取数据 
                 }
             }
         )
@@ -335,7 +335,7 @@ def image_example():
     # Base64 将二进制编码成文本，方便传输;不是加密，也不是压缩
     # 一般还会使数据体积变大，需注意服务商的图片大小限制
     # URL 图片内容块示例：
-    # {"type": "image", "url": "https://实际可访问的地址/image.png"}
+    # {"type": "image", "url": "https:#实际可访问的地址/image.png"}
     # URL 必须能被相应服务访问;本地路径不能当公网 URL 使用
     # 可以直接使用model调用, 使用agent调用, 两种形式返回格式可能有略微区别 
 
@@ -346,11 +346,11 @@ def image_example():
 def chain_example():
     model = build_model()
     prompt = ChatPromptTemplate.from_template("请用一句话解释：{topic}")
-    chain = prompt | model | StrOutputParser() // 输出解析器 StrOutputParser 通常为Python字符串 
+    chain = prompt | model | StrOutputParser() # 输出解析器 StrOutputParser 通常为Python字符串 
     print(chain.invoke({"topic": "什么是数据库"}))
     # 字典 -> prompt 生成提示消息 -> model 返回 AIMessage -> parser 提取文本
 
-    // RunnableLambda --> 将Python函数包装成Runnable(可放进管道链 | 里面执行的组件)
+    # RunnableLambda --> 将Python函数包装成Runnable(可放进管道链 | 里面执行的组件)
     add_prefix = RunnableLambda(lambda text: "小翊的回答：" + text)
     decorated_chain = chain | add_prefix
     print(decorated_chain.invoke({"topic": "什么是缓存"}))
@@ -369,9 +369,9 @@ def chain_example():
     # 不要直接把任意 {"name": "..."} 字典当作聊天模型的输入
 
 
-// 输出解析器 JsonOutputParser --> 模型返回JSON, 自动转变为Python字典 
+# 输出解析器 JsonOutputParser --> 模型返回JSON, 自动转变为Python字典 
 
---> 企业首选 PydanticOutputParser 
+# --> 企业首选 PydanticOutputParser 
 class PersonInfo(BaseModel):
     name: str = Field(description="人物姓名, 字符串类型")
     age: int = Field(description="人物年龄, 整数类型, 不可为字符串")
@@ -392,11 +392,11 @@ response = model.invoke(messages)
 print(response) 
 
 person_data = parser.invoke(response)
-print(type(person_data)) // 返回 Pydantic 对象, 可以直接通过 对象.属性 取值 
+print(type(person_data)) # 返回 Pydantic 对象, 可以直接通过 对象.属性 取值 
 print(person_data)
 
 
-// 构建 Few-Shot 提示词模版
+# 构建 Few-Shot 提示词模版
 example_list = [
     {"planet": "月球", "city_info": "月华城, 月球静海生态都城"},
     {"planet": "火星", "city_info": "赤焰城, 火星火山资源都市"}
@@ -415,7 +415,7 @@ few_chat_template = FewShotChatMessagePromptTemplate(
 total_prompt = ChatPromptTemplate.from_messages([
     ("system", "严格遵循样例格式创作"),
     few_chat_template, 
-    ("human", "请设计{planet}都城)
+    ("human", "请设计{planet}都城")
 ])
 
 result = total_prompt.invoke({"planet": "天王星"}) 
@@ -430,7 +430,7 @@ for m in result.to_messages():
 # Embedding：将文本转换成数字列表，用于计算语义相似程度
 # “数学身份证”只是比喻; 相似向量不保证内容正确或事实相同
 # 维度高不代表一定更好，效果也取决于模型、资料、切分和检索方式
---> 解决模型幻觉和知识时效性不足问题常用方案之一 
+# --> 解决模型幻觉和知识时效性不足问题常用方案之一 
 
 def load_and_split(file_path: str):
     # PyPDFLoader 处理 PDF 需要 pip install -U pypdf 
@@ -492,7 +492,7 @@ def index_document(file_path: str):
     # 建库时运行，资料不变就不用每次提问都重新切分和入库
     split_docs = load_and_split(file_path)
     vector_store = open_vector_store()
-    source = str(Path(file_path).resolve()) // 将相对路径解析到绝对路径 
+    source = str(Path(file_path).resolve()) # 将相对路径解析到绝对路径 
     import hashlib
 
     source_id = hashlib.sha256(source.encode("utf-8")).hexdigest()[:16]
@@ -556,7 +556,7 @@ def csv_example():
     documents = loader.load()
     for doc in documents[:2]:
         print(doc.page_content)
-        print(doc.metadata) // doc.metadata["source"] 默认为文件名, 配置源列之后则为该行源列字段值 
+        print(doc.metadata) # doc.metadata["source"] 默认为文件名, 配置源列之后则为该行源列字段值 
     # 通常一行 CSV 变成一个 Document，正文包含列名与对应值
     # 若文件确实有名为 url 的表头，可设置 source_column="url"
     # source_column 指来源字段，不是随便填写一个“字段名”占位符
@@ -573,98 +573,98 @@ def csv_example():
 # 大规模生产部署再评估服务端向量库、备份和运维方案
 
 # 14. 进阶 Milvus 向量库 
---> 数据量大、高并发需求、混合检索、高可用、数据备份、故障恢复、多模态检索、大规模批量频繁操作
+# --> 数据量大、高并发需求、混合检索、高可用、数据备份、故障恢复、多模态检索、大规模批量频繁操作
 
-Collection(Table) Field(Column) Vector ... 
+# Collection(Table) Field(Column) Vector ... 
 
 # pip install -U "pymilvus[model]"
 from pymilvus import MilvusClient 
 
-client = MilvusClient(uri="http://127.0.0.1:19530")
+client = MilvusClient(uri="http:#127.0.0.1:19530")
 client.create_database("milvus_demos")
 dbs = client.list_databases()
 print(f"现有数据库: {dbs}")
 # client.drop_database("milvus_demos") 删除数据库 
 
 
---> milvus-compose.yml 
-version: '3.5'
+# --> milvus-compose.yml 
+# version: '3.5'
 
-services:
-  etcd:
-    container_name: milvus-etcd
-    image: quay.io/coreos/etcd:v3.5.25
-    environment:
-      - ETCD_AUTO_COMPACTION_MODE=revision
-      - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
-      - ETCD_SNAPSHOT_COUNT=50000
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
-    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
-    healthcheck:
-      test: ["CMD", "etcdctl", "endpoint", "health"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+# services:
+#   etcd:
+#     container_name: milvus-etcd
+#     image: quay.io/coreos/etcd:v3.5.25
+#     environment:
+#       - ETCD_AUTO_COMPACTION_MODE=revision
+#       - ETCD_AUTO_COMPACTION_RETENTION=1000
+#       - ETCD_QUOTA_BACKEND_BYTES=4294967296
+#       - ETCD_SNAPSHOT_COUNT=50000
+#     volumes:
+#       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+#     command: etcd -advertise-client-urls=http:#etcd:2379 -listen-client-urls http:#0.0.0.0:2379 --data-dir /etcd
+#     healthcheck:
+#       test: ["CMD", "etcdctl", "endpoint", "health"]
+#       interval: 30s
+#       timeout: 20s
+#       retries: 3
 
-  minio:
-    container_name: milvus-minio
-    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-    environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
-    ports:
-      - "9001:9001"
-      - "9000:9000"
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
-    command: minio server /minio_data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+#   minio:
+#     container_name: milvus-minio
+#     image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+#     environment:
+#       MINIO_ACCESS_KEY: minioadmin
+#       MINIO_SECRET_KEY: minioadmin
+#     ports:
+#       - "9001:9001"
+#       - "9000:9000"
+#     volumes:
+#       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+#     command: minio server /minio_data --console-address ":9001"
+#     healthcheck:
+#       test: ["CMD", "mc", "ready", "local"]
+#       interval: 30s
+#       timeout: 20s
+#       retries: 3
 
-  standalone:
-    container_name: milvus-standalone
-    image: milvusdb/milvus:v2.6.21
-    command: ["milvus", "run", "standalone"]
-    security_opt:
-    - seccomp:unconfined
-    environment:
-      ETCD_ENDPOINTS: etcd:2379
-      MINIO_ADDRESS: minio:9000
-      MQ_TYPE: woodpecker
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
-      interval: 30s
-      start_period: 90s
-      timeout: 20s
-      retries: 3
-    ports:
-      - "19530:19530"
-      - "9091:9091"
-    depends_on:
-      - "etcd"
-      - "minio"
+#   standalone:
+#     container_name: milvus-standalone
+#     image: milvusdb/milvus:v2.6.21
+#     command: ["milvus", "run", "standalone"]
+#     security_opt:
+#     - seccomp:unconfined
+#     environment:
+#       ETCD_ENDPOINTS: etcd:2379
+#       MINIO_ADDRESS: minio:9000
+#       MQ_TYPE: woodpecker
+#     volumes:
+#       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http:#localhost:9091/healthz"]
+#       interval: 30s
+#       start_period: 90s
+#       timeout: 20s
+#       retries: 3
+#     ports:
+#       - "19530:19530"
+#       - "9091:9091"
+#     depends_on:
+#       - "etcd"
+#       - "minio"
 
-networks:
-  default:
-    name: milvus
+# networks:
+#   default:
+#     name: milvus
 
---> docker load -i milvus_all_offline.tar 
+# --> docker load -i milvus_all_offline.tar 
 
-// 在同有milvus-compose.yml文件的目录执行 命名容器名称为 milvus-standalone 
-docker compose -p milvus-standalone up -d 
+# # 在同有milvus-compose.yml文件的目录执行 命名容器名称为 milvus-standalone 
+# docker compose -p milvus-standalone up -d 
 
-docker ps // 查看运行状态 
+# docker ps # 查看运行状态 
 
---> 下载并安装使用Attu(Milvus官方出品可视化工具)
-docker run -d --name attu --network milvus -p 30000:3000 -e MILVUS_URL=milvus-standalone:19530  zilliz/attu
-之后通过浏览器访问 http://localhost:30000/#/connect 
+# --> 下载并安装使用Attu(Milvus官方出品可视化工具)
+# docker run -d --name attu --network milvus -p 30000:3000 -e MILVUS_URL=milvus-standalone:19530  zilliz/attu
+# 之后通过浏览器访问 http:#localhost:30000/#/connect 
 
 {
     "id": 1, # 主键 
@@ -674,7 +674,7 @@ docker run -d --name attu --network milvus -p 30000:3000 -e MILVUS_URL=milvus-st
 
 from pymilvus import MilvusClient, DataType 
 
-client = MilvusClient(uri="http://localhost:19530")
+client = MilvusClient(uri="http:#localhost:19530")
 client.use_database("milvus_demos")
 
 def create_collection():
@@ -860,10 +860,10 @@ def query_entity():
 
 
 # 混合查询 
---> 稠密向量检索: 基于语义相似性擅长理解意思, 即使关键词不完全匹配, 也能找到含义相近的文档
---> 稀疏向量检索: 基于关键词匹配擅长精准命中关键词, 优先返回包含指定词汇的文档 
+# --> 稠密向量检索: 基于语义相似性擅长理解意思, 即使关键词不完全匹配, 也能找到含义相近的文档
+# --> 稀疏向量检索: 基于关键词匹配擅长精准命中关键词, 优先返回包含指定词汇的文档 
 
--- BM25稀疏方案 
+# -- BM25稀疏方案 
 # 核心依赖导入
 from pymilvus import (
     MilvusClient,
@@ -876,7 +876,7 @@ from pymilvus import (
 )
 
 # 1. 初始化客户端与基本配置
-client = MilvusClient(uri="http://127.0.0.1:19530")
+client = MilvusClient(uri="http:#127.0.0.1:19530")
 COLLECTION_NAME = "multi_vector_demo"
 
 
@@ -900,7 +900,7 @@ def create_collection_and_data():
         datatype=DataType.VARCHAR,
         max_length=1000,
         enable_analyzer=True,
-        analyzer_params={"type": "chinese"} // standard english 
+        analyzer_params={"type": "chinese"} # standard english 
     )
     # 文本的稠密向量【微调向量，拉大区分度】
     schema.add_field(field_name="text_dense", datatype=DataType.FLOAT_VECTOR, dim=5)
@@ -1046,7 +1046,7 @@ if __name__ == '__main__':
     search("汽车购买")
 
 
--- IP稀疏方案(IP: Inner Product)
+# -- IP稀疏方案(IP: Inner Product)
 # Milvus Python SDK 核心依赖导入
 from pymilvus import (
     MilvusClient,
@@ -1057,7 +1057,7 @@ from pymilvus import (
 )
 
 # 1. 初始化客户端与全局常量
-client = MilvusClient(uri="http://127.0.0.1:19530")
+client = MilvusClient(uri="http:#127.0.0.1:19530")
 COLLECTION_NAME = "multi_vector_demo2"
 
 
@@ -1210,12 +1210,12 @@ if __name__ == '__main__':
 # 传统的LangChain工作流通常被编排为有向无环图(DAG)
 # LangGraph 基于 LangChain 构建, 以 "图" 为计算模型的编排框架, 支持 循环工作流 + 动态状态管理 
 # pip install langgraph 
-图的基本组成:
-State(状态): 应用的核心数据结构, 通常使用TypedDict或Pydantic模型定义, 存储所有上下文信息, 如用户输入、历史对话、工具输出等 
-Node(节点): 表示处理步骤的函数, 接收当前状态作为输入, 执行操作后返回更新的状态 
-Edge(边): 定义节点之间的连接关系和执行顺序, 包括普通边和条件边, 后者根据状态动态选择下一步执行的节点 
-- TypedDict 用于为字典数据结构提供静态类型注解，增强代码的类型安全性和IDE支持
-- Pydantic 用于在运行时进行数据验证、序列化和设置管理，特别适合处理外部输入和数据转换
+# 图的基本组成:
+# State(状态): 应用的核心数据结构, 通常使用TypedDict或Pydantic模型定义, 存储所有上下文信息, 如用户输入、历史对话、工具输出等 
+# Node(节点): 表示处理步骤的函数, 接收当前状态作为输入, 执行操作后返回更新的状态 
+# Edge(边): 定义节点之间的连接关系和执行顺序, 包括普通边和条件边, 后者根据状态动态选择下一步执行的节点 
+# - TypedDict 用于为字典数据结构提供静态类型注解，增强代码的类型安全性和IDE支持
+# - Pydantic 用于在运行时进行数据验证、序列化和设置管理，特别适合处理外部输入和数据转换
 
 from typing import TypedDict, Dict 
 from langgraph.graph import StateGraph, START, END 
@@ -1313,7 +1313,7 @@ llm = init_chat_model(
     model="qwen3-max",
     model_provider="openai",  # 使用 openai 协议风格的统一接口
     api_key=os.getenv("ALIYUN_API_KEY"),
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+    base_url="https:#dashscope.aliyuncs.com/compatible-mode/v1"
 )
 
 
@@ -1700,4 +1700,4 @@ for namespace, chunk in parent_graph.stream(
     print(f"📦 产出数据: {chunk}")
     print("-" * 40)
 
-Tip: CompiledStateGraph 同样支持 ainvoke astream 使用逻辑类似 --> 异步 
+# Tip: CompiledStateGraph 同样支持 ainvoke astream 使用逻辑类似 --> 异步 
